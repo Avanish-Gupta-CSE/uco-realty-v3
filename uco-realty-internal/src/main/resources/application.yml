@@ -1,0 +1,40 @@
+server:
+  port: ${SERVER_PORT:8081}
+  error:
+    include-stacktrace: never
+    include-message: never
+    whitelabel:
+      enabled: false
+
+getValue:
+  key: ${SSO_KEY:UCOBANKSSOKEY2026!SECRET#128BITS}
+
+uco:
+  hrms:
+    mode: ${HRMS_MODE:local}
+
+spring:
+  application:
+    name: uco-realty-internal
+  main:
+    allow-circular-references: true
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  mvc:
+    view:
+      prefix: /WEB-INF/jsp/
+      suffix: .jsp
+  servlet:
+    multipart:
+      max-file-size: 4MB
+      max-request-size: 35MB
+  jpa:
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          lob:
+            non_contextual_creation: true
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false

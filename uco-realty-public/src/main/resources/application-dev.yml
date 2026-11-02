@@ -1,0 +1,19 @@
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  datasource:
+    url: ${ORACLE_URL:jdbc:oracle:thin:@localhost:1521/XEPDB1}
+    username: ${ORACLE_USER:uco_realty}
+    password: ${ORACLE_PASS:uco_realty_pwd}
+    driver-class-name: oracle.jdbc.OracleDriver
+
+  jpa:
+    hibernate:
+      ddl-auto: ${DDL_AUTO:none}
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+
