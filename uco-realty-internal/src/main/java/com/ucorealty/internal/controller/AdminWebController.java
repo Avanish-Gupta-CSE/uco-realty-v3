@@ -195,6 +195,7 @@ public class AdminWebController {
 
   @PostMapping("/projects/save")
   public String saveProject(@ModelAttribute Project formProject,
+                            @RequestParam(value = "customCity", required = false) String customCity,
                             @RequestParam(defaultValue = "draft") String action,
                             @RequestParam(value = "photos", required = false) MultipartFile[] photos,
                             @RequestParam(value = "photo1", required = false) MultipartFile photo1,
@@ -213,6 +214,13 @@ public class AdminWebController {
     Project saved = null;
     try {
       String username = auth.getName();
+
+      // Handle custom city input if provided or override __OTHER__ placeholder
+      if (customCity != null && !customCity.trim().isEmpty()) {
+        formProject.setCityName(customCity.trim());
+      } else if ("__OTHER__".equalsIgnoreCase(formProject.getCityName())) {
+        formProject.setCityName("");
+      }
 
       if (formProject.id != null && !formProject.id.trim().isEmpty()) {
         saved = projectService.updateDraft(formProject.id.trim(), formProject, username);

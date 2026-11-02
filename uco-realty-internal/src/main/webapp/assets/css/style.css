@@ -937,3 +937,16 @@ a:hover {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+.custom-city-toggle {
+  font-size: 0.8rem;
+  color: var(--uco-blue, #0d6efd);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.custom-city-toggle:hover {
+  text-decoration: underline;
+  color: #0b5ed7;
+}
+

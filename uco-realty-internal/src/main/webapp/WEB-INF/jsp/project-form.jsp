@@ -77,13 +77,26 @@
                 </div>
 
                 <div class="col-md-6 col-lg-4">
-                    <label for="cityName" class="form-label fw-semibold small">District / City Name *</label>
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label for="cityName" class="form-label fw-semibold small mb-0">District / City Name *</label>
+                        <button type="button" id="btnToggleCustomCity" class="btn btn-link btn-sm p-0 custom-city-toggle">
+                            + Other / Custom City
+                        </button>
+                    </div>
                     <select id="cityName" name="cityName" class="form-select" data-selected-city="${project.cityName}" required>
                         <option value="">-- Select District / City --</option>
                         <c:if test="${not empty project.cityName}">
                             <option value="${project.cityName}" selected>${project.cityName}</option>
                         </c:if>
                     </select>
+
+                    <div id="customCityContainer" class="mt-2 d-none">
+                        <div class="input-group">
+                            <input type="text" id="customCityInput" name="customCity" class="form-control form-control-sm" placeholder="Enter custom district / city name" maxlength="100" autocomplete="off">
+                            <button type="button" id="btnCancelCustomCity" class="btn btn-outline-secondary btn-sm">Back to List</button>
+                        </div>
+                        <div class="form-text text-muted small">Enter the district or city name if not found in the dropdown list.</div>
+                    </div>
                 </div>
 
                 <div class="col-md-6 col-lg-4">

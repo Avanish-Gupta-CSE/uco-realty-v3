@@ -16,6 +16,12 @@ document.addEventListener("DOMContentLoaded", function () {
 function initDistrictSelector() {
     var stateSelect = document.getElementById("stateName");
     var citySelect = document.getElementById("cityName");
+    var btnToggleCustom = document.getElementById("btnToggleCustomCity");
+    var customCityContainer = document.getElementById("customCityContainer");
+    var customCityInput = document.getElementById("customCityInput");
+    var btnCancelCustom = document.getElementById("btnCancelCustomCity");
+    var formEl = document.getElementById("projectForm");
+
     if (!stateSelect || !citySelect) return;
 
     var geoData = {
@@ -49,28 +55,141 @@ function initDistrictSelector() {
         "West Bengal": ["Alipurduar", "Bankura", "Birbhum", "Cooch Behar", "Dakshin Dinajpur", "Darjeeling", "Hooghly", "Howrah", "Jalpaiguri", "Jhargram", "Kalimpong", "Kolkata", "Malda", "Murshidabad", "Nadia", "North 24 Parganas", "Paschim Bardhaman", "Paschim Medinipur", "Purba Bardhaman", "Purba Medinipur", "Purulia", "South 24 Parganas", "Uttar Dinajpur"]
     };
 
+    function showCustomCityMode(presetValue) {
+        if (customCityContainer) {
+            customCityContainer.classList.remove("d-none");
+        }
+        if (customCityInput) {
+            if (presetValue !== undefined && presetValue !== null) {
+                customCityInput.value = presetValue;
+            }
+            customCityInput.setAttribute("required", "required");
+            customCityInput.focus();
+        }
+        if (citySelect) {
+            citySelect.removeAttribute("required");
+            citySelect.value = "__OTHER__";
+        }
+        if (btnToggleCustom) {
+            btnToggleCustom.classList.add("d-none");
+        }
+    }
+
+    function hideCustomCityMode() {
+        if (customCityContainer) {
+            customCityContainer.classList.add("d-none");
+        }
+        if (customCityInput) {
+            customCityInput.value = "";
+            customCityInput.removeAttribute("required");
+        }
+        if (citySelect) {
+            citySelect.setAttribute("required", "required");
+            if (citySelect.value === "__OTHER__") {
+                citySelect.value = "";
+            }
+        }
+        if (btnToggleCustom) {
+            btnToggleCustom.classList.remove("d-none");
+        }
+    }
+
     function updateOptions() {
         var selectedState = stateSelect.value;
         var currentCity = citySelect.getAttribute("data-selected-city") || citySelect.value;
         citySelect.innerHTML = '<option value="">-- Select District / City --</option>';
 
+        var matched = false;
         if (selectedState && geoData[selectedState]) {
             geoData[selectedState].forEach(function (city) {
                 var opt = document.createElement("option");
                 opt.value = city;
                 opt.text = city;
-                if (currentCity && currentCity.toLowerCase() === city.toLowerCase()) {
+                if (currentCity && currentCity.trim().toLowerCase() === city.toLowerCase()) {
                     opt.selected = true;
+                    matched = true;
                 }
                 citySelect.appendChild(opt);
             });
         }
+
+        var otherOpt = document.createElement("option");
+        otherOpt.value = "__OTHER__";
+        otherOpt.text = "+ Other / Enter Custom City...";
+        citySelect.appendChild(otherOpt);
+
+        if (currentCity && currentCity.trim() !== "" && currentCity !== "__OTHER__") {
+            if (!matched) {
+                showCustomCityMode(currentCity.trim());
+            } else {
+                hideCustomCityMode();
+            }
+        } else if (currentCity === "__OTHER__") {
+            showCustomCityMode();
+        }
     }
 
     stateSelect.addEventListener("change", function () {
-        citySelect.removeAttribute("data-selected-city");
+        var customVal = (customCityInput && customCityContainer && !customCityContainer.classList.contains("d-none"))
+            ? customCityInput.value.trim() : null;
+        if (customVal) {
+            citySelect.setAttribute("data-selected-city", customVal);
+        } else {
+            citySelect.removeAttribute("data-selected-city");
+        }
         updateOptions();
     });
+
+    citySelect.addEventListener("change", function () {
+        if (citySelect.value === "__OTHER__") {
+            showCustomCityMode();
+        } else {
+            hideCustomCityMode();
+        }
+    });
+
+    if (btnToggleCustom) {
+        btnToggleCustom.addEventListener("click", function () {
+            showCustomCityMode();
+        });
+    }
+
+    if (btnCancelCustom) {
+        btnCancelCustom.addEventListener("click", function () {
+            hideCustomCityMode();
+            citySelect.focus();
+        });
+    }
+
+    if (formEl) {
+        formEl.addEventListener("submit", function (e) {
+            if (customCityContainer && !customCityContainer.classList.contains("d-none")) {
+                var val = customCityInput ? customCityInput.value.trim() : "";
+                if (!val) {
+                    e.preventDefault();
+                    alert("Please enter a custom district / city name, or click 'Back to List' to select one.");
+                    if (customCityInput) customCityInput.focus();
+                    return false;
+                }
+                var found = false;
+                for (var i = 0; i < citySelect.options.length; i++) {
+                    if (citySelect.options[i].value.toLowerCase() === val.toLowerCase()) {
+                        citySelect.options[i].selected = true;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    var dynOpt = document.createElement("option");
+                    dynOpt.value = val;
+                    dynOpt.text = val;
+                    dynOpt.selected = true;
+                    citySelect.appendChild(dynOpt);
+                }
+                citySelect.value = val;
+            }
+        });
+    }
 
     // Populate initially if state is selected
     if (stateSelect.value) {
