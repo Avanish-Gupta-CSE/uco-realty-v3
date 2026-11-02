@@ -10,6 +10,12 @@
 # Passwords: 8+ characters, a letter and a digit.
 set -euo pipefail
 
+# Ensure Java 25 is prioritized
+if [ -d "/opt/homebrew/opt/openjdk@25/libexec/openjdk.jdk/Contents/Home" ]; then
+  export JAVA_HOME="/opt/homebrew/opt/openjdk@25/libexec/openjdk.jdk/Contents/Home"
+  export PATH="$JAVA_HOME/bin:$PATH"
+fi
+
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 RUN="$ROOT/.run"; mkdir -p "$RUN"
 PUBLIC_WAR="$ROOT/uco-realty-public/target/uco-realty-public-0.1.0.war"

@@ -15,7 +15,14 @@ public class MasterDataService {
   private final List<String> zones;
   private final Map<String, List<String>> stateDistricts;
 
+  public MasterDataService() throws IOException {
+    this(new ObjectMapper());
+  }
+
   public MasterDataService(ObjectMapper mapper) throws IOException {
+    if (mapper == null) {
+      mapper = new ObjectMapper();
+    }
     List<String> z = read(mapper, "geo/zones.json", new TypeReference<List<String>>() {});
     Map<String, List<String>> d = read(mapper, "geo/districts.json",
       new TypeReference<LinkedHashMap<String, List<String>>>() {});

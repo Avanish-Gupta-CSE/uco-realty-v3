@@ -35,6 +35,3 @@ spring:
         jdbc:
           lob:
             non_contextual_creation: true
-  jackson:
-    serialization:
-      write-dates-as-timestamps: false

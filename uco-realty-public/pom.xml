@@ -12,13 +12,17 @@
   <artifactId>uco-realty-public</artifactId>
   <packaging>war</packaging>
   <name>uco-realty-public</name>
-  <description>UCO Realty Customer Portal (Internet DMZ deployment - Java 21 + Spring Boot 3)</description>
+  <description>UCO Realty Customer Portal (Internet DMZ deployment - Java 25 + Spring Boot 4.1 + Tomcat 11)</description>
 
   <dependencies>
     <!-- Spring Boot Starters -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-json</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -31,6 +35,12 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-security</artifactId>
+    </dependency>
+
+    <!-- Jackson Databind -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
     </dependency>
 
     <!-- Embedded Tomcat JSP Engine -->
