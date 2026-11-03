@@ -29,6 +29,12 @@ uco:
     mode: ${HRMS_MODE:bank}      # bank = read employees from the HRMS tables; local = built-in test employees (dev profile only)
   sso:
     dev-login-enabled: false     # plain /sso?emp_id=, app-issued OTP and test-user picker; only the dev profile turns this on
+  rbac:                          # which posting (SOL) gets which role; see RoleResolver
+    superadmin-sols: "7115"      # DIT: Logs page
+    ho-admin-sols: "8028"        # DIT Projects and Product Development: view only
+    marketing-sols: "8001"       # Marketing and Wealth Management: create/approve in any zone
+    retail-sols: ""              # Retail Banking Department: leads + unit reduction. SET THE REAL SOL (env UCO_RBAC_RETAIL_SOLS)
+    zonal-sol-regex: "70\\d\\d"     # zonal offices, e.g. 7001 = Patna Zonal Office
 
 spring:
   application:

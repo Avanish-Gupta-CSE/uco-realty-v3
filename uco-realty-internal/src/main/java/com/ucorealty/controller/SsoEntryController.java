@@ -169,7 +169,7 @@ public class SsoEntryController {
       profile.setPostingSolId(solId.trim());
     }
 
-    if (profile.getResolvedRole() == null) {
+    if (hrmsService.resolveRole(profile) == null) {
       logger.warn("[UCO SSO] Employee {} (SOL {}) has no role in this portal.", profile.getEmpNo(), profile.getPostingSolId());
       auditService.logLoginAttempt(empId, extractClientIp(request), false,
           loginMechanism + " - not authorised for this portal (SOL " + profile.getPostingSolId() + ")");
@@ -240,7 +240,7 @@ public class SsoEntryController {
     session.setAttribute("PENDING_OTP_NAME", profile.getName());
     session.setAttribute("PENDING_OTP_SOL", profile.getPostingSolId() + " - " + profile.getPostingSolDesc());
     session.setAttribute("PENDING_OTP_MOBILE", maskMobile(profile.getMobile()));
-    session.setAttribute("PENDING_OTP_ROLE", profile.getResolvedRole());
+    session.setAttribute("PENDING_OTP_ROLE", hrmsService.resolveRole(profile));
 
     logger.info("[UCO SSO] Generated OTP for employee {} ({})", profile.getEmpNo(), profile.getName());
     return "redirect:/otp";
@@ -283,7 +283,7 @@ public class SsoEntryController {
     }
 
     HrmsUserProfile profile = hrmsService.fetchUserProfile(empId);
-    if (profile == null || profile.getResolvedRole() == null) {
+    if (profile == null || hrmsService.resolveRole(profile) == null) {
       return "redirect:/login?error=invalid_employee";
     }
 
@@ -344,8 +344,8 @@ public class SsoEntryController {
     session.setAttribute("USOL", profile.getPostingSolId());
     session.setAttribute("UID", profile.getEmpNo());
     session.setAttribute("USER_NAME", profile.getName());
-    session.setAttribute("USER_ROLE", profile.getResolvedRole());
-    session.setAttribute("USER_ZONE", profile.getResolvedZone());
+    session.setAttribute("USER_ROLE", hrmsService.resolveRole(profile));
+    session.setAttribute("USER_ZONE", hrmsService.resolveZone(profile));
     session.setAttribute("CADRE", profile.getCadre());
     session.setAttribute("SCALE", profile.getScaleCode());
     session.setAttribute("login_time", LocalDateTime.now());

@@ -34,10 +34,10 @@ mkdir -p "$OUT/db"
 cp "$PUBLIC_WAR" "$OUT/uco-realty-public.war"
 cp "$INTERNAL_WAR" "$OUT/uco-realty-internal.war"
 cp "$ROOT"/db_migrations/*.sql "$ROOT"/db_migrations/README_DBA_DEPLOYMENT.md "$OUT/db/"
-if [ "$MODE" = "prod" ]; then
-  # never ship destructive or test-only scripts to production
-  rm -f "$OUT/db/00_DROP_ALL_TABLES.sql" "$OUT/db/03_CREATE_HRMS_MOCK_TABLES.sql" "$OUT/db/05_UAT_TEST_EMPLOYEES.sql"
-fi
+# UAT and production read the bank's real HRMS tables: never ship the mock tables or local test employees
+rm -f "$OUT/db/03_CREATE_HRMS_MOCK_TABLES.sql" "$OUT/db/05_LOCAL_TEST_EMPLOYEES.sql"
+# the drop-everything script is for UAT resets only
+[ "$MODE" = "prod" ] && rm -f "$OUT/db/00_DROP_ALL_TABLES.sql"
 cp "$ROOT/DEPLOYMENT.md" "$OUT/"
 
 (cd "$OUT" && find . -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 shasum -a 256 > SHA256SUMS)

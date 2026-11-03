@@ -26,7 +26,7 @@ logging:
     root: INFO
     com.ucorealty: INFO
 
-# UAT reads test employees from the UAT HRMS tables (see db_migrations/05_UAT_TEST_EMPLOYEES.sql); no built-in test users.
+# UAT reads the bank's real HRMS tables (hrms_dba); no built-in test users. Set UCO_RBAC_RETAIL_SOLS to the Retail Banking SOL.
 uco:
   hrms:
     mode: bank

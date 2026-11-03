@@ -34,3 +34,5 @@ uco:
     mode: local
   sso:
     dev-login-enabled: true
+  rbac:
+    retail-sols: "8010"          # PLACEHOLDER for local testing only; the real Retail Banking SOL is not known yet

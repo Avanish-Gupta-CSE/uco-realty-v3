@@ -43,8 +43,21 @@ public class HrmsServiceImpl implements HrmsService {
     }
   }
 
-  public HrmsServiceImpl(UserRepository userRepo) {
+  private final RoleResolver roleResolver;
+
+  public HrmsServiceImpl(UserRepository userRepo, RoleResolver roleResolver) {
     this.userRepo = userRepo;
+    this.roleResolver = roleResolver;
+  }
+
+  @Override
+  public String resolveRole(HrmsUserProfile profile) {
+    return roleResolver.resolveRole(profile);
+  }
+
+  @Override
+  public String resolveZone(HrmsUserProfile profile) {
+    return roleResolver.resolveZone(profile);
   }
 
   @PostConstruct
@@ -63,93 +76,27 @@ public class HrmsServiceImpl implements HrmsService {
   }
 
   private void initMockProfiles() {
-    // 1. Head Office DIT - Superadmin (SOL 7114)
-    HrmsUserProfile dit = new HrmsUserProfile("100001", "Avanish Gupta", "7114", "DIT Head Office Kolkata",
-        "Scale 4", "EXEC", "Head Office", "IT Executive");
-    dit.setJobProfile("IT");
-    dit.setMobile("9876543210");
-    dit.setEmail("avanish.gupta@uco.bank.in");
-    addMock(dit);
-
-    // 2. Zonal Office Ajmer - Maker (SOL 7015, Scale 2 Officer)
-    HrmsUserProfile ajmerMaker = new HrmsUserProfile("200001", "Rajesh Sharma", "7015", "Zonal Office Ajmer",
-        "Scale 2", "OFFICER", "Ajmer", "Credit Officer");
-    ajmerMaker.setJobProfile("Retail Credit");
-    ajmerMaker.setMobile("9812345678");
-    ajmerMaker.setEmail("rajesh.sharma@uco.bank.in");
-    addMock(ajmerMaker);
-
-    // 3. Zonal Office Ajmer - Checker (SOL 7015, Scale 4 Executive)
-    HrmsUserProfile ajmerChecker = new HrmsUserProfile("200002", "Vikram Singh Rathore", "7015", "Zonal Office Ajmer",
-        "Scale 4", "EXEC", "Ajmer", "Chief Manager / Zonal Approver");
-    ajmerChecker.setJobProfile("Zonal Approver");
-    ajmerChecker.setMobile("9812345679");
-    ajmerChecker.setEmail("vikram.singh@uco.bank.in");
-    addMock(ajmerChecker);
-
-    // 4. Zonal Office Bhopal - Maker (SOL 7022, Scale 1 Officer)
-    HrmsUserProfile bhopalMaker = new HrmsUserProfile("300001", "Pooja Verma", "7022", "Zonal Office Bhopal",
-        "Scale 1", "OFFICER", "Bhopal", "Assistant Manager");
-    bhopalMaker.setJobProfile("Housing Loans");
-    bhopalMaker.setMobile("9823456780");
-    bhopalMaker.setEmail("pooja.verma@uco.bank.in");
-    addMock(bhopalMaker);
-
-    // 5. Zonal Office Bhopal - Checker (SOL 7022, Scale 5 Executive)
-    HrmsUserProfile bhopalChecker = new HrmsUserProfile("300002", "Anand Mishra", "7022", "Zonal Office Bhopal",
-        "Scale 5", "EXEC", "Bhopal", "Deputy General Manager");
-    bhopalChecker.setJobProfile("Zonal Head");
-    bhopalChecker.setMobile("9823456781");
-    bhopalChecker.setEmail("anand.mishra@uco.bank.in");
-    addMock(bhopalChecker);
-
-    // 6. Head Office Retail Banking (SOL 7105)
-    HrmsUserProfile hoRetail = new HrmsUserProfile("400001", "Sanjay Mukherjee", "7105", "HO Retail Loan Hub",
-        "Scale 3", "OFFICER", "Head Office", "Senior Manager Retail");
-    hoRetail.setJobProfile("RETAIL");
-    hoRetail.setMobile("9834567890");
-    hoRetail.setEmail("sanjay.mukherjee@uco.bank.in");
-    addMock(hoRetail);
-
-    // 7. Head Office Marketing (SOL 7102)
-    HrmsUserProfile hoMarketing = new HrmsUserProfile("400002", "Sunita Sen", "7102", "HO Marketing & PR",
-        "Scale 4", "EXEC", "Head Office", "Chief Manager PR");
-    hoMarketing.setJobProfile("MARKETING");
-    hoMarketing.setMobile("9834567891");
-    hoMarketing.setEmail("sunita.sen@uco.bank.in");
-    addMock(hoMarketing);
-
-    // 8. Head Office Admin (SOL 7101)
-    HrmsUserProfile hoAdmin = new HrmsUserProfile("400003", "Debashis Roy", "7101", "HO General Administration",
-        "Scale 4", "EXEC", "Head Office", "Chief Manager Administration");
-    hoAdmin.setJobProfile("ADMIN");
-    hoAdmin.setMobile("9834567892");
-    hoAdmin.setEmail("debashis.roy@uco.bank.in");
-    addMock(hoAdmin);
-
-    // 9. Zonal Office Jaipur - Maker (SOL 7030, Scale 2 Officer)
-    HrmsUserProfile jaipurMaker = new HrmsUserProfile("500001", "Neha Patel", "7030", "Zonal Office Jaipur",
-        "Scale 2", "OFFICER", "Jaipur", "Manager Credit");
-    jaipurMaker.setJobProfile("Retail Credit");
-    jaipurMaker.setMobile("9845678901");
-    jaipurMaker.setEmail("neha.patel@uco.bank.in");
-    addMock(jaipurMaker);
-
-    // 10. Zonal Office Jaipur - Checker (SOL 7030, Scale 4 Executive)
-    HrmsUserProfile jaipurChecker = new HrmsUserProfile("500002", "Mahendra Choudhary", "7030", "Zonal Office Jaipur",
-        "Scale 4", "EXEC", "Jaipur", "Chief Manager Credit");
-    jaipurChecker.setJobProfile("Zonal Approver");
-    jaipurChecker.setMobile("9845678902");
-    jaipurChecker.setEmail("m.choudhary@uco.bank.in");
-    addMock(jaipurChecker);
-
-    // 11. Bank Production Staff (SOL 7115, Scale 3, SWDC - from bank image IMG_1026/1032)
-    HrmsUserProfile swdcStaff = new HrmsUserProfile("61801", "Bank SWDC Developer", "7115", "SWDC Head Office",
-        "Scale 3", "OFFICER", "Head Office", "Software Development Cell");
-    swdcStaff.setJobProfile("SOFTWARE DEVELOPMENT CELL");
-    swdcStaff.setMobile("9811122233");
-    swdcStaff.setEmail("staff.61801@uco.bank.in");
-    addMock(swdcStaff);
+    // Built-in test employees for the dev profile only (laptop). SOLs follow the real structure:
+    // 7115 DIT superadmin, 8028 HO admin, 8001 marketing, 8010 retail (placeholder), 70xx zonal offices.
+    String[][] rows = {
+      {"100001", "Avanish Gupta", "7115", "DIT-SWDC HEAD OFFICE", "3", "OFFR", "HEAD OFFICE", "Software Developer", "9876543210", "avanish.gupta@uco.bank.in"},
+      {"61801", "SWDC Test Developer", "7115", "DIT-SWDC HEAD OFFICE", "3", "OFFR", "HEAD OFFICE", "Software Development Cell", "9811122233", "staff.61801@uco.bank.in"},
+      {"400003", "Debashis Roy", "8028", "DIT-PROJECTS AND PRODUCT DEVELOPMENT", "4", "EXEC", "HEAD OFFICE", "Chief Manager", "9834567892", "debashis.roy@uco.bank.in"},
+      {"400002", "Sunita Sen", "8001", "MARKETING AND WEALTH MANAGEMENT DEPARTMENT", "4", "EXEC", "HEAD OFFICE", "Chief Manager PR", "9834567891", "sunita.sen@uco.bank.in"},
+      {"400001", "Sanjay Mukherjee", "8010", "RETAIL BANKING DEPARTMENT", "3", "OFFR", "HEAD OFFICE", "Senior Manager Retail", "9834567890", "sanjay.mukherjee@uco.bank.in"},
+      {"700001", "Priya Kumari", "7001", "PATNA ZONAL OFFICE", "2", "OFFR", "PATNA", "Credit Officer", "9801000001", "priya.kumari@uco.bank.in"},
+      {"700002", "Rakesh Prasad", "7001", "PATNA ZONAL OFFICE", "4", "EXEC", "PATNA", "Chief Manager", "9801000002", "rakesh.prasad@uco.bank.in"},
+      {"200001", "Rajesh Sharma", "7015", "AJMER ZONAL OFFICE", "2", "OFFR", "AJMER", "Credit Officer", "9812345678", "rajesh.sharma@uco.bank.in"},
+      {"200002", "Vikram Singh Rathore", "7015", "AJMER ZONAL OFFICE", "4", "EXEC", "AJMER", "Chief Manager", "9812345679", "vikram.singh@uco.bank.in"},
+      {"300001", "Pooja Verma", "7022", "BHOPAL ZONAL OFFICE", "1", "OFFR", "BHOPAL", "Assistant Manager", "9823456780", "pooja.verma@uco.bank.in"},
+      {"300002", "Anand Mishra", "7022", "BHOPAL ZONAL OFFICE", "5", "EXEC", "BHOPAL", "Deputy General Manager", "9823456781", "anand.mishra@uco.bank.in"},
+    };
+    for (String[] r : rows) {
+      HrmsUserProfile p = new HrmsUserProfile(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7]);
+      p.setMobile(r[8]);
+      p.setEmail(r[9]);
+      addMock(p);
+    }
   }
 
   private void addMock(HrmsUserProfile profile) {
@@ -196,7 +143,7 @@ public class HrmsServiceImpl implements HrmsService {
     logger.info("  Name        : {}", p.getName());
     logger.info("  SOL ID      : {} ({})", p.getPostingSolId(), p.getPostingSolDesc());
     logger.info("  Cadre/Scale : {} / {}", p.getCadre(), p.getScaleCode());
-    logger.info("  Role Mapped : {}", p.getResolvedRole());
+    logger.info("  Role Mapped : {}", resolveRole(p));
     logger.info("  OTP Code    : {} [Valid for 5 minutes]", otp);
     logger.info("===============================================================");
 
@@ -246,8 +193,8 @@ public class HrmsServiceImpl implements HrmsService {
   public AppUser syncAppUser(HrmsUserProfile profile) {
     if (profile == null) return null;
 
-    String resolvedRole = profile.getResolvedRole();
-    String resolvedZone = profile.getResolvedZone();
+    String resolvedRole = resolveRole(profile);
+    String resolvedZone = resolveZone(profile);
     String branch = profile.getPostingSolDesc();
 
     AppUser user = userRepo.findByUsername(profile.getEmpNo()).orElseGet(() -> {

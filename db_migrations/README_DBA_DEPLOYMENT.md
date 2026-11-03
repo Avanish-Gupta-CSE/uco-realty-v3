@@ -9,15 +9,15 @@ Scripts for UCO Bank's Oracle database (UAT and Production). The application nee
   GRANT CREATE SESSION, CREATE TABLE, CREATE SEQUENCE TO uco_realty;
   ```
   and a tablespace quota of at least 10 GB (project photos are stored in the database as SecureFiles BLOBs; the browser shrinks them to about 0.3 MB each).
-* `SELECT` on the HRMS tables (`employee_contact_details` and the tenure / job-profile tables) for the same schema user. Both portals use this single database connection.
+* `SELECT` on the real HRMS tables (`employee_contact_details`, `hrms_dba.employee_tenure`, `hrms_dba.employee_job_profile`) for the same schema user. Both portals use this single database connection.
 
 ## 2. Run order (as the application schema user, in SQL*Plus or SQL Developer)
 | Step | Script | What it does |
 | :--- | :--- | :--- |
 | 1 | `01_CREATE_TABLES.sql` | Creates all tables (including `login_audit`), constraints, indexes and the BLOB storage |
-| 2 | `03_CREATE_HRMS_MOCK_TABLES.sql` | **Local/UAT only, and only if the DB has no HRMS tables.** Mock tables named as the application queries them. Never in production |
-| 3 | `05_UAT_TEST_EMPLOYEES.sql` | **UAT/local only.** Adds 12 fictitious employees (one per role, plus a no-access branch employee). Never in production |
-| 4 | `04_DROP_USERS_PASSWORD_HASH.sql` | **Existing databases only.** Drops the obsolete `users.password_hash` column |
+| 2 | `04_DROP_USERS_PASSWORD_HASH.sql` | **Existing databases only.** Drops the obsolete `users.password_hash` column |
+
+**Not for UAT/production:** `03_CREATE_HRMS_MOCK_TABLES.sql` and `05_LOCAL_TEST_EMPLOYEES.sql` are for a developer's laptop only (UAT and production already have the real HRMS data in `hrms_dba`, which the application only reads). They are not included in release bundles.
 
 `00_DROP_ALL_TABLES.sql` removes everything. **UAT resets only. Never run it in production.**
 

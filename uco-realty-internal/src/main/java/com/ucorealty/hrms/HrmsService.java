@@ -16,5 +16,11 @@ public interface HrmsService {
   List<HrmsUserProfile> listAllDirectoryEmployees();
 
   AppUser syncAppUser(HrmsUserProfile profile);
+
+  /** Portal role for this posting, or null when the employee has no access. */
+  String resolveRole(HrmsUserProfile profile);
+
+  /** Official zone name for zonal-office employees, otherwise null. */
+  String resolveZone(HrmsUserProfile profile);
 }
 

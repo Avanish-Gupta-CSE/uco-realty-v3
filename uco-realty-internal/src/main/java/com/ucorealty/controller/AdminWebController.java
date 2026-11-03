@@ -390,7 +390,10 @@ public class AdminWebController {
                           @RequestParam(required = false) String to,
                           @RequestParam(required = false) String status,
                           @RequestParam(required = false) String search,
+                          Authentication auth,
                           Model model) {
+    // The nav link is hidden for other roles, but hiding is not protection: customer phone numbers need a real check
+    RoleCheck.require(auth, LeadExportController.LEAD_ROLES);
     List<Lead> leads = leadRepo.findAll();
 
     // In-memory date & status filter

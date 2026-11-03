@@ -97,7 +97,7 @@ cat <<'MSG'
      - Zero admin/SSO endpoints exposed (403/404 on tampering)
   2. Internal Bank Portal (Intranet SSO)     : http://localhost:8081/login
      - Bank Production SSO Handoff Endpoint  : http://localhost:8081/entry?value=...
-     - Intranet Direct Forwarding Endpoint   : http://localhost:8081/sso?emp_id=...&sol_id=...
+     - Dev-only quick login (employee id+OTP): http://localhost:8081/login  (OTP 123456)
      - Project Maker-Checker Administration  : http://localhost:8081/admin/projects
      - DIT Superadmin Audit Logs             : http://localhost:8081/admin/audit-logs
   =============================================================================

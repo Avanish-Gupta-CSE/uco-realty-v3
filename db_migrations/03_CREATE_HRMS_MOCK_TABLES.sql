@@ -5,7 +5,7 @@
 -- Table and column names are exactly what HrmsServiceImpl queries (taken from the bank screenshots in
 -- .brain/db-login-reference). Verify them against the real HRMS schema before the first UAT run.
 -- Created in the current schema; the application also tries the hrms_dba. prefix.
--- Fill with 05_UAT_TEST_EMPLOYEES.sql.
+-- Fill with 05_LOCAL_TEST_EMPLOYEES.sql (local developer machine only).
 -- ============================================================================
 
 CREATE TABLE employee_contact_details (
