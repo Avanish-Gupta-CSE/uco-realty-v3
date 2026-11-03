@@ -1,68 +1,70 @@
-# Testing UCO Realty by hand
+# Testing UCO Realty by hand (local, dev profile)
 
 ## 1. Start
 ```bash
-scripts/dev-start.sh          # first run asks you to choose passwords for dit.superadmin and ho.admin
+scripts/dev-start.sh            # needs Docker Desktop; starts Oracle, creates tables, starts both portals
+scripts/dev-stop.sh
+scripts/dev-start.sh --reset    # wipe the database and start again
 ```
-Needs Docker Desktop running. It starts Oracle, creates the tables and the two admins, then the backend and the web app.
-Stop with `scripts/dev-stop.sh`. Start again from an empty database with `scripts/dev-start.sh --reset`.
-
 | What | Address |
 |---|---|
-| Customer site | http://localhost:8080/projects |
-| Staff login | http://localhost:8080/login |
-| Admin dashboard | http://localhost:8080/admin/projects |
+| Customer portal | http://localhost:8080/projects |
+| Staff portal (sign-in) | http://localhost:8081/login |
 
-The database starts with **only** `dit.superadmin` and `ho.admin`. Everything else you create in the app, as in real life.
-Sample photos for upload tests: `.brain/sample-uploads/UCR-PROJ-0001/`.
+Staff sign in with an **employee id** and the OTP `123456` (dev profile only). There are no passwords and no user-management screens. Test employees:
 
-## 2. Suggested order (about 30 minutes)
-**A. Superadmin (dit.superadmin)**
-1. Sign in. Open **Change password** (top right) and set a new one.
-2. **User Management > Add New User**: create `ho.marketing` (role Head Office Marketing) and `ho.retail` (Head Office Retail). Use passwords of 8+ characters with a letter and a digit.
+| Id | Role | Posting |
+|---|---|---|
+| `100001` | DIT Superadmin (sees **Logs**) | SOL 7114 |
+| `200001` / `200002` | ZO Maker / ZO Checker | Ajmer (SOL 7015) |
+| `300001` / `300002` | ZO Maker / ZO Checker | Bhopal (SOL 7022) |
+| `500001` / `500002` | ZO Maker / ZO Checker | Jaipur (SOL 7030) |
+| `400001` | HO Retail (reduces units, leads) | SOL 7105 |
+| `400002` | HO Marketing (any zone) | SOL 7102 |
+| `400003` / `61801` | HO Admin (view only) | SOL 7101 / 7115 |
 
-**B. HO Marketing (ho.marketing)**
-3. Create zone users: a ZO Maker and a ZO Checker for **Kolkata**, a ZO Maker and a ZO Checker for **Mumbai**, and one Call Centre user. Zone is required for ZO users.
-4. Try **reset password** and **deactivate / activate** on one of them. A deactivated user cannot sign in.
+Sample photos for uploads: `.brain/sample-uploads/UCR-PROJ-0001/`.
 
-**C. ZO Maker (Kolkata)**
-5. Sign in. **Create Project**: choose State, then District (try **Custom** for a place not in the list), type a 6-digit pincode, fill name, builder, RERA, inventory (available must not exceed total), price, contacts. Zone is locked to Kolkata.
-6. Upload photos (they are shrunk automatically; the box shows e.g. `7.0 MB → 275 KB`). Press **Save Draft**, then reopen and edit it.
-7. **Save & Request Approval**. Try submitting a project with the pincode empty: it must be refused.
-
-**D. ZO Checker (Kolkata) and the Mumbai users**
-8. Checker: open the pending project (eye icon), look at the photos, **Reject / Rectification** with a remark (a remark is required), then sign in as the maker, fix it, resubmit.
-9. Checker approves. Sign in as the **Mumbai** checker: the Kolkata project is not in their queue (use **All-India Directory** to see it read-only, with a lock instead of Approve).
-10. The maker cannot approve their own project (no Approve button, server also refuses).
-
-**E. Customer (no login)**
-11. Open the customer site, fill the name and mobile gate (or skip). Filters show only states and cities that have an approved project. Search by pincode.
-12. Open the project: photos, contacts, details. Anything not entered shows "Not provided". Press **Apply for Home Loan** (a new tab opens the bank's home-loan page).
-
-**F. HO Retail (ho.retail) and Call Centre**
-13. HO Retail: **Customer Leads** (filter by date/status, **Export** to Excel). On an approved project use the **−** button to reduce available units with a reason. Reload the customer page: the new count shows. They cannot approve or create projects.
-14. Call Centre: **Customer Leads** and Excel export only.
-
-**G. Things that must be refused**
-A maker cannot edit another zone's project; nobody can edit or add photos after submit/approval; PDFs and photos over 3 MB are refused; five wrong passwords lock an account for 15 minutes; HO Admin cannot create projects; HO Marketing cannot create admins.
-
-## 3. Optional: sample projects to see how it looks
-With the app running:
+## 2. Automatic checks (about 5 seconds)
 ```bash
-python3 scripts/load_demo_data.py          # asks for the dit.superadmin password
-scripts/remove_demo_data.sh                # removes it again
+python3 scripts/smoke_test.py                       # 26 checks: lockdown, headers, SSO errors, CSRF, roles, logout
+PUBLIC_URL=... INTERNAL_URL=... python3 scripts/smoke_test.py    # other ports/hosts
 ```
-It adds 9 fictional projects (names end with "(Demo)"; 6 approved with photos and a brochure, 1 pending, 1 returned for correction, 1 draft) and 9 demo leads, using the normal approval flow. The projects are placed in the zones of the zone users you already created, so each maker and checker has something to work on (a pending project to approve, a returned one to fix, a draft to submit). If you add users for more zones later, run `scripts/remove_demo_data.sh` and load again. Your own users and projects are not touched. Demo data is for your local database only.
+It creates nothing. Against a UAT/prod build it skips the role checks (no dev login there).
 
-## 4. Automatic check (optional)
-On a **fresh** database (only the two admins), with the two admin passwords you chose:
+## 3. Suggested manual run (about 20 minutes)
+**A. ZO Maker (200001, Ajmer)**
+1. Sign in at :8081/login. **+ Add New Project**: pick State, then District (or **+ Other / Custom City** and type it); the zone is fixed to Ajmer. Pincode is 6 digits; available units must not exceed total. Branch name is required to submit.
+2. Add photos (4 slots, **+ Add More Photos** up to 10, max 2 MB each, JPG/PNG/WEBP). **Save Draft**, reopen, edit.
+3. **Save & Request Approval**. A project with a missing required field must be refused with the message shown on the same form.
+
+**B. ZO Checker (200002) and the other zones**
+4. Open the pending project, review, **Request Correction from Maker** with a remark (required). Sign in as the maker, fix, resubmit.
+5. Checker **approves**. Sign in as the Bhopal checker `300002`: the Ajmer project is not theirs to approve.
+6. The maker cannot approve their own project (no button; the server also refuses).
+
+**C. Customer (no login)**
+7. Open :8080/projects. Fill the name/mobile gate (10 digits) or skip. Filters list only states/cities with approved projects. Search by pincode.
+8. Open the project (photos, contacts; missing data shows "Not provided"). **Apply for Home Loan** saves the lead and opens https://www.uco.bank.in/home-loan in the same tab.
+9. Unapproved or unknown project ids return 404 on the customer site.
+
+**D. Head Office**
+10. HO Retail `400001`: **Customer Leads** (filter, **Export** to Excel); reduce available units on an approved project with a reason. No approve/create rights.
+11. DIT `100001`: **Logs** shows project events and every login attempt (including refused ones). Makers and checkers get 403 on `/admin/audit-logs`.
+12. Sign out (button): you land on the login page; the Back button must not reopen admin pages.
+
+**E. Things that must be refused**
+A maker cannot edit another zone's project; nothing is editable after submit/approval; photos over 2 MB and non-images are skipped; `/admin/**` without sign-in redirects to `/login`; the customer portal answers 403 on `/login`, `/admin`, `/sso`, `/entry`; an employee id that is not in the list is refused.
+
+## 4. Optional: demo data
 ```bash
-DIT_PASSWORD='...' HO_PASSWORD='...' python3 scripts/e2e_flow_test.py
+python3 scripts/load_demo_data.py     # dev profile only; refuses to run elsewhere
+scripts/remove_demo_data.sh           # removes everything whose project name ends in "(Demo)" and the demo leads
 ```
-It runs 128 checks through all roles. It creates test users and projects and changes the DIT password, so use it on a throwaway database, then `scripts/dev-start.sh --reset`.
+Adds 9 fictional projects through the normal forms (6 approved with photos, 1 pending, 1 returned for correction, 1 draft; Ajmer and Bhopal) and 9 demo leads.
 
 ## 5. If something goes wrong
-* `.run/backend.log` and `.run/frontend.log` hold the logs.
-* "Port already in use": run `scripts/dev-stop.sh`.
-* Locked out after wrong passwords: wait 15 minutes or restart the backend.
-* Forgot an admin password: `scripts/dev-start.sh --reset` (wipes everything).
+* Logs: `.run/public.log`, `.run/internal.log`.
+* "Port already in use": `scripts/dev-stop.sh`.
+* Login page shows "Single Sign-On required" and no form: the app is not running with the dev profile.
+* To try the real HRMS path locally: load `db_migrations/03_CREATE_HRMS_MOCK_TABLES.sql` and `05_UAT_TEST_EMPLOYEES.sql`, then start the internal WAR with `--uco.hrms.mode=bank --uco.sso.dev-login-enabled=false` and open `/entry?value=<token>` (tokens are produced with `SsoCryptoUtil.encryptAesCbc`; the dev key/iv are in `application-dev.yml`).

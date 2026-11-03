@@ -6,30 +6,31 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
+import org.springframework.security.web.session.DisableEncodeUrlFilter;
+import com.ucorealty.config.SecurityHeadersFilter;
 
+/**
+ * Staff authentication happens only through bank SSO / OTP (see SsoEntryController), which builds the
+ * Spring Security context itself. There is no form login, so unauthenticated requests to protected
+ * pages are sent to /login (the SSO landing page).
+ */
 @Configuration
 public class InternalSecurityConfig {
 
-  private final AppUserDetailsService userDetailsService;
-  private final CustomAuthenticationSuccessHandler successHandler;
-  private final CustomAuthenticationFailureHandler failureHandler;
   private final CustomLogoutSuccessHandler logoutSuccessHandler;
 
-  public InternalSecurityConfig(AppUserDetailsService userDetailsService,
-                                CustomAuthenticationSuccessHandler successHandler,
-                                CustomAuthenticationFailureHandler failureHandler,
-                                CustomLogoutSuccessHandler logoutSuccessHandler) {
-    this.userDetailsService = userDetailsService;
-    this.successHandler = successHandler;
-    this.failureHandler = failureHandler;
+  public InternalSecurityConfig(CustomLogoutSuccessHandler logoutSuccessHandler) {
     this.logoutSuccessHandler = logoutSuccessHandler;
   }
 
   @Bean
   public SecurityFilterChain chain(HttpSecurity http) throws Exception {
     http
-      .csrf(AbstractHttpConfigurer::disable)
-      .userDetailsService(userDetailsService)
+      // CSRF is on for every staff form/logout. Only the anonymous customer lead capture is exempt.
+      .csrf(csrf -> csrf.ignoringRequestMatchers("/lead"))
+      .headers(h -> h.disable())   // replaced by SecurityHeadersFilter (see config package)
+      .addFilterBefore(new SecurityHeadersFilter(), DisableEncodeUrlFilter.class)
       .authorizeHttpRequests(auth -> auth
         .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.ERROR).permitAll()
         // Full intranet access to catalog, bank production SSO entry points, OTP, static assets, JSP views, and error page:
@@ -43,13 +44,7 @@ public class InternalSecurityConfig {
         .requestMatchers("/admin/**", "/api/admin/**").authenticated()
         .anyRequest().authenticated()
       )
-      .formLogin(form -> form
-        .loginPage("/login")
-        .loginProcessingUrl("/login")
-        .successHandler(successHandler)
-        .failureHandler(failureHandler)
-        .permitAll()
-      )
+      .exceptionHandling(ex -> ex.authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login")))
       .logout(logout -> logout
         .logoutUrl("/logout")
         .logoutSuccessHandler(logoutSuccessHandler)

@@ -37,52 +37,35 @@ public class HrmsUserProfile implements Serializable {
   }
 
   /**
-   * Resolves UCO Realty RBAC Role based on SOL ID and Cadre / Scale:
-   * Aligned with bank logic:
-   * - SOL in [7100..7199]: Head Office
-   *     SOL 7114 / IT -> SUPERADMIN_DIT
-   *     SOL 7105 / RETAIL -> HO_RETAIL
-   *     SOL 7102 / MARKETING -> HO_MARKETING
-   *     Other 71xx -> HO_ADMIN
-   * - SOL in [7001..7099]: Zonal Office
-   *     Scale >= 4 or Cadre EXEC -> ZO_CHECKER
-   *     Scale <= 3 or Cadre OFFICER -> ZO_MAKER
-   * - Branch SOLs:
-   *     Scale >= 4 -> ZO_CHECKER; Scale <= 3 -> ZO_MAKER
+   * Resolves the UCO Realty role from the HRMS posting. Only the SOL ranges below get any access;
+   * every other posting (branches, regional offices, unknown SOL) resolves to null and is refused at login.
+   * - SOL 7114 -> SUPERADMIN_DIT, 7105 -> HO_RETAIL, 7102 -> HO_MARKETING, other 71xx -> HO_ADMIN
+   * - SOL 70xx (zonal office) with a known zone: Scale >= 4 or Cadre EXEC -> ZO_CHECKER, Scale 1-3 -> ZO_MAKER, scale 0/blank -> no access
+   * Matching is by exact SOL / exact cadre; no substring guessing on free-text designations.
    */
   public String getResolvedRole() {
     Long solNum = parseSolNumber(postingSolId);
+    if (solNum == null) return null;
 
     // Head Office (7100 to 7199)
-    if (solNum != null && solNum >= 7100 && solNum < 7200) {
-      if (solNum == 7114L || ("Head Office".equalsIgnoreCase(postingRegionName) && "IT".equalsIgnoreCase(jobProfile))
-          || (tenureAs != null && tenureAs.toUpperCase().contains("IT"))) {
-        return "SUPERADMIN_DIT";
-      }
-      if (solNum == 7105L || "RETAIL".equalsIgnoreCase(jobProfile)
-          || (postingSolDesc != null && postingSolDesc.toUpperCase().contains("RETAIL"))) {
-        return "HO_RETAIL";
-      }
-      if (solNum == 7102L || "MARKETING".equalsIgnoreCase(jobProfile)
-          || (postingSolDesc != null && postingSolDesc.toUpperCase().contains("MARKETING"))) {
-        return "HO_MARKETING";
-      }
+    if (solNum >= 7100 && solNum < 7200) {
+      if (solNum == 7114L) return "SUPERADMIN_DIT";
+      if (solNum == 7105L) return "HO_RETAIL";
+      if (solNum == 7102L) return "HO_MARKETING";
       return "HO_ADMIN";
     }
 
-    // Zonal Office (7001 to 7099)
-    if (solNum != null && solNum > 7000 && solNum < 7100) {
+    // Zonal Office (7001 to 7099): zone is mandatory, a maker/checker without a zone would see nothing useful
+    if (solNum > 7000 && solNum < 7100) {
+      if (getResolvedZone() == null) return null;
+      boolean exec = "EXEC".equalsIgnoreCase(cadre) || "EXECUTIVE".equalsIgnoreCase(cadre) || "EX".equalsIgnoreCase(cadre);
       int scale = parseScale(scaleCode);
-      if (scale >= 4 || "EXEC".equalsIgnoreCase(cadre) || "EXECUTIVE".equalsIgnoreCase(cadre) || "EX".equalsIgnoreCase(cadre)) {
-        return "ZO_CHECKER";
-      } else {
-        return "ZO_MAKER";
-      }
+      if (exec || scale >= 4) return "ZO_CHECKER";
+      if (scale >= 1) return "ZO_MAKER";   // Scale 1-3 officers
+      return null;                          // scale 0 / blank / unknown (clerical, subordinate staff): no access
     }
 
-    // Default by scale
-    int scale = parseScale(scaleCode);
-    return scale >= 4 ? "ZO_CHECKER" : "ZO_MAKER";
+    return null;
   }
 
   /**
@@ -114,7 +97,7 @@ public class HrmsUserProfile implements Serializable {
   }
 
   private int parseScale(String code) {
-    if (code == null) return 1;
+    if (code == null || code.trim().isEmpty()) return 0;
     String clean = code.replaceAll("[^0-9]", "");
     if (!clean.isEmpty()) {
       try {
@@ -129,7 +112,7 @@ public class HrmsUserProfile implements Serializable {
     if (upper.contains("III") || upper.endsWith("3")) return 3;
     if (upper.contains("II") || upper.endsWith("2")) return 2;
     if (upper.contains("I") || upper.endsWith("1")) return 1;
-    return 1;
+    return 0;
   }
 
   private String cleanZone(String raw) {

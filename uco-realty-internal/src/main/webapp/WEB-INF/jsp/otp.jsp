@@ -57,6 +57,7 @@
     </div>
 
     <form action="${pageContext.request.contextPath}/otp-verify" method="post" id="otpForm">
+<input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
         <!-- Hidden combined OTP value -->
         <input type="hidden" id="hidden-otp-input" name="otp" required>
 

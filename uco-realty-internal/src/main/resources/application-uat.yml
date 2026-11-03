@@ -24,4 +24,11 @@ spring:
 logging:
   level:
     root: INFO
-    in.co.ucobank.ucorealty: INFO
+    com.ucorealty: INFO
+
+# UAT reads test employees from the UAT HRMS tables (see db_migrations/05_UAT_TEST_EMPLOYEES.sql); no built-in test users.
+uco:
+  hrms:
+    mode: bank
+  sso:
+    dev-login-enabled: false

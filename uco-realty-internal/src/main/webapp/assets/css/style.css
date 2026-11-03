@@ -774,22 +774,6 @@ a:hover {
   border-color: var(--uco-navy);
 }
 
-.sso-tab-btn {
-  border: none;
-  background: transparent;
-  padding: 8px 16px;
-  font-weight: 600;
-  font-size: 14px;
-  color: var(--uco-gray-muted);
-  border-bottom: 3px solid transparent;
-  cursor: pointer;
-}
-
-.sso-tab-btn.active {
-  color: var(--uco-navy);
-  border-bottom: 3px solid var(--uco-navy);
-}
-
 /* ==========================================================================
    Error Page Layout (BranchRecordMaintainance standard)
    ========================================================================== */

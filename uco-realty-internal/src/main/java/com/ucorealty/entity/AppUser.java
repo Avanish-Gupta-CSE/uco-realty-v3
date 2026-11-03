@@ -13,9 +13,6 @@ public class AppUser {
   @Column(nullable = false, unique = true, length = 50)
   public String username;
 
-  @Column(name = "password_hash", nullable = false)
-  public String passwordHash;
-
   @Column(nullable = false, length = 30)
   public String role; // SUPERADMIN_DIT, HO_MARKETING, HO_RETAIL, ZO_MAKER, ZO_CHECKER, CALL_CENTRE
 
@@ -36,8 +33,6 @@ public class AppUser {
   public void setId(Long id) { this.id = id; }
   public String getUsername() { return username; }
   public void setUsername(String username) { this.username = username; }
-  public String getPasswordHash() { return passwordHash; }
-  public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
   public String getRole() { return role; }
   public void setRole(String role) { this.role = role; }
   public String getZone() { return zone; }

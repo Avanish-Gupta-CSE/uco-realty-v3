@@ -16,3 +16,21 @@ spring:
     properties:
       hibernate:
         format_sql: false
+
+# ---- Local development only (never deploy with this profile) ----
+server:
+  servlet:
+    session:
+      cookie:
+        secure: false
+
+sso:
+  encryption:
+    key: "${SSO_ENCRYPTION_KEY:VUNPQkFOS1NTT0tFWTIwMjYhU0VDUkVUIzEyOEJJVFM=}"
+    iv: "${SSO_ENCRYPTION_IV:MDEyMzQ1Njc4OWFiY2RlZg==}"
+
+uco:
+  hrms:
+    mode: local
+  sso:
+    dev-login-enabled: true

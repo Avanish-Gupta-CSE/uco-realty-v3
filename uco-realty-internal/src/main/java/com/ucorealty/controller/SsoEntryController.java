@@ -26,7 +26,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import java.time.LocalDateTime;
 import java.util.Collections;
-import java.util.List;
 
 /**
  * UCO Bank Corporate Intranet Single Sign-On (SSO) Entry Controller.
@@ -38,11 +37,16 @@ public class SsoEntryController {
 
   private static final Logger logger = LoggerFactory.getLogger(SsoEntryController.class);
 
-  @Value("${sso.encryption.key:${getValue.key:VUNPQkFOS1NTT0tFWTIwMjYhU0VDUkVUIzEyOEJJVFM=}}")
+  // No defaults on purpose: the application must refuse to start without the bank's SSO secrets.
+  @Value("${sso.encryption.key}")
   private String encryptionKey;
 
-  @Value("${sso.encryption.iv:MDEyMzQ1Njc4OWFiY2RlZg==}")
+  @Value("${sso.encryption.iv:}")
   private String encryptionIv;
+
+  // Local/UAT-only conveniences (plain /sso handoff, app-issued OTP, test-user picker). Always false in prod.
+  @Value("${uco.sso.dev-login-enabled:false}")
+  private boolean devLoginEnabled;
 
   @Value("${app.redirect.url:/admin/projects}")
   private String redirectUrl;
@@ -90,11 +94,11 @@ public class SsoEntryController {
     try {
       String normalized = rawToken.replaceAll("\\s+", "+");
       String decrypted = SsoCryptoUtil.decryptPayload(normalized, encryptionKey, encryptionIv);
-      logger.info("[UCO SSO /entry] Successfully decrypted SSO token payload: {}", decrypted);
 
       SsoCryptoUtil.SsoAuthInfo authInfo = SsoCryptoUtil.parseAuthInfo(decrypted);
       if (authInfo == null || authInfo.getEmpNo() == null || authInfo.getEmpNo().trim().isEmpty()) {
-        logger.warn("[UCO SSO /entry] Decrypted payload missing employee identifier: {}", decrypted);
+        logger.warn("[UCO SSO /entry] Decrypted payload missing employee identifier");
+        auditService.logLoginAttempt("UNKNOWN", extractClientIp(request), false, "SSO token decrypted but has no employee id");
         return "redirect:/login?error=invalid_token";
       }
 
@@ -103,6 +107,7 @@ public class SsoEntryController {
 
     } catch (Exception e) {
       logger.error("[UCO SSO /entry] Decryption failed: {}", e.getMessage());
+      auditService.logLoginAttempt("UNKNOWN", extractClientIp(request), false, "SSO token could not be decrypted");
       return "redirect:/login?error=sso_failed";
     }
   }
@@ -130,6 +135,13 @@ public class SsoEntryController {
       return entryPoint(null, null, token, request, null);
     }
 
+    // A plain ?emp_id= URL carries no proof of identity. It exists for local/UAT testing only.
+    if (!devLoginEnabled) {
+      logger.warn("[UCO SSO /sso] Plain employee-id handoff rejected (dev login disabled)");
+      auditService.logLoginAttempt("UNKNOWN", extractClientIp(request), false, "Plain /sso handoff rejected in this environment");
+      return "redirect:/login?error=sso_failed";
+    }
+
     String effectiveEmpId = (empId != null && !empId.trim().isEmpty()) ? empId : empno;
     String effectiveSolId = (solId != null && !solId.trim().isEmpty()) ? solId : sol;
 
@@ -148,15 +160,24 @@ public class SsoEntryController {
     HrmsUserProfile profile = hrmsService.fetchUserProfile(empId);
     if (profile == null || !profile.isActive()) {
       logger.warn("[UCO SSO] Employee record {} could not be verified in HRMS.", empId);
+      auditService.logLoginAttempt(empId, extractClientIp(request), false, loginMechanism + " - employee not found/inactive in HRMS");
       return "redirect:/error-page?reason=invalid_employee";
     }
 
-    if (solId != null && !solId.trim().isEmpty()) {
+    // Role and zone come from the HRMS posting, never from the URL. Only local/UAT test handoffs may override the SOL.
+    if (devLoginEnabled && solId != null && !solId.trim().isEmpty()) {
       profile.setPostingSolId(solId.trim());
     }
 
+    if (profile.getResolvedRole() == null) {
+      logger.warn("[UCO SSO] Employee {} (SOL {}) has no role in this portal.", profile.getEmpNo(), profile.getPostingSolId());
+      auditService.logLoginAttempt(empId, extractClientIp(request), false,
+          loginMechanism + " - not authorised for this portal (SOL " + profile.getPostingSolId() + ")");
+      return "redirect:/error-page?reason=not_authorized";
+    }
+
     AppUser appUser = hrmsService.syncAppUser(profile);
-    HttpSession session = request.getSession(true);
+    HttpSession session = freshSession(request);
 
     UserDetails userDetails = new User(
         appUser.username,
@@ -189,8 +210,7 @@ public class SsoEntryController {
     if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getName())) {
       return "redirect:/admin/projects";
     }
-    List<HrmsUserProfile> sampleUsers = hrmsService.listAllDirectoryEmployees();
-    model.addAttribute("sampleUsers", sampleUsers);
+    model.addAttribute("devLogin", devLoginEnabled);
     return "login";
   }
 
@@ -200,6 +220,9 @@ public class SsoEntryController {
   @PostMapping("/sso/generate-otp")
   public String generateOtp(@RequestParam String empId,
                             HttpServletRequest request) {
+    if (!devLoginEnabled) {
+      return "redirect:/login?error=sso_failed";
+    }
     if (empId == null || empId.trim().isEmpty()) {
       return "redirect:/login?error=invalid_employee";
     }
@@ -229,7 +252,7 @@ public class SsoEntryController {
   @GetMapping("/otp")
   public String otpPage(HttpServletRequest request, Model model) {
     HttpSession session = request.getSession(false);
-    if (session == null || session.getAttribute("PENDING_OTP_EMP_ID") == null) {
+    if (!devLoginEnabled || session == null || session.getAttribute("PENDING_OTP_EMP_ID") == null) {
       return "redirect:/login";
     }
 
@@ -248,7 +271,7 @@ public class SsoEntryController {
   public String verifyOtp(@RequestParam String otp,
                           HttpServletRequest request) {
     HttpSession session = request.getSession(false);
-    if (session == null || session.getAttribute("PENDING_OTP_EMP_ID") == null) {
+    if (!devLoginEnabled || session == null || session.getAttribute("PENDING_OTP_EMP_ID") == null) {
       return "redirect:/login";
     }
 
@@ -260,11 +283,12 @@ public class SsoEntryController {
     }
 
     HrmsUserProfile profile = hrmsService.fetchUserProfile(empId);
-    if (profile == null) {
+    if (profile == null || profile.getResolvedRole() == null) {
       return "redirect:/login?error=invalid_employee";
     }
 
     AppUser appUser = hrmsService.syncAppUser(profile);
+    session = freshSession(request);
 
     UserDetails userDetails = new User(
         appUser.username,
@@ -304,6 +328,8 @@ public class SsoEntryController {
     String errorMessage = "Access Denied: Missing Single Sign-On parameters. Please access the application through the authorized UCO Bank portal.";
     if ("unauthorized".equals(reason)) {
       errorMessage = "Security Authentication Failure: Invalid or unauthorized SSO token. Direct URL browsing is strictly prohibited.";
+    } else if ("not_authorized".equals(reason)) {
+      errorMessage = "Access Denied: Your posting (SOL) does not have access to the Realty portal. Please contact DIT SWDC Cell if you need access.";
     } else if ("invalid_employee".equals(reason)) {
       errorMessage = "Employee Authorization Failure: Your employee record could not be verified in the bank HRMS database. Please contact DIT SWDC Cell.";
     }
@@ -323,6 +349,17 @@ public class SsoEntryController {
     session.setAttribute("CADRE", profile.getCadre());
     session.setAttribute("SCALE", profile.getScaleCode());
     session.setAttribute("login_time", LocalDateTime.now());
+  }
+
+  /**
+   * New session id for every login (prevents session fixation); pre-login attributes such as the
+   * pending OTP employee are carried over by changeSessionId().
+   */
+  private HttpSession freshSession(HttpServletRequest request) {
+    if (request.getSession(false) != null) {
+      request.changeSessionId();
+    }
+    return request.getSession(true);
   }
 
   private String maskMobile(String mobile) {

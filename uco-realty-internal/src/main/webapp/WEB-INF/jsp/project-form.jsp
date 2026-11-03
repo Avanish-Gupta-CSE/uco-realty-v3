@@ -30,6 +30,7 @@
         </c:if>
 
         <form action="${pageContext.request.contextPath}/admin/projects/save" method="post" enctype="multipart/form-data" id="projectForm" data-context-path="${pageContext.request.contextPath}">
+<input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
             <c:if test="${isEdit}">
                 <input type="hidden" id="hidden-project-id" name="id" value="${project.id}">
             </c:if>

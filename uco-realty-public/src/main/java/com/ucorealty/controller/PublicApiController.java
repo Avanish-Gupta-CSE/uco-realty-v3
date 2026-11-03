@@ -2,13 +2,10 @@ package com.ucorealty.controller;
 
 import com.ucorealty.dto.LeadRequest;
 import com.ucorealty.entity.Lead;
-import com.ucorealty.entity.LeadTransferLog;
 import com.ucorealty.entity.Project;
-import com.ucorealty.repository.LeadRepository;
-import com.ucorealty.repository.LeadTransferLogRepository;
 import com.ucorealty.repository.ProjectImageRepository;
+import com.ucorealty.service.LeadService;
 import com.ucorealty.service.ProjectService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -22,16 +19,12 @@ import java.util.stream.Collectors;
 public class PublicApiController {
 
   private final ProjectService projects;
-  private final LeadRepository leads;
-  private final LeadTransferLogRepository transfers;
+  private final LeadService leadService;
   private final ProjectImageRepository imageRepo;
-  private static final ObjectMapper JSON = new ObjectMapper();
 
-  public PublicApiController(ProjectService projects, LeadRepository leads,
-                             LeadTransferLogRepository transfers, ProjectImageRepository imageRepo) {
+  public PublicApiController(ProjectService projects, LeadService leadService, ProjectImageRepository imageRepo) {
     this.projects = projects;
-    this.leads = leads;
-    this.transfers = transfers;
+    this.leadService = leadService;
     this.imageRepo = imageRepo;
   }
 
@@ -158,43 +151,15 @@ public class PublicApiController {
 
   @PostMapping("/leads")
   public Map<String, Object> createLead(@Valid @RequestBody LeadRequest req) {
-    String status = (req.status == null || req.status.trim().isEmpty()) ? "Visitor" : req.status.trim();
-    if ("VISITOR".equalsIgnoreCase(status) || "Visitor".equalsIgnoreCase(status)) {
-      status = "Visitor";
-    } else if ("SUCCESSFUL_APPLIED".equalsIgnoreCase(status) || "Showed interest in Home Loan".equalsIgnoreCase(status)) {
-      status = "Showed interest in Home Loan";
-    } else {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid lead status");
-    }
+    String status = LeadService.normalizeStatus(req.status == null || req.status.trim().isEmpty() ? LeadService.STATUS_VISITOR : req.status);
+    if (status == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid lead status");
     String projectId = (req.projectId == null || req.projectId.trim().isEmpty()) ? null : req.projectId.trim();
-    if ("Showed interest in Home Loan".equals(status)) {
+    if (LeadService.STATUS_INTEREST.equals(status)) {
       if (projectId == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A project is required to apply");
-      projects.publicById(projectId);
     } else {
       projectId = null;
     }
-
-    Lead l = new Lead();
-    l.customerName = req.name.trim();
-    l.phone = req.phone;
-    l.projectId = projectId;
-    l.branchSelected = req.branchSelected;
-    l.status = status;
-    leads.save(l);
-
-    LeadTransferLog t = new LeadTransferLog();
-    t.leadId = l.id;
-    Map<String, Object> payload = new LinkedHashMap<>();
-    payload.put("name", l.customerName);
-    payload.put("phone", l.phone);
-    payload.put("projectId", l.projectId);
-    payload.put("branch", l.branchSelected);
-    try {
-      t.payload = JSON.writeValueAsString(payload);
-    } catch (Exception e) {
-      throw new IllegalStateException("Could not build lead payload", e);
-    }
-    transfers.save(t);
+    Lead l = leadService.capture(req.name, req.phone, projectId, req.branchSelected, status);
 
     Map<String, Object> res = new LinkedHashMap<>();
     res.put("leadId", l.id);

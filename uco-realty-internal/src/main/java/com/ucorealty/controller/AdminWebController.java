@@ -10,7 +10,6 @@ import com.ucorealty.repository.LeadRepository;
 import com.ucorealty.repository.ProjectImageRepository;
 import com.ucorealty.repository.ProjectRepository;
 import com.ucorealty.repository.UserRepository;
-import com.ucorealty.security.PasswordPolicy;
 import com.ucorealty.security.RoleCheck;
 import com.ucorealty.service.AuditService;
 import com.ucorealty.service.MasterDataService;
@@ -19,7 +18,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -42,25 +40,15 @@ public class AdminWebController {
   private final UserRepository userRepo;
   private final LeadRepository leadRepo;
   private final MasterDataService masterDataService;
-  private final PasswordEncoder passwordEncoder;
   private final LeadExportController leadExportController;
   private final AuditService auditService;
   private final com.ucorealty.hrms.HrmsService hrmsService;
-
-  public AdminWebController(ProjectService projectService, ProjectRepository projectRepo,
-                            ProjectImageRepository imageRepo, UserRepository userRepo,
-                            LeadRepository leadRepo, MasterDataService masterDataService,
-                            PasswordEncoder passwordEncoder, LeadExportController leadExportController,
-                            AuditService auditService) {
-    this(projectService, projectRepo, imageRepo, userRepo, leadRepo, masterDataService,
-         passwordEncoder, leadExportController, auditService, null);
-  }
 
   @org.springframework.beans.factory.annotation.Autowired
   public AdminWebController(ProjectService projectService, ProjectRepository projectRepo,
                             ProjectImageRepository imageRepo, UserRepository userRepo,
                             LeadRepository leadRepo, MasterDataService masterDataService,
-                            PasswordEncoder passwordEncoder, LeadExportController leadExportController,
+                            LeadExportController leadExportController,
                             AuditService auditService,
                             @org.springframework.beans.factory.annotation.Autowired(required = false) com.ucorealty.hrms.HrmsService hrmsService) {
     this.projectService = projectService;
@@ -69,7 +57,6 @@ public class AdminWebController {
     this.userRepo = userRepo;
     this.leadRepo = leadRepo;
     this.masterDataService = masterDataService;
-    this.passwordEncoder = passwordEncoder;
     this.leadExportController = leadExportController;
     this.auditService = auditService;
     this.hrmsService = hrmsService;
@@ -453,42 +440,6 @@ public class AdminWebController {
                           Authentication auth) throws IOException {
     auditService.logActivity(auth.getName(), "EXPORT_LEADS", "LEAD", "EXCEL", "Exported leads to Excel");
     leadExportController.export(from, to, status, search, res, auth);
-  }
-
-  // --- Password Self Change ---
-
-  @GetMapping("/change-password")
-  public String changePasswordPage() {
-    return "change-password";
-  }
-
-  @PostMapping("/change-password")
-  public String changePassword(@RequestParam String currentPassword,
-                               @RequestParam String newPassword,
-                               Authentication auth,
-                               RedirectAttributes redirectAttrs) {
-    try {
-      AppUser u = userRepo.findByUsername(auth.getName()).orElseThrow(() -> new IllegalStateException("User not found"));
-      if (!passwordEncoder.matches(currentPassword, u.passwordHash)) {
-        redirectAttrs.addFlashAttribute("error", "Current password is incorrect.");
-        return "redirect:/admin/change-password";
-      }
-      if (currentPassword.equals(newPassword)) {
-        redirectAttrs.addFlashAttribute("error", "New password must be different from current password.");
-        return "redirect:/admin/change-password";
-      }
-      PasswordPolicy.check(newPassword, u.username);
-      u.passwordHash = passwordEncoder.encode(newPassword);
-      userRepo.save(u);
-
-      auditService.logActivity(auth.getName(), "CHANGE_PASSWORD", "USER", auth.getName(), "User changed account password");
-
-      redirectAttrs.addFlashAttribute("message", "Password changed successfully.");
-      return "redirect:/admin/projects";
-    } catch (Exception e) {
-      redirectAttrs.addFlashAttribute("error", "Password change failed: " + e.getMessage());
-      return "redirect:/admin/change-password";
-    }
   }
 
   // --- System Audit Trails & Activity Logs (Strictly Superadmin for DIT only) ---

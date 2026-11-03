@@ -29,7 +29,7 @@
 
     <c:if test="${param.error != null && param.error != 'invalid_employee'}">
         <div class="alert alert-danger py-2 small mb-3" id="login-error-alert">
-            Invalid credentials or inactive account. Please check details and try again.
+            Single Sign-On could not be completed. Please sign in again through the UCO Bank portal or with your Employee ID.
         </div>
     </c:if>
 
@@ -39,19 +39,18 @@
         </div>
     </c:if>
 
-    <!-- Tab Selection -->
-    <div class="d-flex border-bottom mb-4 justify-content-center" id="sso-tab-container">
-        <button type="button" class="sso-tab-btn active" id="tab-btn-sso">
-            Employee SSO (OTP)
-        </button>
-        <button type="button" class="sso-tab-btn" id="tab-btn-password">
-            Direct Password Sign-In
-        </button>
-    </div>
+    <c:if test="${!devLogin}">
+        <div class="alert alert-info py-3 small" id="alert-sso-portal-only">
+            <strong>Single Sign-On required.</strong> Please open the Realty portal from the UCO Bank intranet
+            portal. Direct sign-in on this page is not available.
+        </div>
+    </c:if>
 
-    <!-- Pane 1: Employee SSO (OTP Flow) -->
+    <c:if test="${devLogin}">
+    <!-- Employee SSO (OTP Flow) -->
     <div id="pane-sso" class="tab-pane-content">
         <form action="${pageContext.request.contextPath}/sso/generate-otp" method="post" id="ssoOtpForm">
+<input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
             <div class="mb-3">
                 <label for="empId" class="form-label fw-semibold small" id="label-emp-id">
                     Employee ID (Emp No)
@@ -99,24 +98,7 @@
         </form>
     </div>
 
-    <!-- Pane 2: Direct Password Sign-In (Legacy & Automated Scripts) -->
-    <div id="pane-password" class="tab-pane-content d-none">
-        <form action="${pageContext.request.contextPath}/login" method="post" id="loginForm">
-            <div class="mb-3">
-                <label for="username" class="form-label fw-semibold small" id="label-username">Username or Emp No</label>
-                <input type="text" id="username" name="username" class="form-control" placeholder="e.g. 100001 or dit.superadmin" required>
-            </div>
-
-            <div class="mb-3">
-                <label for="password" class="form-label fw-semibold small" id="label-password">Password</label>
-                <input type="password" id="password" name="password" class="form-control" placeholder="Enter password (e.g. Password@123)" required>
-            </div>
-
-            <button type="submit" class="btn btn-primary w-100 py-2 mt-2" id="btn-login-submit">
-                Sign In with Password
-            </button>
-        </form>
-    </div>
+    </c:if>
 
     <div class="mt-4 text-center" id="wrap-back-catalog">
         <a href="${pageContext.request.contextPath}/projects" class="login-back-link" id="link-back-catalog">

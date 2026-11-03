@@ -37,7 +37,10 @@
                 <sec:authorize access="isAuthenticated()">
                     <span id="user-info-text">Signed in as: <strong id="user-username"><sec:authentication property="name"/></strong></span>
                     <span class="user-badge" id="badge-user-role"><sec:authentication property="principal.authorities"/></span>
-                    <a href="${pageContext.request.contextPath}/logout" class="btn btn-danger btn-sm" id="btn-nav-logout">Logout</a>
+                    <form action="${pageContext.request.contextPath}/logout" method="post" class="d-inline m-0" id="form-nav-logout">
+                        <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+                        <button type="submit" class="btn btn-danger btn-sm" id="btn-nav-logout">Logout</button>
+                    </form>
                 </sec:authorize>
             </div>
         </div>

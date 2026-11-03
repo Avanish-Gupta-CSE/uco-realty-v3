@@ -109,13 +109,13 @@
                                                         <c:when test="${log.action == 'APPROVE' or log.action == 'PUBLISH'}">
                                                             <span class="badge bg-success" id="badge-act-action-${status.index}">${log.action}</span>
                                                         </c:when>
-                                                        <c:when test="${log.action == 'REJECT' or log.action == 'DELETE_USER'}">
+                                                        <c:when test="${log.action == 'REJECT'}">
                                                             <span class="badge bg-danger" id="badge-act-action-${status.index}">${log.action}</span>
                                                         </c:when>
-                                                        <c:when test="${log.action == 'CREATE' or log.action == 'CREATE_USER' or log.action == 'SUBMIT'}">
+                                                        <c:when test="${log.action == 'CREATE' or log.action == 'SUBMIT'}">
                                                             <span class="badge bg-primary" id="badge-act-action-${status.index}">${log.action}</span>
                                                         </c:when>
-                                                        <c:when test="${log.action == 'UPDATE' or log.action == 'RESET_PASSWORD' or log.action == 'CHANGE_PASSWORD'}">
+                                                        <c:when test="${log.action == 'UPDATE'}">
                                                             <span class="badge bg-warning text-dark" id="badge-act-action-${status.index}">${log.action}</span>
                                                         </c:when>
                                                         <c:otherwise>

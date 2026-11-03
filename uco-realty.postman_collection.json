@@ -1,127 +1,147 @@
 {
   "info": {
-    "name": "UCO Realty",
-    "description": "Public (internet) + Admin (intranet) APIs. Login first - token auto-saved to {{token}}. Set the username and password variables to your own test account first.",
+    "name": "UCO Realty - public API",
+    "description": "Read-only customer API of uco-realty-public (no login). Staff features use the browser session through bank SSO and are not part of this collection.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "baseUrl", "value": "http://localhost:8080" },
-    { "key": "username", "value": "" },
-    { "key": "password", "value": "" },
-    { "key": "newUserPassword", "value": "" },
-    { "key": "token", "value": "" },
-    { "key": "projectId", "value": "" }
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "projectId",
+      "value": ""
+    }
   ],
   "item": [
     {
-      "name": "Auth",
-      "item": [
-        {
-          "name": "Login (change username per role)",
-          "request": {
-            "method": "POST",
-            "url": "{{baseUrl}}/api/auth/login",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\"username\":\"{{username}}\",\"password\":\"{{password}}\"}" }
-          },
-          "event": [
+      "name": "List approved projects",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/public/projects?state=&city=&search=&page=0&size=8",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "public",
+            "projects"
+          ],
+          "query": [
             {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "var j = pm.response.json();",
-                  "pm.collectionVariables.set('token', j.token);",
-                  "console.log('role: ' + j.role);"
-                ]
-              }
+              "key": "state",
+              "value": ""
+            },
+            {
+              "key": "city",
+              "value": ""
+            },
+            {
+              "key": "search",
+              "value": ""
+            },
+            {
+              "key": "page",
+              "value": "0"
+            },
+            {
+              "key": "size",
+              "value": "8"
             }
           ]
-        },
-        { "name": "Me", "request": { "method": "GET", "url": "{{baseUrl}}/api/auth/me", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }] } }
-      ]
-    },
-    {
-      "name": "Public (no auth)",
-      "item": [
-        { "name": "List projects", "request": { "method": "GET", "url": "{{baseUrl}}/api/public/projects?state=&city=&search=&page=0&size=8" } },
-        { "name": "Meta (states/cities)", "request": { "method": "GET", "url": "{{baseUrl}}/api/public/meta" } },
-        { "name": "Project detail", "request": { "method": "GET", "url": "{{baseUrl}}/api/public/projects/{{projectId}}" } },
-        {
-          "name": "Create lead",
-          "request": {
-            "method": "POST",
-            "url": "{{baseUrl}}/api/public/leads",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\"name\":\"Test Customer\",\"phone\":\"9876543210\",\"projectId\":\"{{projectId}}\",\"branchSelected\":\"Pune Camp\"}" }
-          }
         }
-      ]
+      }
     },
     {
-      "name": "Admin projects (maker/checker)",
-      "item": [
-        { "name": "List all", "request": { "method": "GET", "url": "{{baseUrl}}/api/admin/projects", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }] } },
-        {
-          "name": "Create draft (maker)",
-          "request": {
-            "method": "POST",
-            "url": "{{baseUrl}}/api/admin/projects",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\"projectName\":\"Demo Project\",\"stateName\":\"Maharashtra\",\"cityName\":\"Pune\",\"totalInventory\":50,\"unsoldInventory\":20}" }
-          },
-          "event": [{ "listen": "test", "script": { "exec": ["pm.collectionVariables.set('projectId', pm.response.json().id);"] } }]
-        },
-        {
-          "name": "Create + submit in one go (maker)",
-          "request": {
-            "method": "POST",
-            "url": "{{baseUrl}}/api/admin/projects",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\"projectName\":\"Direct Submit\",\"totalInventory\":10,\"unsoldInventory\":5,\"status\":\"PENDING_APPROVAL\"}" }
-          }
-        },
-        { "name": "Submit (maker)", "request": { "method": "POST", "url": "{{baseUrl}}/api/admin/projects/{{projectId}}/submit", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }] } },
-        {
-          "name": "Approve (checker)",
-          "request": {
-            "method": "POST",
-            "url": "{{baseUrl}}/api/admin/projects/{{projectId}}/approve",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\"comment\":\"RERA verified\"}" }
-          }
-        },
-        {
-          "name": "Reject (checker)",
-          "request": {
-            "method": "POST",
-            "url": "{{baseUrl}}/api/admin/projects/{{projectId}}/reject",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\"comment\":\"docs missing\"}" }
-          }
-        },
-        { "name": "Upload files (maker, form-data key=files)", "request": { "method": "POST", "url": "{{baseUrl}}/api/admin/projects/{{projectId}}/files", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "body": { "mode": "formdata", "formdata": [{ "key": "files", "type": "file", "src": [] }] } } }
-      ]
-    },
-    {
-      "name": "Users (DIT/HO)",
-      "item": [
-        { "name": "List", "request": { "method": "GET", "url": "{{baseUrl}}/api/admin/users", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }] } },
-        {
-          "name": "Create",
-          "request": {
-            "method": "POST",
-            "url": "{{baseUrl}}/api/admin/users",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\"username\":\"new.user.id\",\"password\":\"{{newUserPassword}}\",\"role\":\"ZO_MAKER\",\"zone\":\"Pune Zone\"}" }
-          }
+      "name": "Meta (states and cities that have projects)",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/public/meta",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "public",
+            "meta"
+          ]
         }
-      ]
+      }
     },
     {
-      "name": "Leads export (call centre/HO/DIT)",
-      "item": [
-        { "name": "Download xlsx", "request": { "method": "GET", "url": "{{baseUrl}}/api/admin/leads/export.xlsx", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }] } }
-      ]
+      "name": "Project detail",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/public/projects/{{projectId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "public",
+            "projects",
+            "{{projectId}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Create lead (interest in a project)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Test Customer\",\n  \"phone\": \"9876543210\",\n  \"projectId\": \"{{projectId}}\",\n  \"status\": \"SUCCESSFUL_APPLIED\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/public/leads",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "public",
+            "leads"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Create lead (visitor, no project)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Test Visitor\",\n  \"phone\": \"9876543211\",\n  \"status\": \"VISITOR\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/public/leads",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "public",
+            "leads"
+          ]
+        }
+      }
     }
   ]
 }

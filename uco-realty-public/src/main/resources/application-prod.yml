@@ -1,0 +1,27 @@
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  datasource:
+    url: ${PROD_ORACLE_URL}
+    username: ${PROD_ORACLE_USER}
+    password: ${PROD_ORACLE_PASS}
+    driver-class-name: oracle.jdbc.OracleDriver
+    hikari:
+      pool-name: UcoRealtyPublicProdHikariPool
+      minimum-idle: 5
+      maximum-pool-size: 25
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+
+logging:
+  level:
+    root: WARN
+    com.ucorealty: INFO

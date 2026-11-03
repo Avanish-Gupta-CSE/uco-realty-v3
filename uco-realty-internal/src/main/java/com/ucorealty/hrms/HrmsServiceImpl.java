@@ -6,8 +6,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
@@ -25,17 +23,15 @@ public class HrmsServiceImpl implements HrmsService {
 
   private static final Logger logger = LoggerFactory.getLogger(HrmsServiceImpl.class);
 
-  @Value("${uco.hrms.mode:local}")
+  @Value("${uco.hrms.mode:bank}")
   private String hrmsMode;
 
   private final UserRepository userRepo;
-  private final PasswordEncoder passwordEncoder;
 
   @Autowired(required = false)
   private DataSource dataSource;
 
   private final Map<String, HrmsUserProfile> mockProfiles = new LinkedHashMap<>();
-  private final Map<String, String> aliasMap = new LinkedHashMap<>();
   private final Map<String, OtpEntry> otpStore = new ConcurrentHashMap<>();
 
   private static class OtpEntry {
@@ -47,16 +43,23 @@ public class HrmsServiceImpl implements HrmsService {
     }
   }
 
-  public HrmsServiceImpl(UserRepository userRepo, @Lazy PasswordEncoder passwordEncoder) {
+  public HrmsServiceImpl(UserRepository userRepo) {
     this.userRepo = userRepo;
-    this.passwordEncoder = passwordEncoder;
   }
 
   @PostConstruct
   public void init() {
-    initMockProfiles();
-    logger.info("[UCO HRMS] Initialized HRMS Service in '{}' mode with {} directory employee records.",
-        hrmsMode, mockProfiles.size());
+    if (isBankMode()) {
+      logger.info("[UCO HRMS] Initialized in 'bank' mode: employees are read from the HRMS tables only.");
+    } else {
+      initMockProfiles();
+      logger.warn("[UCO HRMS] Initialized in 'local' TEST mode with {} built-in employees. Never use this mode in UAT/production.",
+          mockProfiles.size());
+    }
+  }
+
+  private boolean isBankMode() {
+    return "bank".equalsIgnoreCase(hrmsMode);
   }
 
   private void initMockProfiles() {
@@ -66,7 +69,7 @@ public class HrmsServiceImpl implements HrmsService {
     dit.setJobProfile("IT");
     dit.setMobile("9876543210");
     dit.setEmail("avanish.gupta@uco.bank.in");
-    addMock(dit, "dit.superadmin");
+    addMock(dit);
 
     // 2. Zonal Office Ajmer - Maker (SOL 7015, Scale 2 Officer)
     HrmsUserProfile ajmerMaker = new HrmsUserProfile("200001", "Rajesh Sharma", "7015", "Zonal Office Ajmer",
@@ -74,7 +77,7 @@ public class HrmsServiceImpl implements HrmsService {
     ajmerMaker.setJobProfile("Retail Credit");
     ajmerMaker.setMobile("9812345678");
     ajmerMaker.setEmail("rajesh.sharma@uco.bank.in");
-    addMock(ajmerMaker, "ajmer.maker");
+    addMock(ajmerMaker);
 
     // 3. Zonal Office Ajmer - Checker (SOL 7015, Scale 4 Executive)
     HrmsUserProfile ajmerChecker = new HrmsUserProfile("200002", "Vikram Singh Rathore", "7015", "Zonal Office Ajmer",
@@ -82,7 +85,7 @@ public class HrmsServiceImpl implements HrmsService {
     ajmerChecker.setJobProfile("Zonal Approver");
     ajmerChecker.setMobile("9812345679");
     ajmerChecker.setEmail("vikram.singh@uco.bank.in");
-    addMock(ajmerChecker, "ajmer.checker");
+    addMock(ajmerChecker);
 
     // 4. Zonal Office Bhopal - Maker (SOL 7022, Scale 1 Officer)
     HrmsUserProfile bhopalMaker = new HrmsUserProfile("300001", "Pooja Verma", "7022", "Zonal Office Bhopal",
@@ -90,7 +93,7 @@ public class HrmsServiceImpl implements HrmsService {
     bhopalMaker.setJobProfile("Housing Loans");
     bhopalMaker.setMobile("9823456780");
     bhopalMaker.setEmail("pooja.verma@uco.bank.in");
-    addMock(bhopalMaker, "bhopal.maker");
+    addMock(bhopalMaker);
 
     // 5. Zonal Office Bhopal - Checker (SOL 7022, Scale 5 Executive)
     HrmsUserProfile bhopalChecker = new HrmsUserProfile("300002", "Anand Mishra", "7022", "Zonal Office Bhopal",
@@ -98,7 +101,7 @@ public class HrmsServiceImpl implements HrmsService {
     bhopalChecker.setJobProfile("Zonal Head");
     bhopalChecker.setMobile("9823456781");
     bhopalChecker.setEmail("anand.mishra@uco.bank.in");
-    addMock(bhopalChecker, "bhopal.checker");
+    addMock(bhopalChecker);
 
     // 6. Head Office Retail Banking (SOL 7105)
     HrmsUserProfile hoRetail = new HrmsUserProfile("400001", "Sanjay Mukherjee", "7105", "HO Retail Loan Hub",
@@ -106,7 +109,7 @@ public class HrmsServiceImpl implements HrmsService {
     hoRetail.setJobProfile("RETAIL");
     hoRetail.setMobile("9834567890");
     hoRetail.setEmail("sanjay.mukherjee@uco.bank.in");
-    addMock(hoRetail, "ho.retail");
+    addMock(hoRetail);
 
     // 7. Head Office Marketing (SOL 7102)
     HrmsUserProfile hoMarketing = new HrmsUserProfile("400002", "Sunita Sen", "7102", "HO Marketing & PR",
@@ -114,7 +117,7 @@ public class HrmsServiceImpl implements HrmsService {
     hoMarketing.setJobProfile("MARKETING");
     hoMarketing.setMobile("9834567891");
     hoMarketing.setEmail("sunita.sen@uco.bank.in");
-    addMock(hoMarketing, "ho.marketing");
+    addMock(hoMarketing);
 
     // 8. Head Office Admin (SOL 7101)
     HrmsUserProfile hoAdmin = new HrmsUserProfile("400003", "Debashis Roy", "7101", "HO General Administration",
@@ -122,7 +125,7 @@ public class HrmsServiceImpl implements HrmsService {
     hoAdmin.setJobProfile("ADMIN");
     hoAdmin.setMobile("9834567892");
     hoAdmin.setEmail("debashis.roy@uco.bank.in");
-    addMock(hoAdmin, "ho.admin");
+    addMock(hoAdmin);
 
     // 9. Zonal Office Jaipur - Maker (SOL 7030, Scale 2 Officer)
     HrmsUserProfile jaipurMaker = new HrmsUserProfile("500001", "Neha Patel", "7030", "Zonal Office Jaipur",
@@ -130,7 +133,7 @@ public class HrmsServiceImpl implements HrmsService {
     jaipurMaker.setJobProfile("Retail Credit");
     jaipurMaker.setMobile("9845678901");
     jaipurMaker.setEmail("neha.patel@uco.bank.in");
-    addMock(jaipurMaker, "jaipur.maker");
+    addMock(jaipurMaker);
 
     // 10. Zonal Office Jaipur - Checker (SOL 7030, Scale 4 Executive)
     HrmsUserProfile jaipurChecker = new HrmsUserProfile("500002", "Mahendra Choudhary", "7030", "Zonal Office Jaipur",
@@ -138,7 +141,7 @@ public class HrmsServiceImpl implements HrmsService {
     jaipurChecker.setJobProfile("Zonal Approver");
     jaipurChecker.setMobile("9845678902");
     jaipurChecker.setEmail("m.choudhary@uco.bank.in");
-    addMock(jaipurChecker, "jaipur.checker");
+    addMock(jaipurChecker);
 
     // 11. Bank Production Staff (SOL 7115, Scale 3, SWDC - from bank image IMG_1026/1032)
     HrmsUserProfile swdcStaff = new HrmsUserProfile("61801", "Bank SWDC Developer", "7115", "SWDC Head Office",
@@ -146,14 +149,11 @@ public class HrmsServiceImpl implements HrmsService {
     swdcStaff.setJobProfile("SOFTWARE DEVELOPMENT CELL");
     swdcStaff.setMobile("9811122233");
     swdcStaff.setEmail("staff.61801@uco.bank.in");
-    addMock(swdcStaff, "swdc.developer");
+    addMock(swdcStaff);
   }
 
-  private void addMock(HrmsUserProfile profile, String alias) {
+  private void addMock(HrmsUserProfile profile) {
     mockProfiles.put(profile.getEmpNo(), profile);
-    if (alias != null) {
-      aliasMap.put(alias.toLowerCase(), profile.getEmpNo());
-    }
   }
 
   @Override
@@ -163,18 +163,10 @@ public class HrmsServiceImpl implements HrmsService {
     }
     String normalized = empId.trim();
 
-    if (aliasMap.containsKey(normalized.toLowerCase())) {
-      normalized = aliasMap.get(normalized.toLowerCase());
+    if (isBankMode()) {
+      // Bank mode never falls back to built-in test employees.
+      return fetchFromBankDatabase(normalized);
     }
-
-    if ("bank".equalsIgnoreCase(hrmsMode)) {
-      HrmsUserProfile dbProfile = fetchFromBankDatabase(normalized);
-      if (dbProfile != null) {
-        return dbProfile;
-      }
-      logger.warn("[UCO HRMS] Employee {} not found in Bank database, falling back to cache/mock.", normalized);
-    }
-
     return mockProfiles.get(normalized);
   }
 
@@ -191,9 +183,10 @@ public class HrmsServiceImpl implements HrmsService {
       return null;
     }
 
-    String otp = "bank".equalsIgnoreCase(hrmsMode)
-        ? String.format("%06d", new Random().nextInt(1000000))
-        : "123456";
+    if (isBankMode()) {
+      return null; // The bank SSO portal performs the OTP step; this application never issues OTPs in bank mode.
+    }
+    String otp = "123456";
 
     otpStore.put(p.getEmpNo(), new OtpEntry(otp, Instant.now().plusSeconds(300)));
 
@@ -220,7 +213,10 @@ public class HrmsServiceImpl implements HrmsService {
       return false;
     }
 
-    if (!"bank".equalsIgnoreCase(hrmsMode) && "123456".equals(otp.trim())) {
+    if (isBankMode()) {
+      return false;
+    }
+    if ("123456".equals(otp.trim())) {
       return true;
     }
 
@@ -243,7 +239,7 @@ public class HrmsServiceImpl implements HrmsService {
 
   @Override
   public List<HrmsUserProfile> listAllDirectoryEmployees() {
-    return new ArrayList<>(mockProfiles.values());
+    return isBankMode() ? new ArrayList<>() : new ArrayList<>(mockProfiles.values());
   }
 
   @Override
@@ -257,7 +253,6 @@ public class HrmsServiceImpl implements HrmsService {
     AppUser user = userRepo.findByUsername(profile.getEmpNo()).orElseGet(() -> {
       AppUser u = new AppUser();
       u.username = profile.getEmpNo();
-      u.passwordHash = passwordEncoder != null ? passwordEncoder.encode("Password@123") : "Password@123";
       u.isActive = 1;
       return u;
     });
@@ -267,23 +262,6 @@ public class HrmsServiceImpl implements HrmsService {
     user.branch = branch;
     user.isActive = 1;
     AppUser saved = userRepo.save(user);
-
-    for (Map.Entry<String, String> entry : aliasMap.entrySet()) {
-      if (entry.getValue().equals(profile.getEmpNo())) {
-        String aliasUsername = entry.getKey();
-        AppUser aliasUser = userRepo.findByUsername(aliasUsername).orElseGet(() -> {
-          AppUser u = new AppUser();
-          u.username = aliasUsername;
-          u.passwordHash = passwordEncoder != null ? passwordEncoder.encode("Password@123") : "Password@123";
-          return u;
-        });
-        aliasUser.role = resolvedRole;
-        aliasUser.zone = resolvedZone;
-        aliasUser.branch = branch;
-        aliasUser.isActive = 1;
-        userRepo.save(aliasUser);
-      }
-    }
 
     return saved;
   }
@@ -331,39 +309,51 @@ public class HrmsServiceImpl implements HrmsService {
           }
         }
       } catch (SQLException e) {
-        logger.debug("[UCO HRMS] Query attempt failed on {}: {}", sql, e.getMessage());
+        logger.warn("[UCO HRMS] HRMS query failed ({}): {}", e.getErrorCode(), e.getMessage());
       }
     }
 
     return null;
   }
 
-  private void enrichTenureAndJobProfile(Connection conn, HrmsUserProfile p) {
-    String tenureSql = "SELECT POSTING_SOL, SCALE_CODE, TENURE_AS FROM hrms_dba.employee_tenure " +
-                       "WHERE EMPNO = ? AND SYSDATE BETWEEN EFF_FROM_DATE AND EFF_TO_DATE AND STATUS_FLAG = 'V'";
-    try (PreparedStatement ps = conn.prepareStatement(tenureSql)) {
-      ps.setString(1, p.getEmpNo());
-      try (ResultSet rs = ps.executeQuery()) {
-        if (rs.next()) {
-          String sol = rs.getString("POSTING_SOL");
-          String scale = rs.getString("SCALE_CODE");
-          String tenure = rs.getString("TENURE_AS");
-          if (sol != null && !sol.isEmpty()) p.setPostingSolId(sol);
-          if (scale != null && !scale.isEmpty()) p.setScaleCode(scale);
-          if (tenure != null && !tenure.isEmpty()) p.setTenureAs(tenure);
-        }
-      }
-    } catch (Exception ignored) {}
+  private static final String[] TABLE_PREFIXES = {"", "hrms_dba."};
 
-    String jobSql = "SELECT JOB_PROFILE FROM hrms_dba.employee_job_profile " +
-                    "WHERE EMPNO = ? AND SYSDATE BETWEEN EFF_FROM_DATE AND EFF_TO_DATE AND STATUS_FLAG = 'V'";
-    try (PreparedStatement ps = conn.prepareStatement(jobSql)) {
-      ps.setString(1, p.getEmpNo());
-      try (ResultSet rs = ps.executeQuery()) {
-        if (rs.next()) {
-          p.setJobProfile(rs.getString("JOB_PROFILE"));
+  private void enrichTenureAndJobProfile(Connection conn, HrmsUserProfile p) {
+    for (String prefix : TABLE_PREFIXES) {
+      String tenureSql = "SELECT POSTING_SOL, SCALE_CODE, TENURE_AS FROM " + prefix + "employee_tenure " +
+                         "WHERE EMPNO = ? AND SYSDATE BETWEEN EFF_FROM_DATE AND EFF_TO_DATE AND STATUS_FLAG = 'V'";
+      try (PreparedStatement ps = conn.prepareStatement(tenureSql)) {
+        ps.setString(1, p.getEmpNo());
+        try (ResultSet rs = ps.executeQuery()) {
+          if (rs.next()) {
+            String sol = rs.getString("POSTING_SOL");
+            String scale = rs.getString("SCALE_CODE");
+            String tenure = rs.getString("TENURE_AS");
+            if (sol != null && !sol.isEmpty()) p.setPostingSolId(sol);
+            if (scale != null && !scale.isEmpty()) p.setScaleCode(scale);
+            if (tenure != null && !tenure.isEmpty()) p.setTenureAs(tenure);
+          }
+          break;
         }
+      } catch (SQLException e) {
+        logger.debug("[UCO HRMS] Tenure lookup on '{}employee_tenure' failed: {}", prefix, e.getMessage());
       }
-    } catch (Exception ignored) {}
+    }
+
+    for (String prefix : TABLE_PREFIXES) {
+      String jobSql = "SELECT JOB_PROFILE FROM " + prefix + "employee_job_profile " +
+                      "WHERE EMPNO = ? AND SYSDATE BETWEEN EFF_FROM_DATE AND EFF_TO_DATE AND STATUS_FLAG = 'V'";
+      try (PreparedStatement ps = conn.prepareStatement(jobSql)) {
+        ps.setString(1, p.getEmpNo());
+        try (ResultSet rs = ps.executeQuery()) {
+          if (rs.next()) {
+            p.setJobProfile(rs.getString("JOB_PROFILE"));
+          }
+          break;
+        }
+      } catch (SQLException e) {
+        logger.debug("[UCO HRMS] Job-profile lookup on '{}employee_job_profile' failed: {}", prefix, e.getMessage());
+      }
+    }
   }
 }

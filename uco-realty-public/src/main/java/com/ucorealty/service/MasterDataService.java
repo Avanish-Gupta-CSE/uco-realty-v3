@@ -10,40 +10,21 @@ import java.io.InputStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/** State list for the catalog filter, read once from geo/districts.json. */
 @Service
 public class MasterDataService {
-  private final List<String> zones;
-  private final Map<String, List<String>> stateDistricts;
+  private final List<String> states;
 
   public MasterDataService() throws IOException {
-    this(new ObjectMapper());
-  }
-
-  public MasterDataService(ObjectMapper mapper) throws IOException {
-    if (mapper == null) {
-      mapper = new ObjectMapper();
+    Map<String, List<String>> d;
+    try (InputStream in = new ClassPathResource("geo/districts.json").getInputStream()) {
+      d = new ObjectMapper().readValue(in, new TypeReference<LinkedHashMap<String, List<String>>>() {});
     }
-    List<String> z = read(mapper, "geo/zones.json", new TypeReference<List<String>>() {});
-    Map<String, List<String>> d = read(mapper, "geo/districts.json",
-      new TypeReference<LinkedHashMap<String, List<String>>>() {});
-    if (z == null || z.isEmpty() || d == null || d.isEmpty()) {
+    if (d == null || d.isEmpty()) {
       throw new IllegalStateException("Reference data in src/main/resources/geo is empty");
     }
-    this.zones = Collections.unmodifiableList(new ArrayList<>(z));
-    this.stateDistricts = Collections.unmodifiableMap(new LinkedHashMap<>(d));
+    this.states = Collections.unmodifiableList(d.keySet().stream().sorted().collect(Collectors.toList()));
   }
 
-  private static <T> T read(ObjectMapper mapper, String path, TypeReference<T> type) throws IOException {
-    try (InputStream in = new ClassPathResource(path).getInputStream()) {
-      return mapper.readValue(in, type);
-    }
-  }
-
-  public List<String> getZones() { return zones; }
-
-  public Map<String, List<String>> getStateDistricts() { return stateDistricts; }
-
-  public List<String> getStates() {
-    return stateDistricts.keySet().stream().sorted().collect(Collectors.toList());
-  }
+  public List<String> getStates() { return states; }
 }

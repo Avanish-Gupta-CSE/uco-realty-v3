@@ -24,6 +24,6 @@ spring:
 logging:
   level:
     root: WARN
-    in.co.ucobank.ucorealty: INFO
+    com.ucorealty: INFO
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"

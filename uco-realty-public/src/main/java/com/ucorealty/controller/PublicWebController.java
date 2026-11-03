@@ -1,12 +1,10 @@
 package com.ucorealty.controller;
 
 import com.ucorealty.entity.Lead;
-import com.ucorealty.entity.LeadTransferLog;
 import com.ucorealty.entity.Project;
 import com.ucorealty.entity.ProjectImage;
-import com.ucorealty.repository.LeadRepository;
-import com.ucorealty.repository.LeadTransferLogRepository;
 import com.ucorealty.repository.ProjectImageRepository;
+import com.ucorealty.service.LeadService;
 import com.ucorealty.service.MasterDataService;
 import com.ucorealty.service.ProjectService;
 import org.springframework.http.HttpHeaders;
@@ -26,17 +24,14 @@ public class PublicWebController {
   private final ProjectService projectService;
   private final MasterDataService masterDataService;
   private final ProjectImageRepository imageRepo;
-  private final LeadRepository leadRepo;
-  private final LeadTransferLogRepository transferRepo;
+  private final LeadService leadService;
 
   public PublicWebController(ProjectService projectService, MasterDataService masterDataService,
-                             ProjectImageRepository imageRepo, LeadRepository leadRepo,
-                             LeadTransferLogRepository transferRepo) {
+                             ProjectImageRepository imageRepo, LeadService leadService) {
     this.projectService = projectService;
     this.masterDataService = masterDataService;
     this.imageRepo = imageRepo;
-    this.leadRepo = leadRepo;
-    this.transferRepo = transferRepo;
+    this.leadService = leadService;
   }
 
   @GetMapping({"/", "/projects"})
@@ -80,7 +75,6 @@ public class PublicWebController {
     List<ProjectImage> imgs = imageRepo.findByProjectId(id);
     model.addAttribute("project", p);
     model.addAttribute("images", imgs);
-    model.addAttribute("isStaffPreview", false);
     return "public-detail";
   }
 
@@ -89,34 +83,20 @@ public class PublicWebController {
                            @RequestParam String phone,
                            @RequestParam(required = false) String projectId,
                            @RequestParam(required = false) String branchSelected,
-                           @RequestParam(defaultValue = "Showed interest in Home Loan") String status,
+                           @RequestParam(defaultValue = LeadService.STATUS_INTEREST) String status,
                            @RequestHeader(value = "X-Requested-With", required = false) String requestedWith) {
-    if (name == null || name.trim().isEmpty() || phone == null || phone.trim().isEmpty()) {
-      if ("XMLHttpRequest".equalsIgnoreCase(requestedWith)) {
-        return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Name and mobile are required"));
+    boolean ajax = "XMLHttpRequest".equalsIgnoreCase(requestedWith);
+    Lead l;
+    try {
+      l = leadService.capture(name, phone, projectId, branchSelected, status);
+    } catch (ResponseStatusException e) {
+      if (ajax) {
+        return ResponseEntity.status(e.getStatusCode()).body(Collections.singletonMap("error", e.getReason()));
       }
-      return "redirect:/projects?error=missing_info";
+      return "redirect:/projects?error=invalid_lead";
     }
 
-    String normalizedStatus = "Showed interest in Home Loan";
-    if ("VISITOR".equalsIgnoreCase(status) || "Visitor".equalsIgnoreCase(status)) {
-      normalizedStatus = "Visitor";
-    }
-
-    Lead l = new Lead();
-    l.customerName = name.trim();
-    l.phone = phone.trim();
-    l.projectId = (projectId != null && !projectId.trim().isEmpty()) ? projectId.trim() : null;
-    l.branchSelected = (branchSelected != null && !branchSelected.trim().isEmpty()) ? branchSelected.trim() : null;
-    l.status = normalizedStatus;
-    leadRepo.save(l);
-
-    LeadTransferLog t = new LeadTransferLog();
-    t.leadId = l.id;
-    t.payload = "{\"name\":\"" + l.customerName + "\",\"phone\":\"" + l.phone + "\",\"project\":\"" + l.projectId + "\"}";
-    transferRepo.save(t);
-
-    if ("XMLHttpRequest".equalsIgnoreCase(requestedWith)) {
+    if (ajax) {
       Map<String, Object> resp = new HashMap<>();
       resp.put("success", true);
       resp.put("leadId", l.id);
@@ -124,10 +104,9 @@ public class PublicWebController {
       return ResponseEntity.ok(resp);
     }
 
-    if ("Showed interest in Home Loan".equals(normalizedStatus)) {
+    if (LeadService.STATUS_INTEREST.equals(l.status)) {
       return "redirect:https://www.uco.bank.in/home-loan";
     }
-
     if (l.projectId != null) {
       return "redirect:/project/" + l.projectId;
     }

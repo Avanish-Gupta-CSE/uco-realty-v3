@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # Starts UCO Realty multi-module deployment locally:
-# Oracle (Docker) -> database tables -> admin accounts ->
+# Oracle (Docker) -> database tables ->
 #   1. Public Customer Portal (Port 8080 - Internet DMZ)
 #   2. Internal Bank Intranet Portal (Port 8081 - Intranet SSO & Maker-Checker)
 #
 #   scripts/dev-start.sh            start (keeps existing data)
 #   scripts/dev-start.sh --reset    wipe the database first and start from zero
 #
-# Passwords: 8+ characters, a letter and a digit.
+# Staff sign in through SSO/OTP (local HRMS mode: employee 100001, OTP 123456). No local accounts exist.
 set -euo pipefail
 
 # Ensure Java 25 is prioritized
@@ -36,7 +36,7 @@ for p in 8080 8081; do
   fi
 done
 
-say "1/5 Oracle database"
+say "1/4 Oracle database"
 if [ "$(docker inspect -f '{{.State.Health.Status}}' uco-oracle 2>/dev/null)" != "healthy" ]; then
   docker start uco-oracle >/dev/null 2>&1 || (cd "$ROOT" && docker compose up -d oracle >/dev/null 2>&1)
 fi
@@ -47,12 +47,12 @@ for i in $(seq 1 60); do
 done
 echo " ready"
 
-say "2/5 Build applications (uco-realty-public, uco-realty-internal)"
+say "2/4 Build applications (uco-realty-public, uco-realty-internal)"
 (cd "$ROOT" && mvn -q package)
 [ -f "$PUBLIC_WAR" ] || die "Public portal build failed"
 [ -f "$INTERNAL_WAR" ] || die "Internal portal build failed"
 
-say "3/5 Database tables"
+say "3/4 Database tables"
 docker cp "$ROOT/db_migrations" uco-oracle:/tmp/ >/dev/null
 if [ "$RESET" = 1 ]; then
   "$ROOT/scripts/dev-stop.sh" >/dev/null 2>&1 || true
@@ -67,35 +67,7 @@ else
   echo "tables already exist ($TABLES)"
 fi
 
-say "4/5 Admin accounts"
-USERS=$(sql "select count(*) from users;")
-hash_of() {
-  java -Dloader.main=com.ucorealty.util.PasswordHashTool \
-       -Dloader.path=WEB-INF/classes,WEB-INF/lib \
-       -cp "$INTERNAL_WAR" org.springframework.boot.loader.PropertiesLauncher "$1" 2>&1
-}
-ask() {
-  local label="$1" val="${2:-}" out
-  while true; do
-    if [ -z "$val" ]; then
-      [ -t 0 ] || die "No terminal to ask for the $label password. Set DIT_PASSWORD and HO_PASSWORD instead."
-      printf 'Choose a password for %s (8+ characters, a letter and a digit): ' "$label" >&2
-      read -r -s val; echo >&2
-    fi
-    if out=$(hash_of "$val") && [[ "$out" == \$2a\$* ]]; then printf '%s' "$out"; return; fi
-    echo "  Not accepted: $out" >&2; val=""
-  done
-}
-if [ "$USERS" = "0" ]; then
-  H1=$(ask "dit.superadmin" "${DIT_PASSWORD:-}")
-  H2=$(ask "ho.admin" "${HO_PASSWORD:-}")
-  printf '%s\n%s\nexit\n' "$H1" "$H2" | $SQ @/tmp/db_migrations/02_INITIAL_ADMIN_USERS.sql 2>&1 | grep -i "ORA-" && die "Creating admins failed"
-  echo "created dit.superadmin and ho.admin"
-else
-  echo "users already exist ($USERS), password prompts skipped"
-fi
-
-say "5/5 Start Applications"
+say "4/4 Start Applications"
 if [ -f "$RUN/pids" ]; then "$ROOT/scripts/dev-stop.sh" >/dev/null 2>&1 || true; fi
 
 # Start Public Portal (8080)

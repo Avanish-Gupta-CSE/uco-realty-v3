@@ -181,6 +181,7 @@
                                                         Edit
                                                     </a>
                                                     <form action="${pageContext.request.contextPath}/admin/projects/${p.id}/submit" method="post" class="d-inline m-0" id="form-submit-project-${p.id}" data-confirm="Submit project for Checker approval?">
+<input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
                                                         <button type="submit" class="btn btn-success btn-sm" id="btn-submit-project-${p.id}">Submit</button>
                                                     </form>
                                                 </c:if>
@@ -260,12 +261,13 @@
             </div>
 
             <form id="decisionForm" action="" method="post">
+<input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
                 <div class="modal-body p-4">
                     <div class="mb-3">
                         <label for="decisionSelect" class="form-label fw-semibold small">Decision *</label>
                         <select id="decisionSelect" name="decision" class="form-select" required>
                             <option value="approve">Approve &amp; Publish Project</option>
-                            <option value="correction">Request Correction from Maker</option>
+                            <option value="needs-correction">Request Correction from Maker</option>
                             <option value="reject">Reject Project</option>
                         </select>
                     </div>
@@ -297,6 +299,7 @@
             </div>
 
             <form id="reduceForm" action="" method="post">
+<input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
                 <div class="modal-body p-4">
                     <p class="text-muted small mb-3"><span id="reduceProjectName" class="fw-bold text-dark"></span></p>
 

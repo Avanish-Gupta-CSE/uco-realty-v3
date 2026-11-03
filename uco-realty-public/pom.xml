@@ -43,10 +43,31 @@
       <artifactId>jackson-databind</artifactId>
     </dependency>
 
-    <!-- Embedded Tomcat JSP Engine -->
+    <!-- External Tomcat deployment: the server provides Tomcat itself, so the embedded one is "provided"
+         (still used for java -jar and for local runs; same pattern as the bank reference projects). -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-tomcat</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- Servlet API and EL come with the server; keep them out of WEB-INF/lib (transitive jars would otherwise be bundled) -->
+    <dependency>
+      <groupId>jakarta.servlet</groupId>
+      <artifactId>jakarta.servlet-api</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.tomcat.embed</groupId>
+      <artifactId>tomcat-embed-el</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- JSP engine: provided by the external Tomcat; still on the classpath for java -jar (WEB-INF/lib-provided) -->
     <dependency>
       <groupId>org.apache.tomcat.embed</groupId>
       <artifactId>tomcat-embed-jasper</artifactId>
+      <scope>provided</scope>
     </dependency>
 
     <!-- Jakarta JSTL (Jakarta EE 10 / Tomcat 10.1+) -->
@@ -60,11 +81,6 @@
     </dependency>
 
     <!-- Spring Security JSP Taglib (<sec:authorize>) -->
-    <dependency>
-      <groupId>org.springframework.security</groupId>
-      <artifactId>spring-security-taglibs</artifactId>
-    </dependency>
-
     <!-- Oracle JDBC Driver for Java 11/17/21 -->
     <dependency>
       <groupId>com.oracle.database.jdbc</groupId>

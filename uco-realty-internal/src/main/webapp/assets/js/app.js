@@ -37,7 +37,10 @@ function initArrivalGateModal() {
     if (phoneInput && storedPhone) phoneInput.value = storedPhone;
 
     // Show on catalog landing if not previously saved or dismissed
-    var isCatalog = window.location.pathname === "/" ||
+    // The app may be served under a context path (external Tomcat: /uco-realty-public/), so compare against it
+    var ctx = modalEl.getAttribute("data-context-path") || "";
+    var isCatalog = window.location.pathname === ctx + "/" ||
+                    window.location.pathname === ctx ||
                     window.location.pathname.indexOf("/projects") !== -1;
 
     if (isCatalog && !storedName && !isDismissed && typeof bootstrap !== "undefined") {

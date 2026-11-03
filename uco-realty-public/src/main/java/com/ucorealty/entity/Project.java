@@ -3,20 +3,15 @@ package com.ucorealty.entity;
 import jakarta.persistence.*;
 import org.springframework.format.annotation.DateTimeFormat;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
-// Entity = one Oracle table row. Like a TS interface + DB mapping.
-// Full BRD field set (page 3: Create Housing Project Mainpage) + workflow columns.
+// Read-only view of a `projects` row for the customer portal: only the columns customers may see.
+// Authoring, approval and the internal workflow columns live in uco-realty-internal.
 @Entity
 @Table(name = "projects")
 public class Project {
   @Id
   @Column(name = "id", length = 20)
   public String id;
-
-  // --- Location & identity ---
-  @Column(name = "sr_no")
-  public Long srNo;
 
   @Column(name = "zone_name")
   public String zoneName;
@@ -161,29 +156,6 @@ public class Project {
   @Column(name = "rel_exec_number", length = 15)
   public String relExecNumber;
 
-  // --- Docs & validity ---
-  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-  @Column(name = "valid_upto")
-  public LocalDate validUpto;
-
-  @Column(name = "renewal_pending", length = 20)
-  public String renewalPending;
-
-  @Column(name = "certificate_path", length = 500)
-  public String certificatePath;
-
-  @Column(name = "floor_plan_path", length = 500)
-  public String floorPlanPath;
-
-  @Column(name = "approval_sought")
-  public String approvalSought;
-
-  @Column(name = "total_img_count")
-  public Integer totalImgCount = 0;
-
-  @Column(name = "verified_img_count")
-  public Integer verifiedImgCount = 0;
-
   // --- Workflow: DRAFT, PENDING_APPROVAL, APPROVED, REJECTED, NEEDS_CORRECTION ---
   @Column(name = "status", nullable = false)
   public String status = "DRAFT";
@@ -194,36 +166,9 @@ public class Project {
   @Column(name = "is_published")
   public Integer isPublished = 0;
 
-  @Column(name = "created_by")
-  public String createdBy;
-
-  @Column(name = "checked_by")
-  public String checkedBy;
-
-  @Column(name = "checker_comment", length = 1000)
-  public String checkerComment;
-
-  @Column(name = "created_at")
-  public LocalDateTime createdAt;
-
-  @Column(name = "updated_at")
-  public LocalDateTime updatedAt;
-
-  @PrePersist
-  void onCreate() {
-    createdAt = LocalDateTime.now();
-    updatedAt = LocalDateTime.now();
-    if (id == null) id = "UCR-PROJ-" + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 8).toUpperCase();
-  }
-
-  @PreUpdate
-  void onUpdate() { updatedAt = LocalDateTime.now(); }
-
   // --- JavaBean Getters & Setters for JSP EL support ---
   public String getId() { return id; }
   public void setId(String id) { this.id = id; }
-  public Long getSrNo() { return srNo; }
-  public void setSrNo(Long srNo) { this.srNo = srNo; }
   public String getZoneName() { return zoneName; }
   public void setZoneName(String zoneName) { this.zoneName = zoneName; }
   public String getBranchName() { return branchName; }
@@ -316,20 +261,6 @@ public class Project {
   public void setRelExecName(String relExecName) { this.relExecName = relExecName; }
   public String getRelExecNumber() { return relExecNumber; }
   public void setRelExecNumber(String relExecNumber) { this.relExecNumber = relExecNumber; }
-  public LocalDate getValidUpto() { return validUpto; }
-  public void setValidUpto(LocalDate validUpto) { this.validUpto = validUpto; }
-  public String getRenewalPending() { return renewalPending; }
-  public void setRenewalPending(String renewalPending) { this.renewalPending = renewalPending; }
-  public String getCertificatePath() { return certificatePath; }
-  public void setCertificatePath(String certificatePath) { this.certificatePath = certificatePath; }
-  public String getFloorPlanPath() { return floorPlanPath; }
-  public void setFloorPlanPath(String floorPlanPath) { this.floorPlanPath = floorPlanPath; }
-  public String getApprovalSought() { return approvalSought; }
-  public void setApprovalSought(String approvalSought) { this.approvalSought = approvalSought; }
-  public Integer getTotalImgCount() { return totalImgCount; }
-  public void setTotalImgCount(Integer totalImgCount) { this.totalImgCount = totalImgCount; }
-  public Integer getVerifiedImgCount() { return verifiedImgCount; }
-  public void setVerifiedImgCount(Integer verifiedImgCount) { this.verifiedImgCount = verifiedImgCount; }
   public String getStatus() { return status; }
   public void setStatus(String status) { this.status = status; }
   public Integer getIsActive() { return isActive; }
@@ -340,14 +271,4 @@ public class Project {
   public void setIsPublished(Integer isPublished) { this.isPublished = isPublished; }
   public Integer getPublished() { return isPublished; }
   public void setPublished(Integer published) { this.isPublished = published; }
-  public String getCreatedBy() { return createdBy; }
-  public void setCreatedBy(String createdBy) { this.createdBy = createdBy; }
-  public String getCheckedBy() { return checkedBy; }
-  public void setCheckedBy(String checkedBy) { this.checkedBy = checkedBy; }
-  public String getCheckerComment() { return checkerComment; }
-  public void setCheckerComment(String checkerComment) { this.checkerComment = checkerComment; }
-  public LocalDateTime getCreatedAt() { return createdAt; }
-  public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-  public LocalDateTime getUpdatedAt() { return updatedAt; }
-  public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }
