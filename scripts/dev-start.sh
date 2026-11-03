@@ -70,7 +70,7 @@ fi
 say "4/5 Admin accounts"
 USERS=$(sql "select count(*) from users;")
 hash_of() {
-  java -Dloader.main=com.ucorealty.internal.tools.PasswordHashTool \
+  java -Dloader.main=com.ucorealty.util.PasswordHashTool \
        -Dloader.path=WEB-INF/classes,WEB-INF/lib \
        -cp "$INTERNAL_WAR" org.springframework.boot.loader.PropertiesLauncher "$1" 2>&1
 }

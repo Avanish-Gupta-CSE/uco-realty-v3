@@ -9,6 +9,15 @@ server:
 getValue:
   key: ${SSO_KEY:UCOBANKSSOKEY2026!SECRET#128BITS}
 
+sso:
+  encryption:
+    key: "${SSO_ENCRYPTION_KEY:VUNPQkFOS1NTT0tFWTIwMjYhU0VDUkVUIzEyOEJJVFM=}"
+    iv: "${SSO_ENCRYPTION_IV:MDEyMzQ1Njc4OWFiY2RlZg==}"
+
+app:
+  redirect:
+    url: "${APP_REDIRECT_URL:/admin/projects}"
+
 uco:
   hrms:
     mode: ${HRMS_MODE:local}

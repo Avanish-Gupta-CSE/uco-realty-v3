@@ -2,6 +2,7 @@ package com.ucorealty.util;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
@@ -10,79 +11,154 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * UCO Bank Single Sign-On (SSO) AES-GCM Payload Decryption & Encryption Utility.
- * Aligned with bank production reference project BranchRecordMaintainance (HomeController.java).
+ * UCO Bank Single Sign-On (SSO) Payload Decryption & Encryption Utility.
+ * Supports:
+ *   1. Bank Production AES-CBC with PKCS5Padding (GetValue.jsp reference from db-login-reference)
+ *      with Base64 key and Base64 IV.
+ *   2. Bank Production AES-GCM with NoPadding (BranchRecordMaintainance reference)
+ *      with 12-byte prepended IV and 128-bit authentication tag.
  */
 public final class SsoCryptoUtil {
 
-  private static final String ALGORITHM = "AES/GCM/NoPadding";
-  private static final int IV_SIZE = 12; // 12-byte IV for GCM
-  private static final int TAG_SIZE = 128; // 128-bit authentication tag
+  private static final String AES_CBC_PKCS5 = "AES/CBC/PKCS5Padding";
+  private static final String AES_GCM_NOPADDING = "AES/GCM/NoPadding";
+  private static final int GCM_IV_SIZE = 12;
+  private static final int GCM_TAG_SIZE = 128;
 
   private SsoCryptoUtil() {}
 
   /**
-   * Decrypts the Base64-encoded AES-GCM encrypted payload received in /entry?value=...
+   * Decrypts SSO payload using AES/CBC/PKCS5Padding with Base64 decoded key and IV (GetValue.jsp bank reference).
    */
-  public static String decryptPayload(String value, String encryptionKey) throws Exception {
-    if (value == null || value.trim().isEmpty()) {
-      throw new IllegalArgumentException("Encrypted value cannot be null or empty");
+  public static String decryptAesCbc(String token, String base64Key, String base64Iv) throws Exception {
+    if (token == null || token.trim().isEmpty()) {
+      throw new IllegalArgumentException("Token cannot be null or empty");
     }
-    if (encryptionKey == null || encryptionKey.trim().isEmpty()) {
-      throw new IllegalArgumentException("Encryption key cannot be null or empty");
-    }
+    String normalized = token.replaceAll("\\s+", "+");
 
-    // Replace whitespace/newlines with '+' as per bank reference implementation
-    value = value.replaceAll("\\s+", "+");
-    byte[] decoded = Base64.getDecoder().decode(value);
+    byte[] keyBytes = decodeKeyOrString(base64Key);
+    byte[] ivBytes = decodeKeyOrString(base64Iv);
 
-    if (decoded.length < IV_SIZE) {
-      throw new IllegalArgumentException("Decoded ciphertext is too short to contain IV");
-    }
+    SecretKeySpec key = new SecretKeySpec(normalizeToKeyLength(keyBytes), "AES");
+    IvParameterSpec iv = new IvParameterSpec(normalizeTo16Bytes(ivBytes));
 
-    byte[] iv = new byte[IV_SIZE];
-    System.arraycopy(decoded, 0, iv, 0, IV_SIZE);
+    Cipher cipher = Cipher.getInstance(AES_CBC_PKCS5);
+    cipher.init(Cipher.DECRYPT_MODE, key, iv);
 
-    byte[] cipherText = new byte[decoded.length - IV_SIZE];
-    System.arraycopy(decoded, IV_SIZE, cipherText, 0, cipherText.length);
-
-    Cipher cipher = Cipher.getInstance(ALGORITHM);
-    GCMParameterSpec spec = new GCMParameterSpec(TAG_SIZE, iv);
-    byte[] keyBytes = normalizeKey(encryptionKey);
-    cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(keyBytes, "AES"), spec);
-
+    byte[] cipherText = Base64.getDecoder().decode(normalized);
     byte[] plainText = cipher.doFinal(cipherText);
     return new String(plainText, StandardCharsets.UTF_8);
   }
 
   /**
-   * Encrypts plaintext payload (e.g. "emp_id=61801&sol_id=7115") for test generation.
+   * Encrypts SSO payload using AES/CBC/PKCS5Padding (matching GetValue.jsp specification).
+   */
+  public static String encryptAesCbc(String plainText, String base64Key, String base64Iv) throws Exception {
+    if (plainText == null || plainText.isEmpty()) {
+      throw new IllegalArgumentException("Plaintext cannot be null or empty");
+    }
+
+    byte[] keyBytes = decodeKeyOrString(base64Key);
+    byte[] ivBytes = decodeKeyOrString(base64Iv);
+
+    SecretKeySpec key = new SecretKeySpec(normalizeToKeyLength(keyBytes), "AES");
+    IvParameterSpec iv = new IvParameterSpec(normalizeTo16Bytes(ivBytes));
+
+    Cipher cipher = Cipher.getInstance(AES_CBC_PKCS5);
+    cipher.init(Cipher.ENCRYPT_MODE, key, iv);
+
+    byte[] cipherText = cipher.doFinal(plainText.getBytes(StandardCharsets.UTF_8));
+    return Base64.getEncoder().encodeToString(cipherText);
+  }
+
+  /**
+   * Dual-mode decryption: attempts AES/CBC/PKCS5Padding first (GetValue.jsp),
+   * falling back to AES/GCM/NoPadding (BranchRecordMaintainance).
+   */
+  public static String decryptPayload(String value, String encryptionKey, String encryptionIv) throws Exception {
+    if (value == null || value.trim().isEmpty()) {
+      throw new IllegalArgumentException("Encrypted value cannot be null or empty");
+    }
+
+    String normalized = value.replaceAll("\\s+", "+");
+
+    // 1. Try AES/CBC/PKCS5Padding with provided IV (GetValue.jsp)
+    if (encryptionIv != null && !encryptionIv.trim().isEmpty()) {
+      try {
+        return decryptAesCbc(normalized, encryptionKey, encryptionIv);
+      } catch (Exception ignored) {
+        // Fall through to GCM or fallback CBC
+      }
+    }
+
+    // 2. Try AES/GCM/NoPadding with prepended 12-byte IV (BranchRecordMaintainance)
+    try {
+      byte[] decoded = Base64.getDecoder().decode(normalized);
+      if (decoded.length > GCM_IV_SIZE) {
+        byte[] iv = new byte[GCM_IV_SIZE];
+        System.arraycopy(decoded, 0, iv, 0, GCM_IV_SIZE);
+        byte[] cipherText = new byte[decoded.length - GCM_IV_SIZE];
+        System.arraycopy(decoded, GCM_IV_SIZE, cipherText, 0, cipherText.length);
+
+        Cipher cipher = Cipher.getInstance(AES_GCM_NOPADDING);
+        GCMParameterSpec spec = new GCMParameterSpec(GCM_TAG_SIZE, iv);
+        byte[] keyBytes = normalizeKey(encryptionKey);
+        cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(keyBytes, "AES"), spec);
+        return new String(cipher.doFinal(cipherText), StandardCharsets.UTF_8);
+      }
+    } catch (Exception ignored) {}
+
+    // 3. Fallback: Try AES/CBC without separate IV (using key-derived IV)
+    try {
+      byte[] keyBytes = normalizeKey(encryptionKey);
+      byte[] ivBytes = new byte[16];
+      System.arraycopy(keyBytes, 0, ivBytes, 0, 16);
+      SecretKeySpec key = new SecretKeySpec(keyBytes, "AES");
+      IvParameterSpec iv = new IvParameterSpec(ivBytes);
+
+      Cipher cipher = Cipher.getInstance(AES_CBC_PKCS5);
+      cipher.init(Cipher.DECRYPT_MODE, key, iv);
+      byte[] cipherText = Base64.getDecoder().decode(normalized);
+      return new String(cipher.doFinal(cipherText), StandardCharsets.UTF_8);
+    } catch (Exception e) {
+      throw new IllegalArgumentException("Token decryption failed under both AES-CBC and AES-GCM: " + e.getMessage(), e);
+    }
+  }
+
+  /**
+   * Backward-compatible overload without IV parameter.
+   */
+  public static String decryptPayload(String value, String encryptionKey) throws Exception {
+    return decryptPayload(value, encryptionKey, null);
+  }
+
+  /**
+   * Backward-compatible AES-GCM encrypt.
    */
   public static String encryptPayload(String plainText, String encryptionKey) throws Exception {
     if (plainText == null || encryptionKey == null) {
       throw new IllegalArgumentException("Plaintext and key cannot be null");
     }
 
-    byte[] iv = new byte[IV_SIZE];
+    byte[] iv = new byte[GCM_IV_SIZE];
     new SecureRandom().nextBytes(iv);
 
-    Cipher cipher = Cipher.getInstance(ALGORITHM);
-    GCMParameterSpec spec = new GCMParameterSpec(TAG_SIZE, iv);
+    Cipher cipher = Cipher.getInstance(AES_GCM_NOPADDING);
+    GCMParameterSpec spec = new GCMParameterSpec(GCM_TAG_SIZE, iv);
     byte[] keyBytes = normalizeKey(encryptionKey);
     cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(keyBytes, "AES"), spec);
 
     byte[] cipherText = cipher.doFinal(plainText.getBytes(StandardCharsets.UTF_8));
-    byte[] combined = new byte[IV_SIZE + cipherText.length];
-    System.arraycopy(iv, 0, combined, 0, IV_SIZE);
-    System.arraycopy(cipherText, 0, combined, IV_SIZE, cipherText.length);
+    byte[] combined = new byte[GCM_IV_SIZE + cipherText.length];
+    System.arraycopy(iv, 0, combined, 0, GCM_IV_SIZE);
+    System.arraycopy(cipherText, 0, combined, GCM_IV_SIZE, cipherText.length);
 
     return Base64.getEncoder().encodeToString(combined);
   }
 
   /**
    * Parses the decrypted plaintext into employee number and SOL ID.
-   * Handles bank pattern: val.substring(val.indexOf("=") + 1, val.indexOf("&"))
-   * as well as standard URL query parameter pairs.
+   * Directly implements GetValue.jsp param parsing alongside bank variants.
    */
   public static SsoAuthInfo parseAuthInfo(String decryptedText) {
     if (decryptedText == null || decryptedText.trim().isEmpty()) {
@@ -92,13 +168,11 @@ public final class SsoCryptoUtil {
     String empNo = null;
     String solId = null;
 
-    // Check bank substring pattern: emp_id=61801&sol_id=7115
-    if (val.contains("=") && val.contains("&")) {
+    Map<String, String> params = new HashMap<>();
+    if (val.contains("=") || val.contains("&")) {
       try {
-        Map<String, String> params = new HashMap<>();
-        String[] pairs = val.split("&");
-        for (String pair : pairs) {
-          int idx = pair.indexOf("=");
+        for (String pair : val.split("&")) {
+          int idx = pair.indexOf('=');
           if (idx > 0) {
             String k = pair.substring(0, idx).trim().toLowerCase();
             String v = pair.substring(idx + 1).trim();
@@ -106,25 +180,32 @@ public final class SsoCryptoUtil {
           }
         }
 
-        // Look for employee ID keys
-        for (String k : new String[]{"emp_id", "empno", "empcode", "empid", "user_id", "username"}) {
-          if (params.containsKey(k)) {
-            empNo = params.get(k);
-            break;
+        // 1. Exact GetValue.jsp parameters: empno and sol
+        if (params.containsKey("empno")) empNo = params.get("empno");
+        if (params.containsKey("sol")) solId = params.get("sol");
+
+        // 2. Standard UCO Bank intranet aliases
+        if (empNo == null) {
+          for (String k : new String[]{"emp_id", "empcode", "empid", "user_id", "username", "uid", "uempno"}) {
+            if (params.containsKey(k)) {
+              empNo = params.get(k);
+              break;
+            }
           }
         }
 
-        // Look for SOL ID keys
-        for (String k : new String[]{"sol_id", "solid", "sol", "branch_id", "branchcode"}) {
-          if (params.containsKey(k)) {
-            solId = params.get(k);
-            break;
+        if (solId == null) {
+          for (String k : new String[]{"sol_id", "solid", "branch_id", "branchcode", "usol"}) {
+            if (params.containsKey(k)) {
+              solId = params.get(k);
+              break;
+            }
           }
         }
       } catch (Exception ignored) {}
     }
 
-    // Fallback to exact bank reference substring logic if params couldn't be parsed
+    // Substring fallback
     if (empNo == null && val.contains("=") && val.contains("&")) {
       try {
         empNo = val.substring(val.indexOf("=") + 1, val.indexOf("&")).trim();
@@ -132,7 +213,7 @@ public final class SsoCryptoUtil {
       } catch (Exception ignored) {}
     }
 
-    // Single value fallback (just empId)
+    // Single value fallback (just employee id)
     if (empNo == null && !val.contains("=") && !val.contains("&")) {
       empNo = val;
     }
@@ -157,18 +238,38 @@ public final class SsoCryptoUtil {
     }
   }
 
-  private static byte[] normalizeKey(String key) {
-    byte[] b = key.getBytes(StandardCharsets.UTF_8);
+  private static byte[] decodeKeyOrString(String str) {
+    if (str == null || str.trim().isEmpty()) {
+      return new byte[16];
+    }
+    String s = str.trim();
+    try {
+      byte[] decoded = Base64.getDecoder().decode(s);
+      if (decoded.length == 16 || decoded.length == 24 || decoded.length == 32) {
+        return decoded;
+      }
+    } catch (Exception ignored) {}
+    return s.getBytes(StandardCharsets.UTF_8);
+  }
+
+  private static byte[] normalizeToKeyLength(byte[] b) {
     if (b.length == 16 || b.length == 24 || b.length == 32) {
       return b;
     }
-    // Pad or truncate to 16 bytes for standard AES-128
-    byte[] key16 = new byte[16];
-    System.arraycopy(b, 0, key16, 0, Math.min(b.length, 16));
-    for (int i = b.length; i < 16; i++) {
-      key16[i] = (byte) '#';
-    }
-    return key16;
+    byte[] key = new byte[16];
+    System.arraycopy(b, 0, key, 0, Math.min(b.length, 16));
+    for (int i = b.length; i < 16; i++) key[i] = (byte) '#';
+    return key;
+  }
+
+  private static byte[] normalizeTo16Bytes(byte[] b) {
+    if (b.length == 16) return b;
+    byte[] out = new byte[16];
+    System.arraycopy(b, 0, out, 0, Math.min(b.length, 16));
+    return out;
+  }
+
+  private static byte[] normalizeKey(String key) {
+    return normalizeToKeyLength(decodeKeyOrString(key));
   }
 }
-
