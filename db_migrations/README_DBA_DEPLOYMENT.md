@@ -11,16 +11,20 @@ Scripts for UCO Bank's Oracle database (UAT and Production). The application nee
   and a tablespace quota of at least 10 GB (project photos are stored in the database as SecureFiles BLOBs; the browser shrinks them to about 0.3 MB each).
 * `SELECT` on the real HRMS tables (`employee_contact_details`, `hrms_dba.employee_tenure`, `hrms_dba.employee_job_profile`) for the same schema user. Both portals use this single database connection.
 
-## 2. Run order (as the application schema user, in SQL*Plus or SQL Developer)
+## 2. What the DBA runs
+**A new database (UAT, production): one script.**
 | Step | Script | What it does |
 | :--- | :--- | :--- |
-| 1 | `01_CREATE_TABLES.sql` | Creates all 6 tables (`projects`, `project_staging`, `project_images`, `leads`, `audit_log`, `login_audit`), constraints, indexes and the BLOB storage |
-| 2 | `06_STAGING_MODEL.sql` | **Existing databases only.** Adds `project_staging` (+ unique one-open-request index), `row_version` columns, `project_images.staging_id` and moves not-yet-approved projects into staging (new databases get all of it from `01`). Safe to re-run |
-| 3 | `07_DROP_UNUSED_TABLES.sql` | **Existing databases only.** Drops the unused `users` and `lead_transfer_log` tables |
+| 1 | `01_CREATE_TABLES.sql` | Creates the 6 tables (`projects`, `project_staging`, `project_images`, `leads`, `audit_log`, `login_audit`), constraints, indexes and the BLOB storage. Run once as the application schema user |
 
-**Not for UAT/production:** `03_CREATE_HRMS_MOCK_TABLES.sql` and `05_LOCAL_TEST_EMPLOYEES.sql` are for a developer's laptop only (UAT and production already have the real HRMS data in `hrms_dba`, which the application only reads). They are not included in release bundles.
+That is all. The application creates and changes no tables itself; in UAT it checks at start that the tables match the code (`validate`) and refuses to start otherwise.
 
-`00_DROP_ALL_TABLES.sql` removes everything. **UAT resets only. Never run it in production.**
+**Only a developer laptop uses the other scripts** (`03`, `05`, `06`, `07` are left out of the release bundle; `00` is in a UAT bundle only):
+| Script | Purpose |
+| :--- | :--- |
+| `00_DROP_ALL_TABLES.sql` | empties the application tables (also removes old, retired tables). Included in a UAT bundle for resets, **never run in production** |
+| `03_CREATE_HRMS_MOCK_TABLES.sql` + `05_LOCAL_TEST_EMPLOYEES.sql` | stand-ins for the bank's HRMS tables and 12 test employees, to try the real HRMS code path in Docker Oracle. UAT and production already have the real HRMS data in `hrms_dba` |
+| `06_STAGING_MODEL.sql`, `07_DROP_UNUSED_TABLES.sql` | one-time upgrade of a laptop database created by earlier builds (old change-request design, `users` and `lead_transfer_log` tables). A new database never needs them |
 
 ## 3. Verification
 ```sql

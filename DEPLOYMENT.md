@@ -27,8 +27,22 @@ export CATALINA_OPTS="-Dspring.profiles.active=uat \
 Follow `db/README_DBA_DEPLOYMENT.md`. Order: `01_CREATE_TABLES.sql`; for an existing older database also `06_STAGING_MODEL.sql` and `07_DROP_UNUSED_TABLES.sql` (maker's working-copy table `project_staging`). There is no seed data and no application accounts. UAT and production use the bank's **real HRMS data** (`hrms_dba`); `03_`/`05_` scripts are only for a developer laptop.
 The application schema user needs `SELECT` on the bank HRMS tables (`employee_contact_details`, and optionally `employee_tenure`, `employee_job_profile`). Columns read from `employee_contact_details`: `EMPNO, NAME, POSTING_SOL_ID, POSTING_SOL_DESC, SCALE_CODE, CADRE_CODE, POSTING_REGION_NAME, DESIG, MOBILE_NO, E_MAIL` (tables are tried with and without the `hrms_dba.` prefix). Please verify these names against the real HRMS schema.
 
-## 2. Configuration (environment variables)
-Each WAR has four small settings files: `application.properties` (shared), `application-prod.properties` (the default profile), `application-uat.properties` and `application-local.properties` (laptop only). Nothing needs editing for UAT or production, only the variables below. `SPRING_PROFILES_ACTIVE` picks one of `prod`, `uat`, `local`.
+## 2. Configuration
+### How the settings files work (read this once)
+* **All four files are inside every WAR** (`WEB-INF/classes`): `application.properties`, `application-prod.properties`, `application-uat.properties`, `application-local.properties`. Nothing is copied to the server separately.
+* Spring **always** loads `application.properties` (the shared settings), then loads **one** `application-<profile>.properties` on top of it. The profile is the value of `SPRING_PROFILES_ACTIVE`; if it is not set, it is `prod`.
+* **Environment variables and JVM `-D` options beat both files.** That is why the server needs only a few variables (below), not edited files: the password never sits in a file.
+
+| Profile (`SPRING_PROFILES_ACTIVE`) | Use it on | What it adds on top of `application.properties` |
+| :--- | :--- | :--- |
+| `prod` (default) | production | no table checks, 25 DB connections, quiet logs |
+| `uat` | UAT server | **checks the tables against the code at start** (refuses to start if they differ), 10 connections, normal logs |
+| `local` | a laptop only | the in-memory H2 database by default, built-in test employees (OTP 123456), the `/ucorealty-...` context path, plain-http cookies. Never on a bank server |
+
+### Which database does the application use?
+Whatever **`DB_URL`** points to; the files contain no database address. On UAT/production set `DB_URL=jdbc:oracle:thin:@//host:1521/SERVICE` with `DB_USER` and `DB_PASS`. The Oracle driver is in every WAR.
+* **H2 is for laptops, not for the bank's UAT server.** The normal WAR has no H2 driver (it is added only by `mvn -Ph2`), in-memory H2 loses its data on restart and needs a separate server process for the two WARs, `uat` cannot check an H2 schema (H2 names the number types differently), and, most important, **the bank's HRMS tables do not exist in H2, so nobody could sign in** with the real SSO. UAT needs a real Oracle schema with `SELECT` on the HRMS tables; if the bank is late, test on your laptop (Oracle in Docker, or `dev-start.sh --h2`).
+* A closed demo without Oracle is possible, but it is the laptop setup on a test box (`local` profile, H2 server, test employees); keep it off the bank's network.
 
 | Variable | Module | Required | Meaning |
 | :--- | :--- | :--- | :--- |

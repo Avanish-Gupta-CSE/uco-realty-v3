@@ -68,7 +68,7 @@ public class SsoEntryController {
     if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getName())) {
       return "redirect:/admin/projects";
     }
-    return "redirect:/projects";
+    return "redirect:/login";   // staff site: the first thing an employee who is not signed in sees is the login page
   }
 
   /**

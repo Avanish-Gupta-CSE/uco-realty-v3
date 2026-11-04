@@ -35,6 +35,8 @@ H2_VERSION=2.4.240      # the version Spring Boot 4.1.2 manages
 H2_JAR="$HOME/.m2/repository/com/h2database/h2/$H2_VERSION/h2-$H2_VERSION.jar"
 H2_URL="jdbc:h2:tcp://localhost:9092/mem:ucorealty;MODE=Oracle;DB_CLOSE_DELAY=-1"
 
+# show: prints, in grey, the real command a step is about to run (so nothing is a black box; scripts/README.md explains each one)
+show() { printf '   \033[2m$ %s\033[0m\n' "$*"; }
 say() { printf '\n\033[1m==> %s\033[0m\n' "$*"; }
 die() { printf '\n\033[31mERROR: %s\033[0m\n' "$*" >&2; exit 1; }
 sql() { printf 'set heading off feedback off pagesize 0 verify off\n%s\nexit\n' "$1" | $SQ | tr -d ' \t\r\n'; }
@@ -55,6 +57,7 @@ h2_running() { lsof -nP -iTCP:9092 -sTCP:LISTEN >/dev/null 2>&1; }
 
 if [ "$DB" = h2 ]; then
 say "1/4 H2 database server (in memory, no Docker)"
+[ -f "$H2_JAR" ] || { show "mvn dependency:get -Dartifact=com.h2database:h2:$H2_VERSION   (downloads the H2 jar once)"; true; }
 [ -f "$H2_JAR" ] || (cd "$ROOT" && mvn -q dependency:get -Dartifact=com.h2database:h2:$H2_VERSION) || die "Could not download H2"
 if [ "$RESET" = 1 ] && h2_running; then
   [ -f "$RUN/h2.pid" ] && kill "$(cat "$RUN/h2.pid")" 2>/dev/null || true
@@ -63,6 +66,7 @@ fi
 if h2_running; then
   echo "H2 server already running (data kept)"
 else
+  show "java -cp h2-$H2_VERSION.jar org.h2.tools.Server -tcp -tcpPort 9092 -web -webPort 8082 -ifNotExists"
   ( cd "$ROOT"; nohup java -cp "$H2_JAR" org.h2.tools.Server -tcp -tcpPort 9092 -web -webPort 8082 -ifNotExists > "$RUN/h2-server.log" 2>&1 < /dev/null & echo $! > "$RUN/h2.pid" )
   for i in $(seq 1 20); do h2_running && break; sleep 1; done
   h2_running || die "H2 server did not start (see .run/h2-server.log)"
@@ -71,6 +75,7 @@ fi
 else
 say "1/4 Oracle database"
 if [ "$(docker inspect -f '{{.State.Health.Status}}' uco-oracle 2>/dev/null)" != "healthy" ]; then
+  show "docker start uco-oracle     (or: docker compose up -d oracle, the first time)"
   docker start uco-oracle >/dev/null 2>&1 || (cd "$ROOT" && docker compose up -d oracle >/dev/null 2>&1)
 fi
 for i in $(seq 1 60); do
@@ -83,9 +88,13 @@ fi
 
 say "2/4 Build applications (ucorealty-customer, ucorealty-staff)"
 if [ "$DB" = h2 ]; then
-  (cd "$ROOT" && mvn -q -Ph2 clean package -DskipTests)     # -Ph2 adds the H2 driver; the normal build never contains it
+  show "(cd ucorealty-customer && mvn -q -Ph2 clean package -DskipTests)   -> target/ucorealty-customer.war"
+  show "(cd ucorealty-staff    && mvn -q -Ph2 clean package -DskipTests)   -> target/ucorealty-staff.war"
+  for m in ucorealty-customer ucorealty-staff; do (cd "$ROOT/$m" && mvn -q -Ph2 clean package -DskipTests); done     # -Ph2 adds the H2 driver; the normal build never contains it
 else
-  (cd "$ROOT" && mvn -q clean package -DskipTests)
+  show "(cd ucorealty-customer && mvn -q clean package -DskipTests)   -> target/ucorealty-customer.war"
+  show "(cd ucorealty-staff    && mvn -q clean package -DskipTests)   -> target/ucorealty-staff.war"
+  for m in ucorealty-customer ucorealty-staff; do (cd "$ROOT/$m" && mvn -q clean package -DskipTests); done
 fi
 [ -f "$PUBLIC_WAR" ] || die "Public portal build failed"
 [ -f "$INTERNAL_WAR" ] || die "Internal portal build failed"
@@ -93,6 +102,8 @@ fi
 say "3/4 Database tables"
 if [ "$DB" = h2 ]; then
   H2_SCRIPT="$RUN/h2-schema.sql"
+  show "python3 scripts/h2_schema.py > .run/h2-schema.sql     (db_migrations/01_CREATE_TABLES.sql made H2-friendly)"
+  show "java -cp h2.jar org.h2.tools.RunScript -url $H2_URL -user sa -script .run/h2-schema.sql"
   python3 "$ROOT/scripts/h2_schema.py" > "$H2_SCRIPT" || die "Could not generate the H2 schema"
   HAS=$(java -cp "$H2_JAR" org.h2.tools.Shell -url "$H2_URL" -user sa -sql "select count(*) from information_schema.tables where table_name='PROJECTS'" 2>/dev/null | sed -n 2p | tr -d ' ')
   if [ "$RESET" = 1 ] || [ "$HAS" != "1" ]; then
@@ -102,14 +113,17 @@ if [ "$DB" = h2 ]; then
     echo "tables already exist"
   fi
 else
+show "docker cp db_migrations uco-oracle:/tmp/"
 docker cp "$ROOT/db_migrations" uco-oracle:/tmp/ >/dev/null
 if [ "$RESET" = 1 ]; then
   "$ROOT/scripts/dev-stop.sh" --apps-only >/dev/null 2>&1 || true
+  show "sqlplus uco_realty@XEPDB1  @/tmp/db_migrations/00_DROP_ALL_TABLES.sql"
   echo exit | $SQ @/tmp/db_migrations/00_DROP_ALL_TABLES.sql >/dev/null 2>&1
   echo "database wiped"
 fi
 TABLES=$(sql "select count(*) from user_tables;")
 if [ "$TABLES" = "0" ]; then
+  show "sqlplus uco_realty@XEPDB1  @/tmp/db_migrations/01_CREATE_TABLES.sql"
   echo exit | $SQ @/tmp/db_migrations/01_CREATE_TABLES.sql 2>&1 | grep -i "ORA-\|error" && die "Creating tables failed"
   echo "tables created"
 else
@@ -121,6 +135,7 @@ say "4/4 Start Applications"
 if [ -f "$RUN/pids" ]; then "$ROOT/scripts/dev-stop.sh" --apps-only >/dev/null 2>&1 || true; fi
 
 # Start Public Portal (8080)
+show "SPRING_PROFILES_ACTIVE=$PROFILE ${DB_ENV:+DB_URL=... DB_USER=... DB_PASS=... }java -Dserver.port=8080 -jar ucorealty-customer.war   (log: .run/public.log)"
 ( cd "$ROOT"; env SPRING_PROFILES_ACTIVE=$PROFILE $DB_ENV nohup java -Dserver.port=8080 -jar "$PUBLIC_WAR" > "$RUN/public.log" 2>&1 < /dev/null & echo $! > "$RUN/public.pid" )
 for i in $(seq 1 60); do
   grep -q "Started PublicPortalApplication" "$RUN/public.log" 2>/dev/null && break
@@ -130,6 +145,7 @@ for i in $(seq 1 60); do
 done
 
 # Start Internal Intranet Portal (8081)
+show "SPRING_PROFILES_ACTIVE=$PROFILE ${DB_ENV:+DB_URL=... DB_USER=... DB_PASS=... }java -Dserver.port=8081 -jar ucorealty-staff.war   (log: .run/internal.log)"
 ( cd "$ROOT"; env SPRING_PROFILES_ACTIVE=$PROFILE $DB_ENV nohup java -Dserver.port=8081 -jar "$INTERNAL_WAR" > "$RUN/internal.log" 2>&1 < /dev/null & echo $! > "$RUN/internal.pid" )
 for i in $(seq 1 60); do
   grep -q "Started InternalPortalApplication" "$RUN/internal.log" 2>/dev/null && break

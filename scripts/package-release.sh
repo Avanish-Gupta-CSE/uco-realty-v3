@@ -21,7 +21,9 @@ fi
 
 echo "==> Building both WARs"
 # shellcheck disable=SC2086
-(cd "$ROOT" && mvn -q ${MVN_OPTS:-} clean package -DskipTests)
+for m in ucorealty-customer ucorealty-staff; do
+  (cd "$ROOT/$m" && mvn -q ${MVN_OPTS:-} clean package -DskipTests)
+done
 
 PUBLIC_WAR="$ROOT/ucorealty-customer/target/ucorealty-customer.war"
 INTERNAL_WAR="$ROOT/ucorealty-staff/target/ucorealty-staff.war"
@@ -36,6 +38,8 @@ cp "$INTERNAL_WAR" "$OUT/ucorealty-staff.war"
 cp "$ROOT"/db_migrations/*.sql "$ROOT"/db_migrations/README_DBA_DEPLOYMENT.md "$OUT/db/"
 # UAT and production read the bank's real HRMS tables: never ship the mock tables or local test employees
 rm -f "$OUT/db/03_CREATE_HRMS_MOCK_TABLES.sql" "$OUT/db/05_LOCAL_TEST_EMPLOYEES.sql"
+# one-time upgrade scripts for old laptop databases: a new bank database only needs 01_CREATE_TABLES.sql
+rm -f "$OUT/db/06_STAGING_MODEL.sql" "$OUT/db/07_DROP_UNUSED_TABLES.sql"
 # the drop-everything script is for UAT resets only
 [ "$MODE" = "prod" ] && rm -f "$OUT/db/00_DROP_ALL_TABLES.sql"
 cp "$ROOT/DEPLOYMENT.md" "$OUT/"

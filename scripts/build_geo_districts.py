@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Builds backend/src/main/resources/geo/districts.json (state -> districts) from the
+"""Builds ucorealty-staff/src/main/resources/geo/districts.json (state -> districts) from the
 India Post "All India Pincode Directory" CSV pages downloaded from data.gov.in.
 
 Only state and district names are kept; no pincodes are stored.

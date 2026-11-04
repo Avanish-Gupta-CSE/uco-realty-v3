@@ -2,12 +2,25 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
+  <!-- Self-sufficient: the only parent is Spring Boot's (it brings the tested library versions and build settings,
+       which is why the dependencies below have no version numbers). Nothing else in this repository is needed:
+       cd <this folder> && mvn clean package
+       <relativePath/> (empty) = take the parent from the Maven repository, do not look for a pom.xml in the folder above. -->
   <parent>
-    <groupId>com.ucorealty</groupId>
-    <artifactId>ucorealty</artifactId>
-    <version>0.1.0</version>
-    <relativePath>../pom.xml</relativePath>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>4.1.2</version>
+    <relativePath/>
   </parent>
+
+  <groupId>com.ucorealty</groupId>
+  <version>0.1.0</version>
+
+  <properties>
+    <java.version>25</java.version>
+    <maven.compiler.release>25</maven.compiler.release>
+    <poi.version>5.2.5</poi.version>
+  </properties>
 
   <artifactId>ucorealty-staff</artifactId>
   <packaging>war</packaging>
@@ -113,8 +126,9 @@
   </build>
 
   <profiles>
-    <!-- Opt-in: `mvn -Ph2 package` adds the H2 driver for local testing without Docker (the h2 option of scripts/dev-start.sh does this).
-         The normal build, and so every UAT/production WAR, never contains H2. -->
+    <!-- A BUILD option (not the Spring runtime profile in application-*.properties). Off by default: only `mvn -Ph2 package`
+         turns it on, adding the H2 driver for local testing without Docker (the h2 option of scripts/dev-start.sh does this).
+         A normal build, and so every UAT/production WAR, never contains H2. -->
     <profile>
       <id>h2</id>
       <dependencies>

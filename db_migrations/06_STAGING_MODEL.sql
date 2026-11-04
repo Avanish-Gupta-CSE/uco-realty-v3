@@ -12,7 +12,8 @@
 --   4. project_images: project_id becomes optional, staging_id added (a photo belongs to a project OR to staging)
 --   5. MOVES every project that is not yet approved (DRAFT, PENDING_APPROVAL, NEEDS_CORRECTION, REJECTED)
 --      from PROJECTS into PROJECT_STAGING as a CREATE request, with its photos
--- New databases get all of this from 01_CREATE_TABLES.sql (skip this script).
+-- ONLY for the developer laptop database created by earlier builds. The bank database is new: it gets all of this
+-- from 01_CREATE_TABLES.sql, so the DBA never runs this script.
 -- ============================================================================
 DECLARE
   n NUMBER;

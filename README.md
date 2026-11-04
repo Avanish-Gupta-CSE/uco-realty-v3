@@ -28,18 +28,19 @@ More: `TESTING_GUIDE.md`.
 
 ### Raw commands (without the scripts)
 ```bash
-mvn clean package -DskipTests
+# each app is self-sufficient: it has its own pom.xml and is built on its own
+(cd ucorealty-customer && mvn clean package -DskipTests)
+(cd ucorealty-staff && mvn clean package -DskipTests)
 SPRING_PROFILES_ACTIVE=local java -jar ucorealty-customer/target/ucorealty-customer.war
 SPRING_PROFILES_ACTIVE=local java -jar ucorealty-staff/target/ucorealty-staff.war   # second shell
 ```
 The default profile is **prod**; local runs must say `local`.
 
 ### Eclipse / STS
-Import as *Existing Maven Projects* from the repository root (two modules). Use a Java 25 JRE. Run `com.ucorealty.PublicPortalApplication` and/or `com.ucorealty.InternalPortalApplication` as a Java Application with VM argument `-Dspring.profiles.active=local` (add `-Dserver.port=8081` etc. only if you change ports).
+Import `ucorealty-customer` and `ucorealty-staff` as two separate *Existing Maven Projects* (each folder has its own `pom.xml`). Use a Java 25 JRE. Run `com.ucorealty.PublicPortalApplication` and/or `com.ucorealty.InternalPortalApplication` as a Java Application with VM argument `-Dspring.profiles.active=local` (add `-Dserver.port=8081` etc. only if you change ports).
 
 ## Layout
 ```
-pom.xml                    parent (modules: ucorealty-customer, ucorealty-staff)
 ucorealty-customer/         customer portal
 ucorealty-staff/       staff portal
 db_migrations/             Oracle scripts + DBA guide

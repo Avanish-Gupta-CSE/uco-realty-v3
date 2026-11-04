@@ -2,7 +2,8 @@
 -- Migration for EXISTING databases: drops two tables the application no longer uses.
 --   USERS             staff identity now comes from HRMS at login and lives in the session (no table to keep in sync)
 --   LEAD_TRANSFER_LOG a queue for a future push to the bank LPS system that nothing ever read
--- New databases created from 01_CREATE_TABLES.sql do not have them (skip this script).
+-- ONLY for the developer laptop database created by earlier builds. The bank database is new: 01_CREATE_TABLES.sql
+-- never creates these tables, so the DBA never runs this script.
 -- Safe to re-run: it does nothing when a table is already gone. Take a backup first if you want to keep the history.
 -- ============================================================================
 DECLARE
