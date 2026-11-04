@@ -8,15 +8,15 @@
     <relativePath/>
   </parent>
   <groupId>com.ucorealty</groupId>
-  <artifactId>uco-realty-parent</artifactId>
+  <artifactId>ucorealty</artifactId>
   <version>0.1.0</version>
   <packaging>pom</packaging>
-  <name>uco-realty-parent</name>
+  <name>ucorealty</name>
   <description>UCO Realty Parent Multi-Module Project (Java 25 + Spring Boot 4.1 + Tomcat 11)</description>
 
   <modules>
-    <module>uco-realty-public</module>
-    <module>uco-realty-internal</module>
+    <module>ucorealty-customer</module>
+    <module>ucorealty-staff</module>
   </modules>
 
   <properties>

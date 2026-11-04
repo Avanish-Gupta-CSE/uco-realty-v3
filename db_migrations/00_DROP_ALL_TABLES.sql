@@ -13,8 +13,10 @@ BEGIN
     WHERE table_name IN (
       'LEAD_TRANSFER_LOG', 
       'AUDIT_LOG', 
+      'LOGIN_AUDIT', 
       'LEADS', 
       'PROJECT_IMAGES', 
+      'PROJECT_STAGING', 
       'PROJECTS', 
       'USERS'
     )

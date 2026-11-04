@@ -1,0 +1,939 @@
+/* ==========================================================================
+   UCO Bank Realty Portal - Bank Theme & Bootstrap 5 Customization
+   Compliance: Strict CSP Compliant (Zero inline styles, zero inline scripts)
+   ========================================================================== */
+
+:root {
+  --uco-navy: #003366;
+  --uco-dark: #002244;
+  --uco-deep-blue: #001a33;
+  --uco-light-blue: #e0f2fe;
+  --uco-border-blue: #bae6fd;
+  --uco-saffron: #e65100;
+  --uco-gold: #ffc107;
+  --uco-green: #166534;
+  --uco-green-light: #dcfce7;
+  --uco-green-border: #bbf7d0;
+  --uco-red: #991b1b;
+  --uco-red-light: #fee2e2;
+  --uco-red-border: #f87171;
+  --uco-gray-bg: #f1f5f9;
+  --uco-gray-card: #f8fafc;
+  --uco-gray-border: #e2e8f0;
+  --uco-gray-text: #475569;
+  --uco-gray-muted: #64748b;
+}
+
+body {
+  background-color: var(--uco-gray-bg);
+  color: #1e293b;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main.container, main.container-fluid {
+  flex: 1;
+}
+
+a {
+  color: var(--uco-navy);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+  color: var(--uco-dark);
+}
+
+.text-primary {
+  color: var(--uco-navy) !important;
+}
+
+.btn-outline-primary {
+  color: var(--uco-navy);
+  border-color: var(--uco-navy);
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus,
+.btn-outline-primary:active {
+  background-color: var(--uco-navy) !important;
+  border-color: var(--uco-navy) !important;
+  color: #ffffff !important;
+}
+
+/* ==========================================================================
+   Header & Navigation
+   ========================================================================== */
+.header {
+  background: #ffffff;
+  border-bottom: 2px solid var(--uco-navy);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.logo-img {
+  height: 52px;
+  width: auto;
+}
+
+.logo-text h1 {
+  font-size: 20px;
+  color: var(--uco-navy);
+  margin: 0;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.logo-text p {
+  font-size: 12px;
+  color: var(--uco-gray-muted);
+  margin: 0;
+}
+
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  flex-wrap: wrap;
+}
+
+.user-badge {
+  background: var(--uco-light-blue);
+  color: var(--uco-navy);
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.navbar-custom {
+  background: var(--uco-navy);
+  padding: 0;
+}
+
+.navbar-custom .nav-link {
+  color: #ffffff;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 500;
+  border-bottom: 3px solid transparent;
+  transition: all 0.15s ease-in-out;
+}
+
+.navbar-custom .nav-link:hover,
+.navbar-custom .nav-link.active {
+  background: var(--uco-dark);
+  color: #ffffff;
+  border-bottom: 3px solid var(--uco-saffron);
+}
+
+/* ==========================================================================
+   Cards & Layout Components
+   ========================================================================== */
+.card-custom {
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid var(--uco-gray-border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title-custom {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--uco-navy);
+  border-bottom: 1px solid var(--uco-gray-border);
+  padding-bottom: 10px;
+  margin-bottom: 20px;
+}
+
+.hero-banner {
+  background: linear-gradient(90deg, #003366 0%, #004d80 50%, #005599 100%);
+  color: #ffffff;
+  padding: 28px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 12px rgba(0, 51, 102, 0.15);
+}
+
+.hero-banner h2 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.hero-banner p {
+  font-size: 14px;
+  opacity: 0.92;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.filter-bar {
+  background: #ffffff;
+  padding: 18px;
+  border-radius: 8px;
+  border: 1px solid var(--uco-gray-border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.btn-back {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--uco-navy);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* ==========================================================================
+   Buttons (UCO Bank Styled)
+   ========================================================================== */
+.btn-primary {
+  background-color: var(--uco-navy);
+  border-color: var(--uco-navy);
+  color: #ffffff;
+  font-weight: 600;
+}
+.btn-primary:hover, .btn-primary:focus, .btn-primary:active {
+  background-color: var(--uco-dark) !important;
+  border-color: var(--uco-dark) !important;
+  color: #ffffff !important;
+}
+
+.btn-secondary {
+  background-color: var(--uco-gray-muted);
+  border-color: var(--uco-gray-muted);
+  color: #ffffff;
+}
+.btn-secondary:hover, .btn-secondary:focus {
+  background-color: var(--uco-gray-text);
+  border-color: var(--uco-gray-text);
+  color: #ffffff;
+}
+
+.btn-success {
+  background-color: var(--uco-green);
+  border-color: var(--uco-green);
+  color: #ffffff;
+}
+.btn-success:hover, .btn-success:focus {
+  background-color: #1b5e20;
+  border-color: #1b5e20;
+  color: #ffffff;
+}
+
+.btn-warning {
+  background-color: var(--uco-gold);
+  border-color: var(--uco-gold);
+  color: #000000;
+  font-weight: 600;
+}
+.btn-warning:hover, .btn-warning:focus {
+  background-color: #e6a800;
+  border-color: #e6a800;
+  color: #000000;
+}
+
+.btn-danger {
+  background-color: var(--uco-red);
+  border-color: var(--uco-red);
+  color: #ffffff;
+}
+.btn-danger:hover, .btn-danger:focus {
+  background-color: #7f1d1d;
+  border-color: #7f1d1d;
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   Status Badges
+   ========================================================================== */
+.badge-draft {
+  background-color: #e2e8f0;
+  color: #475569;
+  font-weight: 600;
+}
+.badge-pending {
+  background-color: #fef3c7;
+  color: #92400e;
+  font-weight: 600;
+}
+.badge-approved {
+  background-color: var(--uco-green-light);
+  color: var(--uco-green);
+  font-weight: 600;
+}
+.badge-rejected {
+  background-color: var(--uco-red-light);
+  color: var(--uco-red);
+  font-weight: 600;
+}
+.badge-correction {
+  background-color: #ffedd5;
+  color: #9a3412;
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   Banners & Alerts
+   ========================================================================== */
+.staff-preview-banner {
+  background: #fffbeb;
+  border: 1px solid #fef08a;
+  border-left: 5px solid #d97706;
+  color: #854d0e;
+  padding: 14px 20px;
+  border-radius: 6px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+.form-error-alert {
+  background-color: var(--uco-red-light);
+  border: 1px solid var(--uco-red-border);
+  color: var(--uco-red);
+  padding: 14px 18px;
+  border-radius: 6px;
+  margin-bottom: 24px;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.08);
+}
+
+.alert-success-custom {
+  background-color: var(--uco-green-light);
+  color: var(--uco-green);
+  border: 1px solid var(--uco-green-border);
+  border-radius: 6px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+}
+
+/* ==========================================================================
+   Public Project Cards
+   ========================================================================== */
+.project-card {
+  border: 1px solid var(--uco-gray-border);
+  border-radius: 8px;
+  background: #ffffff;
+  overflow: hidden;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.project-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 18px rgba(0, 51, 102, 0.1);
+}
+
+.project-card-img {
+  width: 100%;
+  height: 190px;
+  object-fit: cover;
+  background: #e2e8f0;
+}
+
+.project-card-img-placeholder {
+  width: 100%;
+  height: 190px;
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--uco-gray-muted);
+  font-size: 13px;
+  border-bottom: 1px solid var(--uco-gray-border);
+}
+
+.project-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--uco-navy);
+  margin-bottom: 4px;
+}
+
+.project-builder {
+  font-size: 13px;
+  color: var(--uco-gray-muted);
+  margin-bottom: 12px;
+}
+
+.project-meta-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-bottom: 6px;
+  padding-bottom: 6px;
+  border-bottom: 1px dashed var(--uco-gray-border);
+}
+
+/* ==========================================================================
+   Project Detail Page
+   ========================================================================== */
+.project-header-card {
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid var(--uco-gray-border);
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.project-gallery-scroller {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+}
+
+.gallery-img {
+  height: 220px;
+  width: 320px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--uco-gray-border);
+  flex-shrink: 0;
+}
+
+.table-spec th {
+  width: 35%;
+  background-color: var(--uco-gray-card);
+  color: var(--uco-gray-text);
+  font-weight: 600;
+}
+
+.loan-apply-card {
+  border: 2px solid var(--uco-navy);
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.quick-apply-box {
+  background: #e6eef8;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 14px;
+  margin-bottom: 16px;
+  font-size: 13px;
+}
+
+/* ==========================================================================
+   Photo Slots Grid (Form Page - 10 Slots)
+   ========================================================================== */
+.photo-slots-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.photo-slot-card {
+  border-radius: 8px;
+  background: #ffffff;
+  min-height: 230px;
+  transition: all 0.15s ease-in-out;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.upload-slot {
+  border: 2px dashed #93c5fd;
+  background: #f8fafc;
+  cursor: pointer;
+}
+.upload-slot:hover {
+  border-color: #0284c7;
+  background: #f0f9ff;
+}
+
+.existing-slot {
+  border: 1px solid var(--uco-gray-border);
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.slot-upload-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 15px 5px;
+  text-align: center;
+}
+
+.slot-camera-icon-wrap {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #e0f2fe;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+  color: var(--uco-navy);
+}
+
+.slot-preview-wrap {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  text-align: center;
+}
+
+.slot-preview-img {
+  width: 100%;
+  height: 130px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--uco-gray-border);
+  display: block;
+}
+
+.slot-delete-btn {
+  background: var(--uco-red-light);
+  color: var(--uco-red);
+  padding: 5px 10px;
+  font-size: 12px;
+  border: 1px solid var(--uco-red-border);
+  border-radius: 4px;
+  width: 100%;
+  cursor: pointer;
+  font-weight: 600;
+}
+.slot-delete-btn:hover {
+  background: #fca5a5;
+  color: #7f1d1d;
+}
+
+.slot-clear-btn {
+  background: #f1f5f9;
+  color: #475569;
+  padding: 5px 10px;
+  font-size: 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  width: 100%;
+  cursor: pointer;
+  font-weight: 500;
+}
+.slot-clear-btn:hover {
+  background: #e2e8f0;
+}
+
+.slot-remove-extra-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  line-height: 20px;
+  text-align: center;
+  font-size: 12px;
+  color: #64748b;
+  cursor: pointer;
+  padding: 0;
+}
+.slot-remove-extra-btn:hover {
+  background: #fee2e2;
+  color: #991b1b;
+  border-color: #f87171;
+}
+
+.slot-counter-badge {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--uco-navy);
+  background: var(--uco-light-blue);
+  padding: 6px 16px;
+  border-radius: 20px;
+  border: 1px solid var(--uco-border-blue);
+}
+
+.add-photos-btn {
+  background: var(--uco-navy);
+  color: #ffffff;
+  padding: 8px 18px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+.add-photos-btn:hover {
+  background: var(--uco-dark);
+  color: #ffffff;
+}
+
+.form-section-title {
+  color: var(--uco-navy);
+  font-size: 16px;
+  font-weight: 700;
+  margin: 24px 0 14px;
+  border-bottom: 2px solid var(--uco-gray-border);
+  padding-bottom: 8px;
+}
+
+/* ==========================================================================
+   Login Page Styling
+   ========================================================================== */
+.login-bg {
+  background: linear-gradient(135deg, #002244 0%, #003366 50%, #004d80 100%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 35px 30px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+  border-top: 5px solid var(--uco-saffron);
+}
+
+.login-logo {
+  text-align: center;
+  margin-bottom: 20px;
+}
+.login-logo img {
+  height: 60px;
+}
+
+.login-card h2 {
+  font-size: 20px;
+  color: var(--uco-navy);
+  text-align: center;
+  margin-bottom: 6px;
+  font-weight: 700;
+}
+
+.login-card p {
+  font-size: 13px;
+  color: var(--uco-gray-muted);
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.login-back-link {
+  font-size: 13px;
+  color: var(--uco-navy);
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   Footer
+   ========================================================================== */
+.footer {
+  background: var(--uco-dark);
+  color: #cbd5e1;
+  padding: 20px 0;
+  font-size: 13px;
+  margin-top: auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* ==========================================================================
+   Audit Logs Table Columns (CSP Compliant - No inline styles)
+   ========================================================================== */
+.table-col-time {
+  width: 16%;
+}
+.table-col-user {
+  width: 14%;
+}
+.table-col-module {
+  width: 10%;
+}
+.table-col-action {
+  width: 15%;
+}
+.table-col-ip {
+  width: 14%;
+}
+.table-col-status {
+  width: 12%;
+}
+.table-col-details {
+  width: auto;
+}
+.audit-details-code {
+  font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.82rem;
+  background-color: #f8fafc;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+  word-break: break-all;
+}
+
+/* ==========================================================================
+   UCO Bank SSO & OTP Module (Bank Compliant)
+   ========================================================================== */
+.login-card-wide {
+  width: 100%;
+  max-width: 500px;
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 35px 30px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+  border-top: 5px solid var(--uco-saffron);
+}
+
+.otp-input-group {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.otp-box {
+  width: 48px;
+  height: 54px;
+  text-align: center;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--uco-navy);
+  border-radius: 6px;
+  border: 2px solid #ced4da;
+  background: #fdfdfd;
+  transition: all 0.2s ease;
+}
+
+.otp-box:focus {
+  border-color: var(--uco-navy);
+  box-shadow: 0 0 0 0.2rem rgba(0, 51, 102, 0.25);
+  background: #ffffff;
+  outline: none;
+}
+
+.sso-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 12px;
+  background: #e7f3ff;
+  color: #003366;
+  border: 1px solid #b6d4fe;
+}
+
+.role-pills-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.role-pill-btn {
+  border: 1px solid #cbd5e1;
+  background: #f1f5f9;
+  border-radius: 14px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  color: #334155;
+  transition: all 0.15s ease;
+}
+
+.role-pill-btn:hover {
+  background: var(--uco-navy);
+  color: #ffffff;
+  border-color: var(--uco-navy);
+}
+
+/* ==========================================================================
+   Error Page Layout (BranchRecordMaintainance standard)
+   ========================================================================== */
+.error-layout {
+  background-color: var(--uco-bg, #f4f6f9);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.error-card {
+  background: #ffffff;
+  border: 1px solid var(--uco-gray-border, #e2e8f0);
+  border-radius: 8px;
+  padding: 40px;
+  max-width: 540px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.error-icon {
+  width: 64px;
+  height: 64px;
+  line-height: 64px;
+  border-radius: 50%;
+  background-color: #fee2e2;
+  color: #dc2626;
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0 auto 20px auto;
+}
+
+.error-title {
+  color: #1e293b;
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.error-desc {
+  color: #475569;
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+.error-hint {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 20px;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 15px;
+}
+
+.error-system-code {
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* ==========================================================================
+   Project Management Table Layout & Columns (Responsive & Proportional)
+   ========================================================================== */
+.table-admin-projects {
+  width: 100%;
+  min-width: 960px;
+}
+
+.table-admin-projects th {
+  font-weight: 600;
+  font-size: 0.85rem;
+  letter-spacing: 0.2px;
+  color: var(--uco-dark);
+  white-space: nowrap;
+}
+
+.table-admin-projects td {
+  vertical-align: middle;
+}
+
+.col-th-project {
+  width: 25%;
+  min-width: 210px;
+}
+
+.col-th-location {
+  width: 18%;
+  min-width: 140px;
+}
+
+.col-th-builder {
+  width: 15%;
+  min-width: 120px;
+}
+
+.col-th-inventory {
+  width: 11%;
+  min-width: 90px;
+}
+
+.col-th-status {
+  width: 13%;
+  min-width: 115px;
+}
+
+.col-th-creator {
+  width: 8%;
+  min-width: 85px;
+}
+
+.col-th-actions {
+  width: 1%;               /* shrink to the buttons; the other columns share the rest */
+  white-space: nowrap;
+}
+
+.project-title {
+  color: var(--uco-navy);
+  font-weight: 700;
+  font-size: 0.95rem;
+  line-height: 1.3;
+}
+
+.project-badge-id {
+  font-size: 0.72rem;
+  padding: 2px 6px;
+  background-color: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+}
+
+.creator-tag {
+  font-size: 0.78rem;
+  color: #475569;
+  background-color: #f8fafc;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+  display: inline-block;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.custom-city-toggle {
+  font-size: 0.8rem;
+  color: var(--uco-blue, #0d6efd);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.custom-city-toggle:hover {
+  text-decoration: underline;
+  color: #0b5ed7;
+}
+
+
+/* Dashboard action buttons ("Reduce Units", "Withdraw request"...) must stay on one line */
+.col-th-actions .btn { white-space: nowrap; }

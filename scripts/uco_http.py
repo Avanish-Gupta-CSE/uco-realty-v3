@@ -1,7 +1,7 @@
 """Tiny HTTP helper shared by scripts/smoke_test.py and scripts/load_demo_data.py (standard library only).
 
 Keeps cookies, never follows redirects (so tests can see them), reads the CSRF token from pages and
-signs in through the DEV-PROFILE employee-id + OTP form of the internal portal (dev profile only: in UAT/prod
+signs in through the LOCAL-PROFILE employee-id + OTP form of the internal portal (local profile only: in UAT/prod
 that form does not exist and these scripts must not be used).
 """
 import http.cookiejar
@@ -50,7 +50,7 @@ class Client:
         return m.group(1).decode() if m else None
 
     def dev_login(self, emp_id, otp="123456"):
-        """Employee id + OTP form (dev profile). Returns True when /admin/projects is reachable afterwards."""
+        """Employee id + OTP form (local profile). Returns True when /admin/projects is reachable afterwards."""
         token = self.csrf("/login")
         if not token:
             return False

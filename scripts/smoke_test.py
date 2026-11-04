@@ -2,10 +2,10 @@
 """Smoke test for a RUNNING local setup (scripts/dev-start.sh): public portal on 8080, internal portal on 8081.
 
     python3 scripts/smoke_test.py
-    PUBLIC_URL=http://localhost:8080 INTERNAL_URL=http://localhost:8081 python3 scripts/smoke_test.py
+    PUBLIC_URL=http://localhost:8080/ucorealty-customer INTERNAL_URL=http://localhost:8081/ucorealty-staff python3 scripts/smoke_test.py
 
 Checks the customer lockdown, security headers, SSO error paths, CSRF, role isolation and logout. The role checks
-need the dev profile (employee-id + OTP form with the built-in test employees); against a UAT/prod build it runs
+need the local profile (employee-id + OTP form with the built-in test employees); against a UAT/prod build it runs
 the checks that do not need a login and says what it skipped. It never creates projects.
 Exit code is 0 only when every check passes.
 """
@@ -15,8 +15,8 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from uco_http import Client, location  # noqa: E402
 
-PUBLIC = os.environ.get("PUBLIC_URL", "http://localhost:8080")
-INTERNAL = os.environ.get("INTERNAL_URL", "http://localhost:8081")
+PUBLIC = os.environ.get("PUBLIC_URL", "http://localhost:8080/ucorealty-customer")
+INTERNAL = os.environ.get("INTERNAL_URL", "http://localhost:8081/ucorealty-staff")
 results = []
 
 
@@ -34,6 +34,8 @@ check("security headers present", {"content-security-policy", "x-frame-options",
 for path in ("/login", "/admin/projects", "/sso", "/entry", "/api/admin/geo"):
     check(f"{path} is refused", pub.get(path)[0] == 403, pub.get(path)[0])
 check("unknown project is 404", pub.get("/project/UCR-PROJ-NOPE")[0] == 404)
+check("customer name with markup is refused (400)", pub.post("/lead", {"name": "<b>x</b>", "phone": "9876543210"},
+      headers={"X-Requested-With": "XMLHttpRequest"})[0] == 400)
 check("bad phone in lead is 400", pub.post("/lead", {"name": "Smoke", "phone": "123"},
       headers={"X-Requested-With": "XMLHttpRequest"})[0] == 400)
 
@@ -52,7 +54,7 @@ check("POST without CSRF token is 403", internal.post("/sso/generate-otp", {"emp
 if not dev_login:
     print("\n  (dev login form not present: this looks like a UAT/prod build, role checks skipped)")
 else:
-    print("\n== Roles (dev profile test employees)")
+    print("\n== Roles (local profile test employees)")
     dit, maker, checker, retail = Client(INTERNAL), Client(INTERNAL), Client(INTERNAL), Client(INTERNAL)
     check("DIT 100001 (SOL 7115) signs in", dit.dev_login("100001"))
     check("Maker 200001 signs in", maker.dev_login("200001"))
@@ -63,6 +65,8 @@ else:
     check("Maker cannot open Customer Leads (403)", maker.get("/admin/leads")[0] == 403)
     check("Checker cannot open Customer Leads (403)", checker.get("/admin/leads")[0] == 403)
     check("DIT can open Customer Leads", dit.get("/admin/leads")[0] == 200)
+    check("Checker cannot open the new-project form (403)", checker.get("/admin/projects/new")[0] == 403)
+    check("HO retail cannot open the new-project form (403)", retail.get("/admin/projects/new")[0] == 403)
     check("DIT can open Logs", dit.get("/admin/audit-logs")[0] == 200)
     check("Maker cannot open Logs (403)", maker.get("/admin/audit-logs")[0] == 403)
     check("Checker cannot open Logs (403)", checker.get("/admin/audit-logs")[0] == 403)

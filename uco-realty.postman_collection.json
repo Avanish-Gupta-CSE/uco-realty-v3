@@ -1,13 +1,13 @@
 {
   "info": {
     "name": "UCO Realty - public API",
-    "description": "Read-only customer API of uco-realty-public (no login). Staff features use the browser session through bank SSO and are not part of this collection.",
+    "description": "Read-only customer API of ucorealty-customer (no login). Staff features use the browser session through bank SSO and are not part of this collection.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:8080"
+      "value": "http://localhost:8080/ucorealty-customer"
     },
     {
       "key": "projectId",

@@ -10,7 +10,7 @@ case "$MODE" in uat|prod) ;; *) echo "Usage: $0 [uat|prod]"; exit 1;; esac
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 STAMP="$(date +%Y%m%d-%H%M)"
-NAME="uco-realty-$MODE-$STAMP"
+NAME="ucorealty-$MODE-$STAMP"
 OUT="$ROOT/release/$NAME"
 
 # Java 25 is required; prefer the Homebrew one when present (same as dev-start.sh)
@@ -23,16 +23,16 @@ echo "==> Building both WARs"
 # shellcheck disable=SC2086
 (cd "$ROOT" && mvn -q ${MVN_OPTS:-} clean package -DskipTests)
 
-PUBLIC_WAR="$ROOT/uco-realty-public/target/uco-realty-public-0.1.0.war"
-INTERNAL_WAR="$ROOT/uco-realty-internal/target/uco-realty-internal-0.1.0.war"
+PUBLIC_WAR="$ROOT/ucorealty-customer/target/ucorealty-customer.war"
+INTERNAL_WAR="$ROOT/ucorealty-staff/target/ucorealty-staff.war"
 [ -f "$PUBLIC_WAR" ] && [ -f "$INTERNAL_WAR" ] || { echo "!! build did not produce both WARs"; exit 1; }
 
 echo "==> Assembling $OUT"
 mkdir -p "$OUT/db"
-# The WAR file name becomes the URL path on an external Tomcat (uco-realty-internal.war -> /uco-realty-internal),
+# The WAR file name becomes the URL path on an external Tomcat (ucorealty-staff.war -> /ucorealty-staff),
 # so ship them without the version number.
-cp "$PUBLIC_WAR" "$OUT/uco-realty-public.war"
-cp "$INTERNAL_WAR" "$OUT/uco-realty-internal.war"
+cp "$PUBLIC_WAR" "$OUT/ucorealty-customer.war"
+cp "$INTERNAL_WAR" "$OUT/ucorealty-staff.war"
 cp "$ROOT"/db_migrations/*.sql "$ROOT"/db_migrations/README_DBA_DEPLOYMENT.md "$OUT/db/"
 # UAT and production read the bank's real HRMS tables: never ship the mock tables or local test employees
 rm -f "$OUT/db/03_CREATE_HRMS_MOCK_TABLES.sql" "$OUT/db/05_LOCAL_TEST_EMPLOYEES.sql"
