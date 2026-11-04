@@ -35,7 +35,7 @@ scripts/dev-stop.sh                  # also stops H2 (the in-memory data is gone
 * The tables come from the **same** DBA script `db_migrations/01_CREATE_TABLES.sql`, converted on the fly by `scripts/h2_schema.py` (H2 in Oracle mode). Every start of a fresh H2 runs the DROP + CREATE statements, so it is always clean.
 * **H2 console:** http://localhost:8082, JDBC URL `jdbc:h2:tcp://localhost:9092/mem:ucorealty`, user `sa`, empty password. Both apps share this one database (that is why H2 runs as its own small server: an in-memory database lives inside one process, and the customer and staff apps are two).
 * The H2 driver is added only by the `h2` Maven build option (`-Ph2`) (`mvn -Ph2 clean package` inside each app folder, done by the script); the normal build, and so every UAT/production WAR, contains no H2.
-* Same results as Oracle: `smoke_test.py` 35/35, `workflow_test.py` 78/78, `context_path_check.py` OK. What H2 cannot check: the Oracle-only unique index `ux_staging_one_open` (the app still enforces it), the SecureFiles photo storage, the real HRMS tables, and schema validation (H2 and Oracle name the number types differently). Use Oracle in Docker (default start) before you hand over, and the UAT database for the final run (`SPRING_PROFILES_ACTIVE=uat`, `DB_URL`, `DB_USER`, `DB_PASS`, the DBA runs `db_migrations/01_CREATE_TABLES.sql`).
+* Same results as Oracle: `smoke_test.py` 35/35, `workflow_test.py` 83/83, `context_path_check.py` OK. What H2 cannot check: the Oracle-only unique index `ux_staging_one_open` (the app still enforces it), the SecureFiles photo storage, the real HRMS tables, and schema validation (H2 and Oracle name the number types differently). Use Oracle in Docker (default start) before you hand over, and the UAT database for the final run (`SPRING_PROFILES_ACTIVE=uat`, `DB_URL`, `DB_USER`, `DB_PASS`, the DBA runs `db_migrations/01_CREATE_TABLES.sql`).
 * `scripts/remove_demo_data.sh` works on both.
 
 ## 2. Automatic check (about 5 seconds)
@@ -92,7 +92,7 @@ Checks the customer-site lockdown, headers, bad SSO tokens, CSRF, roles (DIT/mak
 
 **Automatic version of all of this**
 ```bash
-python3 scripts/workflow_test.py     # 78 checks; creates two "ZZ Workflow" projects (one ends DELETED, one REJECTED)
+python3 scripts/workflow_test.py     # 83 checks; creates two "ZZ Workflow" projects (one ends DELETED, one REJECTED)
 scripts/remove_demo_data.sh          # physically removes those test projects and their staging rows from the dev database
 ```
 
@@ -115,7 +115,7 @@ Watch it between the steps: *Save as Draft* changes only `project_staging`; *Sen
 | 1 | Build | `cd ucorealty-customer && mvn -q clean package -DskipTests`, then the same in `ucorealty-staff` (or `scripts/package-release.sh uat`) | both WARs built, no error |
 | 2 | Start | `scripts/dev-start.sh` | both URLs answer; no ERROR in `.run/*.log` |
 | 3 | Smoke | `python3 scripts/smoke_test.py` | 35/35 |
-| 4 | Workflow | `python3 scripts/workflow_test.py` | 78/78 (new project, return, reject, withdraw, edit, unit reduction, delete, role/zone/self-approval refusals, concurrency, XSS) |
+| 4 | Workflow | `python3 scripts/workflow_test.py` | 83/83 (new project, return, reject, withdraw, edit, unit reduction, delete, role/zone/self-approval refusals, concurrency, XSS) |
 | 5 | Clean | `scripts/remove_demo_data.sh` | "demo data removed" |
 | 6 | Manual 3A-3D | sections 3 and 3b with the personas | every expected result above |
 | 7 | Roles | try `/admin/leads`, `/admin/audit-logs`, a reduce-units POST as the wrong roles | 403 / Access Denied |

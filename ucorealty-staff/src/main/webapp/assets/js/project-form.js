@@ -189,6 +189,11 @@ function initDistrictSelector() {
                 citySelect.value = val;
             }
         });
+
+        // Runs when the browser builds the data to send (after every other submit check passed); see packTextFields.
+        formEl.addEventListener("formdata", function (e) {
+            packTextFields(e.formData);
+        });
     }
 
     // Populate initially if state is selected
@@ -416,3 +421,23 @@ function initDateGuards() {
     }
 }
 
+/**
+ * Tomcat refuses a multipart request with more than 50 parts, and this form has about 45 text fields plus up to 10 photo
+ * inputs. So when the browser builds the data to send, all text fields are packed into ONE urlencoded value ("__packed")
+ * and only the photos that were chosen stay as file parts. The server (PackedFormFilter) unpacks it again. The form on the
+ * screen is not touched; only the outgoing data changes.
+ */
+function packTextFields(formData) {
+    var packed = new URLSearchParams();
+    Array.from(formData.entries()).forEach(function (entry) {
+        var name = entry[0], value = entry[1];
+        if (name === "_csrf" || name === "action") return;          // the CSRF check and the button stay ordinary parts
+        if (value instanceof File) {
+            if (value.size === 0 && !value.name) formData.delete(name);   // an empty photo slot is not worth a part
+            return;
+        }
+        packed.append(name, value);
+        formData.delete(name);
+    });
+    formData.append("__packed", packed.toString());
+}

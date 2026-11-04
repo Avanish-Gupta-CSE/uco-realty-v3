@@ -12,7 +12,7 @@
     <link rel="stylesheet" id="bootstrap-css" href="${pageContext.request.contextPath}/assets/css/bootstrap.min.css">
     <!-- UCO Bank Theme Stylesheet -->
     <%-- bump assetVersion whenever CSS/JS change, so browsers do not keep showing the old design --%>
-    <c:set var="assetVersion" value="20261104a" scope="request" />
+    <c:set var="assetVersion" value="20261104b" scope="request" />
     <link rel="stylesheet" id="uco-theme-css" href="${pageContext.request.contextPath}/assets/css/style.css?v=${assetVersion}">
 </head>
 <body>

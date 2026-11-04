@@ -72,7 +72,7 @@ The script then waits until each log says "Started ...Application" and prints th
 | `package-release.sh uat|prod` | builds both WARs and zips them with the SQL files, the deployment guide and SHA-256 checksums (never mock HRMS tables or demo data) | optional: a convenient hand-over bundle |
 | `h2_schema.py` | converts `db_migrations/01_CREATE_TABLES.sql` for H2 (drops the Oracle-only storage clause and the expression index) | no (H2 only) |
 | `smoke_test.py` | 35 quick checks: lockdown of the customer site, headers, CSRF, bad tokens, role access, logout | no (run before a release, local profile only) |
-| `workflow_test.py` | 78 checks of the whole maker-checker flow through the real screens; leaves two test projects behind | no (local profile only) |
+| `workflow_test.py` | 83 checks of the whole maker-checker flow through the real screens; leaves two test projects behind | no (local profile only) |
 | `context_path_check.py` | crawls both apps as several roles and fails if any URL lacks the context path | no (run before a release) |
 | `load_demo_data.py` / `remove_demo_data.sh` | create / delete nine demo projects, leads and photos (all names end in "(Demo)") | no |
 | `uco_http.py` | tiny helper the Python scripts share (cookies, CSRF token, login) | no |

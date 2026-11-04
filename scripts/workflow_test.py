@@ -255,6 +255,35 @@ html = maker.get("/admin/projects?search=Jerry")[2].decode()
 check("an allowed '&' is escaped on screen (&amp;)", "Tom &amp; Jerry" in html and "Tom & Jerry" not in html)
 pid5 = demo.newest_project_id(maker, "ZZ Workflow Tom"); maker.post(f"/admin/projects/staging/{sid(maker, pid5)}/withdraw", {"_csrf": maker.csrf("/admin/projects")})
 
+print("\n== 13. The browser's real request shape: all text fields packed into ONE part (Tomcat refuses more than 50 parts)")
+import urllib.parse  # noqa: E402
+
+
+def save_packed(c, fields, action="draft", files=()):
+    """What project-form.js sends: _csrf and action as parts, every other text field urlencoded into __packed, photos as file parts."""
+    parts = {"_csrf": c.csrf("/admin/projects"), "action": action, "__packed": urllib.parse.urlencode(fields)}
+    return c.multipart_post("/admin/projects/staging/save", parts, files)
+
+
+fl = demo.form(5, "ZZ Workflow Packed & Co", "ZZ Workflow Builder", "Bihar", "Patna", "800001", 40)
+fl.update({"branchName": "Patna Main Branch", "amenities": "Park & Gym + Pool\nSecond line \u00e9"})
+for extra in ("promoter1", "promoter2", "promoter3", "promoter4", "promoter5", "salesExecName", "salesMobile", "salesEmail", "website",
+              "builderRating", "branchHeadName", "branchHeadNumber", "relExecName", "relExecNumber", "approvalSought", "renewalPending"):
+    fl.setdefault(extra, "")
+photos3 = [(f"photo{i + 1}", p.name, p.read_bytes(), "image/jpeg") for i, p in enumerate(PHOTO[:3])]
+check("a browser-style request has far fewer than 50 parts", 3 + len(photos3) <= 14 and len(fl) > 40)
+s_, _, _ = save_packed(maker, fl, files=photos3)
+check("packed save as draft works (302)", s_ == 302)
+pid6 = demo.newest_project_id(maker, "ZZ Workflow Packed")
+check("the packed fields were unpacked: project exists as a Draft", pid6 is not None and status_of(maker, pid6) == "Draft")
+sid6 = sid(maker, pid6)
+prev = maker.get(f"/admin/projects/staging/{sid6}/preview")[2].decode()
+check("special characters survived the packing (& + new line, accent)", "Park &amp; Gym + Pool" in prev and "\u00e9" in prev)
+fl["stagingId"] = str(sid6)
+s_, _, _ = save_packed(maker, fl, action="submit")
+check("packed 'Send for Approval' works (302) and the status is Pending Approval", s_ == 302 and status_of(maker, pid6) == "Pending Approval")
+decide(checker, sid6, "reject", "test only")
+
 print(f"\n{results.count(True)}/{len(results)} checks passed")
 print("(test projects ZZ Workflow ... remain: one DELETED in the master table, one REJECTED in staging; scripts/remove_demo_data.sh removes them)")
 sys.exit(1 if False in results else 0)
