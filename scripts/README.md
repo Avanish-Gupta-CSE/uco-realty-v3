@@ -62,7 +62,7 @@ It does exactly steps 1 to 4 above, on your laptop, in four stages:
 | 3. Tables | `docker cp db_migrations uco-oracle:/tmp/`, then `sqlplus uco_realty` runs `01_CREATE_TABLES.sql` only if the schema has no tables (`--reset` runs `00_DROP_ALL_TABLES.sql` first) | `python3 scripts/h2_schema.py > .run/h2-schema.sql` (the same `01_CREATE_TABLES.sql`, made H2-friendly), then `org.h2.tools.RunScript` runs it (drops and recreates) |
 | 4. Start the apps | `SPRING_PROFILES_ACTIVE=local DB_URL=... DB_USER=... DB_PASS=... java -Dserver.port=8080 -jar ucorealty-customer.war`, then the same for `ucorealty-staff.war` on 8081. Each runs in the background; logs `.run/public.log`, `.run/internal.log`; process ids `.run/*.pid` | the same without `DB_*`: the `local` profile defaults to the H2 server |
 
-Why the `local` profile: `application-local.properties` switches on the built-in test employees (OTP 123456), plain-http cookies and the `/ucorealty-...` context path. On a bank server you never use it.
+Why the `local` profile: `application-local.properties` switches on the test OTP (123456; employees come from the stand-in HRMS tables that dev-start loads from `db_migrations/03` and `05`), plain-http cookies and the `/ucorealty-...` context path. On a bank server you never use it.
 The script then waits until each log says "Started ...Application" and prints the URLs.
 
 ## The other scripts

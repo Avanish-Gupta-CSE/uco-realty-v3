@@ -130,16 +130,16 @@ python3 scripts/load_demo_data.py     # local profile only; refuses to run elsew
 scripts/remove_demo_data.sh           # removes everything whose project name ends in "(Demo)" and the demo leads
 ```
 
-## 5. Try the real HRMS code path on this Mac (optional)
-The local profile uses a built-in list of test employees. To exercise the same code that runs in UAT (reading `employee_contact_details`), on your laptop only:
+## 5. Employees and sign-in on this Mac
+There are no test employees in the Java code. The application always reads employees from the HRMS tables; on your Mac those tables are stand-ins (`db_migrations/03_CREATE_HRMS_MOCK_TABLES.sql`) filled with 12 test employees (`05_LOCAL_TEST_EMPLOYEES.sql`). `scripts/dev-start.sh` loads them into Oracle, and `scripts/h2_schema.py` adds them to H2, so the sign-in code is the same as in UAT. The `local` profile sets the test OTP (`uco.sso.test-otp=123456`), so any employee in those tables signs in with their number and `123456`.
+
+To try the bank-style token entry instead of the form (laptop only), run the staff app with the form switched off and open `/entry?value=<token>`, where the token is `emp_id=<EMPNO>&sol_id=<SOL>` encrypted with the dev key/iv (`SsoCryptoUtil.encryptAesCbc`; values in `application-local.properties`):
 ```bash
-docker cp db_migrations uco-oracle:/tmp/
-# in sqlplus as uco_realty: @/tmp/db_migrations/03_CREATE_HRMS_MOCK_TABLES.sql  then  @/tmp/db_migrations/05_LOCAL_TEST_EMPLOYEES.sql
 DB_URL=jdbc:oracle:thin:@localhost:1521/XEPDB1 DB_USER=uco_realty DB_PASS=uco_realty_pwd \
 java -jar ucorealty-staff/target/ucorealty-staff.war --server.port=8181 \
-     --spring.profiles.active=local --uco.hrms.mode=bank --uco.sso.dev-login-enabled=false
+     --spring.profiles.active=local --uco.sso.dev-login-enabled=false
 ```
-Then open `/entry?value=<token>` where the token is `emp_id=<EMPNO>&sol_id=<SOL>` encrypted with the dev key/iv (`SsoCryptoUtil.encryptAesCbc`; values in `application-local.properties`). `600001` (branch SOL) and `600002` (scale 0) must be refused with "not authorised".
+`600001` (branch SOL) and `600002` (scale 0) must be refused with "not authorised".
 
 ## 5b. UAT before the SSO is wired (closed test only)
 Until the bank PC and key arrive, the UAT server can offer a **basic employee-id + test-OTP page** against the real HRMS data. It is off by default and needs both settings (JVM `-D...` or environment variables):

@@ -5,7 +5,7 @@
     PUBLIC_URL=http://localhost:8080/ucorealty-customer INTERNAL_URL=http://localhost:8081/ucorealty-staff python3 scripts/smoke_test.py
 
 Checks the customer lockdown, security headers, SSO error paths, CSRF, role isolation and logout. The role checks
-need the local profile (employee-id + OTP form with the built-in test employees); against a UAT/prod build it runs
+need the local profile (employee-id + OTP form with the test employees from db_migrations/05); against a UAT/prod build it runs
 the checks that do not need a login and says what it skipped. It never creates projects.
 Exit code is 0 only when every check passes.
 """

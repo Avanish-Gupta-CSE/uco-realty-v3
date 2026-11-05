@@ -2,7 +2,7 @@
 -- MOCK HRMS TABLES: for a DEVELOPER LAPTOP only (Docker Oracle). UAT and production already have the bank's real HRMS tables
 -- (employee_contact_details, hrms_dba.employee_tenure, hrms_dba.employee_job_profile); NEVER run this there.
 --
--- Table and column names are exactly what HrmsServiceImpl queries; column types and sizes follow the bank's own
+-- Table and column names are exactly what HrmsRepository queries; column types and sizes follow the bank's own
 -- "desc employee_contact_details" (EMPNO varchar2(6), POSTING_SOL_ID varchar2(4), SCALE_CODE varchar2(2),
 -- CADRE_CODE varchar2(4), POSTING_REGION_NAME varchar2(50)). Only the columns the application reads are created.
 -- Created in the current schema; the application also tries the hrms_dba. prefix.

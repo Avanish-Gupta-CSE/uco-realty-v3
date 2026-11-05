@@ -23,7 +23,7 @@ That is all. The application creates and changes no tables itself; in UAT it che
 | Script | Purpose |
 | :--- | :--- |
 | `00_DROP_ALL_TABLES.sql` | empties the application tables (also removes old, retired tables). Included in a UAT bundle for resets, **never run in production** |
-| `03_CREATE_HRMS_MOCK_TABLES.sql` + `05_LOCAL_TEST_EMPLOYEES.sql` | stand-ins for the bank's HRMS tables and 12 test employees, to try the real HRMS code path in Docker Oracle. UAT and production already have the real HRMS data in `hrms_dba` |
+| `03_CREATE_HRMS_MOCK_TABLES.sql` + `05_LOCAL_TEST_EMPLOYEES.sql` | stand-ins for the bank's HRMS tables and 12 test employees, so a laptop uses the same HRMS code path as UAT (`scripts/dev-start.sh` loads them for you). UAT and production already have the real HRMS data in `hrms_dba` |
 | `06_STAGING_MODEL.sql`, `07_DROP_UNUSED_TABLES.sql` | one-time upgrade of a laptop database created by earlier builds (old change-request design, `users` and `lead_transfer_log` tables). A new database never needs them |
 
 ## 3. Verification

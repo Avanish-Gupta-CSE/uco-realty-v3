@@ -1,19 +1,17 @@
 package com.ucorealty.hrms;
 
 import com.ucorealty.entity.AppUser;
-import java.util.List;
 
 public interface HrmsService {
 
+  /** The employee as HRMS knows them, or null when unknown. */
   HrmsUserProfile fetchUserProfile(String empId);
 
-  boolean validateEmployee(String empId);
+  /** True when the fixed test OTP (uco.sso.test-otp) is configured; never in production. */
+  boolean isTestOtpEnabled();
 
-  String generateOtp(String empId);
-
+  /** Checks the test OTP for an employee who exists in HRMS. The real OTP is the bank SSO portal's job. */
   boolean verifyOtp(String empId, String otp);
-
-  List<HrmsUserProfile> listAllDirectoryEmployees();
 
   AppUser toAppUser(HrmsUserProfile profile);
 
@@ -23,4 +21,3 @@ public interface HrmsService {
   /** Official zone name for zonal-office employees, otherwise null. */
   String resolveZone(HrmsUserProfile profile);
 }
-

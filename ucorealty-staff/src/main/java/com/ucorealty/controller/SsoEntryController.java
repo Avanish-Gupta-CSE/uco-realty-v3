@@ -9,6 +9,8 @@ import com.ucorealty.util.SsoCryptoUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -45,9 +47,6 @@ public class SsoEntryController {
   @Value("${sso.encryption.iv:}")
   private String encryptionIv;
 
-  @Value("${uco.hrms.mode:bank}")
-  private String hrmsMode;
-
   // Local/UAT-only conveniences (plain /sso handoff, app-issued OTP, test-user picker). Always false in prod.
   @Value("${uco.sso.dev-login-enabled:false}")
   private boolean devLoginEnabled;
@@ -57,10 +56,12 @@ public class SsoEntryController {
 
   private final HrmsService hrmsService;
   private final AuditService auditService;
+  private final Environment environment;
 
-  public SsoEntryController(HrmsService hrmsService, AuditService auditService) {
+  public SsoEntryController(HrmsService hrmsService, AuditService auditService, Environment environment) {
     this.hrmsService = hrmsService;
     this.auditService = auditService;
+    this.environment = environment;
   }
 
   @GetMapping("/")
@@ -211,7 +212,7 @@ public class SsoEntryController {
       return "redirect:/admin/projects";
     }
     model.addAttribute("devLogin", devLoginEnabled);
-    model.addAttribute("localMode", "local".equalsIgnoreCase(hrmsMode));   // built-in test employees (laptop only)
+    model.addAttribute("localMode", environment.acceptsProfiles(Profiles.of("local")));   // laptop only: shows a hint about the test employees
     return "login";
   }
 
@@ -235,7 +236,6 @@ public class SsoEntryController {
       return "redirect:/login?error=invalid_employee";
     }
 
-    String otp = hrmsService.generateOtp(profile.getEmpNo());
     HttpSession session = request.getSession(true);
     session.setAttribute("PENDING_OTP_EMP_ID", profile.getEmpNo());
     session.setAttribute("PENDING_OTP_NAME", profile.getName());

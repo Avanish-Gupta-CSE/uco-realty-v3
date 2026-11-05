@@ -10,7 +10,7 @@
 #                                        Data lives in the H2 server process: scripts/dev-stop.sh (without --apps-only) wipes it.
 #   scripts/dev-start.sh --h2 --reset    fresh empty H2 database
 #
-# Staff sign in through SSO/OTP (local HRMS mode: employee 100001, OTP 123456). No local accounts exist.
+# Staff sign in with a test employee from the HRMS stand-in tables (db_migrations/05, e.g. 100001) and the test OTP 123456. No local accounts exist.
 set -euo pipefail
 
 # Ensure Java 25 is prioritized
@@ -102,7 +102,7 @@ fi
 say "3/4 Database tables"
 if [ "$DB" = h2 ]; then
   H2_SCRIPT="$RUN/h2-schema.sql"
-  show "python3 scripts/h2_schema.py > .run/h2-schema.sql     (db_migrations/01_CREATE_TABLES.sql made H2-friendly)"
+  show "python3 scripts/h2_schema.py > .run/h2-schema.sql     (db_migrations/01 made H2-friendly, plus the laptop HRMS tables 03 and test employees 05)"
   show "java -cp h2.jar org.h2.tools.RunScript -url $H2_URL -user sa -script .run/h2-schema.sql"
   python3 "$ROOT/scripts/h2_schema.py" > "$H2_SCRIPT" || die "Could not generate the H2 schema"
   HAS=$(java -cp "$H2_JAR" org.h2.tools.Shell -url "$H2_URL" -user sa -sql "select count(*) from information_schema.tables where table_name='PROJECTS'" 2>/dev/null | sed -n 2p | tr -d ' ')
@@ -128,6 +128,12 @@ if [ "$TABLES" = "0" ]; then
   echo "tables created"
 else
   echo "tables already exist ($TABLES)"
+fi
+if [ "$(sql "select count(*) from user_tables where table_name='EMPLOYEE_CONTACT_DETAILS';")" = "0" ]; then
+  show "sqlplus uco_realty@XEPDB1  @/tmp/db_migrations/03_CREATE_HRMS_MOCK_TABLES.sql   then   @/tmp/db_migrations/05_LOCAL_TEST_EMPLOYEES.sql"
+  echo exit | $SQ @/tmp/db_migrations/03_CREATE_HRMS_MOCK_TABLES.sql 2>&1 | grep -i "ORA-" && die "Creating the HRMS stand-in tables failed"
+  echo exit | $SQ @/tmp/db_migrations/05_LOCAL_TEST_EMPLOYEES.sql 2>&1 | grep -i "ORA-" && die "Loading the test employees failed"
+  echo "HRMS stand-in tables and test employees created (laptop only)"
 fi
 fi
 

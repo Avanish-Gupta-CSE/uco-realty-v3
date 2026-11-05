@@ -55,44 +55,16 @@
                 <label for="empId" class="form-label fw-semibold small" id="label-emp-id">
                     Employee ID (Emp No)
                 </label>
-                <input type="text" id="empId" name="empId" class="form-control" placeholder="e.g. 100001, 200001" required autofocus autocomplete="off">
+                <input type="text" id="empId" name="empId" class="form-control" placeholder="Employee number" required autofocus autocomplete="off">
                 <div class="form-text small text-muted" id="emp-id-hint">
                     Enter your official 6-digit UCO Bank Employee Number.
                 </div>
             </div>
 
-            <c:if test="${localMode}">
-            <!-- Role Selector Helper Pills (Dev & Testing) -->
-            <div class="mb-3" id="role-quick-select-wrap">
-                <label class="form-label text-muted small fw-semibold" id="label-quick-test">
-                    Quick Role Selector (Testing):
-                </label>
-                <div class="role-pills-container" id="pills-container">
-                    <button type="button" class="role-pill-btn" data-emp-id="100001" id="pill-100001">
-                        100001 (Superadmin DIT)
-                    </button>
-                    <button type="button" class="role-pill-btn" data-emp-id="200001" id="pill-200001">
-                        200001 (Ajmer Maker)
-                    </button>
-                    <button type="button" class="role-pill-btn" data-emp-id="200002" id="pill-200002">
-                        200002 (Ajmer Checker)
-                    </button>
-                    <button type="button" class="role-pill-btn" data-emp-id="300001" id="pill-300001">
-                        300001 (Bhopal Maker)
-                    </button>
-                    <button type="button" class="role-pill-btn" data-emp-id="300002" id="pill-300002">
-                        300002 (Bhopal Checker)
-                    </button>
-                    <button type="button" class="role-pill-btn" data-emp-id="400001" id="pill-400001">
-                        400001 (HO Retail)
-                    </button>
-                </div>
-            </div>
 
-            </c:if>
 
             <div class="alert alert-info py-2 small mb-3" id="alert-sso-info">
-                <strong>HRMS Single Sign-On:</strong> Roles (Maker/Checker/Admin) are automatically derived from HRMS SOL ID &amp; Cadre Scale. <c:if test="${localMode}">Local test OTP: <code>123456</code>.</c:if><c:if test="${!localMode}">Enter the OTP given to you by the test administrator.</c:if>
+                <strong>HRMS Single Sign-On:</strong> Roles (Maker/Checker/Admin) are automatically derived from HRMS SOL ID &amp; Cadre Scale. <c:if test="${localMode}">Laptop test: the employees are in <code>db_migrations/05_LOCAL_TEST_EMPLOYEES.sql</code>; the OTP is the value of <code>uco.sso.test-otp</code>.</c:if><c:if test="${!localMode}">Enter the OTP given to you by the test administrator.</c:if>
             </div>
 
             <button type="submit" class="btn btn-primary w-100 py-2 mt-2" id="btn-sso-otp">

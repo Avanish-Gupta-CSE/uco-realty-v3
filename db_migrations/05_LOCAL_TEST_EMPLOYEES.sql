@@ -1,9 +1,8 @@
 -- ============================================================================
--- LOCAL TEST EMPLOYEES for trying the real HRMS code path on a developer machine (MacBook).
+-- LOCAL TEST EMPLOYEES for a developer machine (MacBook): the application reads these rows exactly as it reads the bank's HRMS tables.
 -- NOT for UAT or production: those environments already have the real data in the bank's HRMS tables.
--- Requires 03_CREATE_HRMS_MOCK_TABLES.sql first. Then start the internal app with
---   --uco.hrms.mode=bank --uco.sso.dev-login-enabled=false
--- and open /entry?value=<token> (token = encrypted  emp_id=<EMPNO>&sol_id=<SOL>, see TESTING_GUIDE.md).
+-- Requires 03_CREATE_HRMS_MOCK_TABLES.sql first. scripts/dev-start.sh (Oracle) and scripts/h2_schema.py (H2) load 03 and 05 for you;
+-- sign in with the employee number and the local test OTP, or open /entry?value=<token> (token = encrypted  emp_id=<EMPNO>&sol_id=<SOL>, see TESTING_GUIDE.md).
 -- SOLs follow the real structure: 7115 DIT superadmin, 8028 HO Marketing and Wealth Management,
 -- 8001 HO Retail Banking, 7001–7049 zonal offices (7001 = Patna).
 -- Idempotent (MERGE).

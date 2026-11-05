@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 """Turns the DBA script db_migrations/01_CREATE_TABLES.sql into an H2 script (Oracle mode) for local testing without Docker.
+It also appends the laptop-only HRMS stand-ins: 03_CREATE_HRMS_MOCK_TABLES.sql and 05_LOCAL_TEST_EMPLOYEES.sql (the application
+reads employees from those tables exactly as it reads the bank's HRMS tables in UAT).
 
 The tables, columns, checks and foreign keys stay exactly as the DBA script defines them, so testing on H2 also tests that script.
 Only the two things H2 cannot do are replaced:
@@ -26,6 +28,11 @@ pattern = re.compile(r"CREATE UNIQUE INDEX ux_staging_one_open ON project_stagin
 sql, n2 = pattern.subn("-- ux_staging_one_open is Oracle-only (H2 cannot index an expression); the application enforces the rule on H2", sql)
 if not (n1 == 1 and n2 == 1):
     sys.exit("h2_schema.py: 01_CREATE_TABLES.sql changed shape (SECUREFILE clause or ux_staging_one_open not found); update this script")
+
+# 3. laptop HRMS tables + test employees (plain SQL that H2 in Oracle mode understands)
+hrms = open(os.path.join(root, "db_migrations", "03_CREATE_HRMS_MOCK_TABLES.sql"), encoding="utf-8").read()
+hrms += "\n" + open(os.path.join(root, "db_migrations", "05_LOCAL_TEST_EMPLOYEES.sql"), encoding="utf-8").read()
+sql += "\n" + hrms
 
 # SQL*Plus-only commands (PROMPT, SET ...) mean nothing to H2
 sql = re.sub(r"^(PROMPT|SET|WHENEVER|SPOOL)\b.*$", "", sql, flags=re.M | re.I)

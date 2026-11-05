@@ -24,8 +24,8 @@ export CATALINA_OPTS="-Dspring.profiles.active=uat \
 (`-D...` JVM properties and OS environment variables both work.) `server.port` and `server.servlet.context-path` in the application files are ignored on an external Tomcat; the connector port and the WAR name decide.
 
 ## 1. Database (DBA)
-Follow `db/README_DBA_DEPLOYMENT.md`. Order: `01_CREATE_TABLES.sql`; for an existing older database also `06_STAGING_MODEL.sql` and `07_DROP_UNUSED_TABLES.sql` (maker's working-copy table `project_staging`). There is no seed data and no application accounts. UAT and production use the bank's **real HRMS data** (`hrms_dba`); `03_`/`05_` scripts are only for a developer laptop.
-The application schema user needs `SELECT` on the bank HRMS tables (`employee_contact_details`, and optionally `employee_tenure`, `employee_job_profile`). Columns read from `employee_contact_details`: `EMPNO, NAME, POSTING_SOL_ID, POSTING_SOL_DESC, SCALE_CODE, CADRE_CODE, POSTING_REGION_NAME, DESIG, MOBILE_NO, E_MAIL` (tables are tried with and without the `hrms_dba.` prefix). Please verify these names against the real HRMS schema.
+Follow `db/README_DBA_DEPLOYMENT.md`. Order: `01_CREATE_TABLES.sql`; for an existing older database also `06_STAGING_MODEL.sql` and `07_DROP_UNUSED_TABLES.sql` (maker's working-copy table `project_staging`). There is no seed data and no application accounts. UAT and production use the bank's **real HRMS data** (`hrms_dba`); `03_`/`05_` scripts (stand-in HRMS tables and test employees) are only for a developer laptop.
+The application schema user needs `SELECT` on the bank HRMS tables (`employee_contact_details`, and optionally `employee_tenure`, `employee_job_profile`). Columns read from `employee_contact_details`: `EMPNO, NAME, POSTING_SOL_ID, POSTING_SOL_DESC, SCALE_CODE, CADRE_CODE, POSTING_REGION_NAME, DESIG, MOBILE_NO, E_MAIL` (the table prefixes tried, in order, are the setting `uco.hrms.table-prefixes` / env `HRMS_TABLE_PREFIXES`; default `,hrms_dba.` = first no prefix, then `hrms_dba.`). Please verify these names against the real HRMS schema.
 
 ## 2. Configuration
 ### How the settings files work (read this once)
@@ -37,12 +37,12 @@ The application schema user needs `SELECT` on the bank HRMS tables (`employee_co
 | :--- | :--- | :--- |
 | `prod` (default) | production | no table checks, 25 DB connections, quiet logs |
 | `uat` | UAT server | **checks the tables against the code at start** (refuses to start if they differ), 10 connections, normal logs |
-| `local` | a laptop only | the in-memory H2 database by default, built-in test employees (OTP 123456), the `/ucorealty-...` context path, plain-http cookies. Never on a bank server |
+| `local` | a laptop only | the in-memory H2 database by default, the test employees in the HRMS stand-in tables (from `db_migrations/03` and `05`; test OTP 123456), the `/ucorealty-...` context path, plain-http cookies. Never on a bank server |
 
 ### Which database does the application use?
 Whatever **`DB_URL`** points to; the files contain no database address. On UAT/production set `DB_URL=jdbc:oracle:thin:@//host:1521/SERVICE` with `DB_USER` and `DB_PASS`. The Oracle driver is in every WAR.
 * **H2 is for laptops, not for the bank's UAT server.** The normal WAR has no H2 driver (it is added only by `mvn -Ph2`), in-memory H2 loses its data on restart and needs a separate server process for the two WARs, `uat` cannot check an H2 schema (H2 names the number types differently), and, most important, **the bank's HRMS tables do not exist in H2, so nobody could sign in** with the real SSO. UAT needs a real Oracle schema with `SELECT` on the HRMS tables; if the bank is late, test on your laptop (Oracle in Docker, or `dev-start.sh --h2`).
-* A closed demo without Oracle is possible, but it is the laptop setup on a test box (`local` profile, H2 server, test employees); keep it off the bank's network.
+* A closed demo without Oracle is possible, but it is the laptop setup on a test box (`local` profile, H2 server, test employees in the stand-in HRMS tables); keep it off the bank's network.
 
 | Variable | Module | Required | Meaning |
 | :--- | :--- | :--- | :--- |
@@ -53,6 +53,7 @@ Whatever **`DB_URL`** points to; the files contain no database address. On UAT/p
 | `SSO_ENCRYPTION_IV` | internal | if the bank uses AES-CBC | Base64 IV |
 | `APP_REDIRECT_URL` | internal | no | landing page after login, default `/admin/projects` |
 | `UCO_RBAC_RETAIL_SOLS` | internal | no (default 8001) | SOL(s) of HO Retail Banking, comma separated. Other role SOLs have defaults (`UCO_RBAC_SUPERADMIN_SOLS`=7115, `UCO_RBAC_MARKETING_SOLS`=8028, `UCO_RBAC_ZONAL_SOL_REGEX`=`70(0[1-9]|[1-4]\d)`) |
+| `HRMS_TABLE_PREFIXES` | internal | no | schema prefixes tried for the HRMS tables, in order. Default `,hrms_dba.` (first none, then `hrms_dba.`). Set to e.g. `hrms_dba.` once the bank confirms where the tables live |
 | `SESSION_COOKIE_SECURE` | both | no | default `true`; set `false` only for a plain-HTTP UAT |
 | `SERVER_PORT` | both | no | 8080 public / 8081 internal |
 
@@ -62,7 +63,7 @@ export DB_URL='jdbc:oracle:thin:@//db-host:1521/SERVICE' DB_USER='...' DB_PASS='
 export SSO_ENCRYPTION_KEY='...' SSO_ENCRYPTION_IV='...'
 java -jar ucorealty-staff.war        # standalone alternative to Tomcat; same for ucorealty-customer.war (without the SSO variables)
 ```
-The WARs contain no sample data, test users or secrets. In `uat`/`prod` the dev conveniences are off: no plain `/sso?emp_id=` login, no application-issued OTP, no built-in employees (the bank SSO portal does the OTP).
+The Java code contains no test employees and no fixed OTP: employees are always read from the HRMS tables (on a laptop those are stand-ins created from `db_migrations/03` and `05`, never part of a release). One thing does travel inside the WAR: `application-local.properties`, which holds a development SSO key, the test OTP and the dev login switch. It is only read when `SPRING_PROFILES_ACTIVE=local`, and the `prod` profile refuses to start if a test OTP is set. In `uat`/`prod` the dev conveniences are off: no plain `/sso?emp_id=` login, no test OTP (unless you set `UCO_SSO_TEST_OTP` on a closed UAT), and the bank SSO portal does the real OTP.
 
 ## 3. Bank SSO integration
 The bank portal redirects the employee to `https://<intranet-host>/ucorealty-staff/entry?value=<token>` (also accepted: `/GetValue.jsp`, `/sso?value=`). The token is the encrypted string `emp_id=<empno>&sol_id=<sol>`; if it decrypts, the employee is genuine. The application then:
