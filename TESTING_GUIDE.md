@@ -24,7 +24,7 @@ Staff sign in with an **employee id** and the OTP `123456` (local profile only; 
 
 Anything else is refused. In the local profile only the ids above exist (`999999` is "not found"); the real bank rules for refusing branch staff and scale 0 are in section 5.
 
-Sample photos for uploads: `.brain/sample-uploads/UCR-PROJ-0001/`.
+Sample photos for uploads: `.brain/07_REFERENCE/sample-uploads/UCR-PROJ-0001/`.
 
 ## 1b. No Docker: in-memory H2 (optional)
 ```bash
@@ -122,7 +122,7 @@ Watch it between the steps: *Save as Draft* changes only `project_staging`; *Sen
 | 8 | Public lockdown | `curl -i http://localhost:8080/ucorealty-customer/admin/projects` | 403; only catalog, project detail, lead, files |
 | 9 | UAT-like start | section 5 or 5b | login behaves as described |
 | 9b | Context path | `python3 scripts/context_path_check.py` | "OK: every URL carries the context path" (no root-relative link, form, script or JSON URL) |
-| 10 | Docs | `.brain/Roles_And_Actions.md`, `Schema.md`, `API.md` match any change you made | yes |
+| 10 | Docs | `.brain/03_SYSTEM/Roles_And_Actions.md`, `Schema.md`, `API.md` match any change you made | yes |
 
 ## 4. Optional demo data
 ```bash

@@ -3,7 +3,7 @@
 
 Creates 9 fictional projects (names end with "(Demo)") through the normal web forms (staging copy -> checker approval), signing in as the local-profile
 test employees: makers 200001 (Ajmer) and 300001 (Bhopal) create and submit, checkers 200002 / 300002 decide.
-Result: 6 approved (with photos from .brain/sample-uploads), 1 waiting for the checker, 1 returned for correction,
+Result: 6 approved (with photos from .brain/07_REFERENCE/sample-uploads), 1 waiting for the checker, 1 returned for correction,
 1 draft, plus 9 demo leads.
 
     python3 scripts/load_demo_data.py
@@ -21,7 +21,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from uco_http import Client, location  # noqa: E402
 
 BASE = os.environ.get("INTERNAL_URL", "http://localhost:8081/ucorealty-staff")
-PHOTOS = Path(__file__).resolve().parent.parent / ".brain" / "sample-uploads" / "UCR-PROJ-0001"
+PHOTOS = Path(__file__).resolve().parent.parent / ".brain" / "07_REFERENCE" / "sample-uploads" / "UCR-PROJ-0001"
 
 CREW = {  # zone -> (maker, checker)
     "Ajmer": ("200001", "200002"),

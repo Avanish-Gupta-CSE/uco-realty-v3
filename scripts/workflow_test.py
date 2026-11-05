@@ -21,7 +21,7 @@ import load_demo_data as demo  # noqa: E402
 
 PUBLIC = os.environ.get("PUBLIC_URL", "http://localhost:8080/ucorealty-customer")
 INTERNAL = os.environ.get("INTERNAL_URL", "http://localhost:8081/ucorealty-staff")
-PHOTO = sorted((Path(__file__).resolve().parent.parent / ".brain" / "sample-uploads" / "UCR-PROJ-0001").glob("photo-*.jpg"))
+PHOTO = sorted((Path(__file__).resolve().parent.parent / ".brain" / "07_REFERENCE" / "sample-uploads" / "UCR-PROJ-0001").glob("photo-*.jpg"))
 results = []
 
 
