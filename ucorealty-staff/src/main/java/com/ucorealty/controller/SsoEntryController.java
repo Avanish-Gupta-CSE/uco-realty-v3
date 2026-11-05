@@ -275,8 +275,15 @@ public class SsoEntryController {
     }
 
     HrmsUserProfile profile = hrmsService.fetchUserProfile(empId);
-    if (profile == null || hrmsService.resolveRole(profile) == null) {
+    if (profile == null) {
       return "redirect:/login?error=invalid_employee";
+    }
+    if (hrmsService.resolveRole(profile) == null) {
+      logger.warn("[UCO SSO] Employee {} (SOL {}) has no role in this portal.", profile.getEmpNo(), profile.getPostingSolId());
+      auditService.logLoginAttempt(empId, extractClientIp(request), false,
+          "SSO OTP Login - not authorised for this portal (SOL " + profile.getPostingSolId() + ")");
+      session.invalidate();
+      return "redirect:/error-page?reason=not_authorized";
     }
 
     AppUser appUser = hrmsService.toAppUser(profile);
