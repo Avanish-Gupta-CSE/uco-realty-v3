@@ -24,18 +24,6 @@ public class HrmsUserProfile implements Serializable {
 
   public HrmsUserProfile() {}
 
-  public HrmsUserProfile(String empNo, String name, String postingSolId, String postingSolDesc,
-                         String scaleCode, String cadre, String postingRegionName, String tenureAs) {
-    this.empNo = empNo;
-    this.name = name;
-    this.postingSolId = postingSolId;
-    this.postingSolDesc = postingSolDesc;
-    this.scaleCode = scaleCode;
-    this.cadre = cadre;
-    this.postingRegionName = postingRegionName;
-    this.tenureAs = tenureAs;
-  }
-
   // --- Getters & Setters ---
   public String getEmpNo() { return empNo; }
   public void setEmpNo(String empNo) { this.empNo = empNo; }

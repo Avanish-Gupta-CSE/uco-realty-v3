@@ -193,10 +193,8 @@ public abstract class ProjectData {
   public void setApprovalDate(LocalDate approvalDate) { this.approvalDate = approvalDate; }
   public Integer getTotalInventory() { return totalInventory; }
   public void setTotalInventory(Integer totalInventory) { this.totalInventory = totalInventory; }
-  public Integer getTotalUnits() { return totalInventory != null ? totalInventory : 0; }
   public Integer getUnsoldInventory() { return unsoldInventory; }
   public void setUnsoldInventory(Integer unsoldInventory) { this.unsoldInventory = unsoldInventory; }
-  public Integer getAvailableUnits() { return unsoldInventory != null ? unsoldInventory : 0; }
   public LocalDate getInventoryAsOnDate() { return inventoryAsOnDate; }
   public void setInventoryAsOnDate(LocalDate inventoryAsOnDate) { this.inventoryAsOnDate = inventoryAsOnDate; }
   public String getAmenities() { return amenities; }

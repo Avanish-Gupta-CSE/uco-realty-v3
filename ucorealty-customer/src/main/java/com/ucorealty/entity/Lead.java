@@ -55,18 +55,4 @@ public class Lead {
   public void setStatus(String status) { this.status = status; }
   public LocalDateTime getCreatedAt() { return createdAt; }
   public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-
-  private static final java.time.format.DateTimeFormatter DATE_FORMATTER =
-      java.time.format.DateTimeFormatter.ofPattern("dd-MM-yyyy");
-
-  public String getFormattedDate() {
-    if (createdAt == null) {
-      return "-";
-    }
-    return createdAt.format(DATE_FORMATTER);
-  }
-
-  public String getFormattedCreatedAt() {
-    return getFormattedDate();
-  }
 }

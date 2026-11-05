@@ -1,10 +1,8 @@
 package com.ucorealty.service;
 
 import com.ucorealty.entity.AppUser;
-import com.ucorealty.entity.AuditLog;
 import com.ucorealty.entity.Project;
 import com.ucorealty.entity.ProjectData;
-import com.ucorealty.repository.AuditLogRepository;
 import com.ucorealty.repository.ProjectRepository;
 import com.ucorealty.security.CurrentUser;
 import org.slf4j.Logger;
@@ -24,11 +22,9 @@ import java.util.stream.Collectors;
 public class ProjectService {
   private static final Logger log = LoggerFactory.getLogger(ProjectService.class);
   private final ProjectRepository repo;
-  private final AuditLogRepository audit;
 
-  public ProjectService(ProjectRepository repo, AuditLogRepository audit) {
+  public ProjectService(ProjectRepository repo) {
     this.repo = repo;
-    this.audit = audit;
   }
 
   // ---- shared rules (package-private statics, used by the workflow service) ----
@@ -166,9 +162,5 @@ public class ProjectService {
   public Project findById(String id) {
     return repo.findById(id).filter(p -> !Project.DELETED.equals(p.status)).orElseThrow(() ->
       new ResponseStatusException(HttpStatus.NOT_FOUND, "Project " + id + " not found"));
-  }
-
-  public List<AuditLog> getAuditLogs(String id) {
-    return audit.findByEntityIdOrderByCreatedAtDesc(id);
   }
 }

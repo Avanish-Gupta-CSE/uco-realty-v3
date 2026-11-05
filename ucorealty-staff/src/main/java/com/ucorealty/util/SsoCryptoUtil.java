@@ -232,10 +232,6 @@ public final class SsoCryptoUtil {
 
     public String getEmpNo() { return empNo; }
     public String getSolId() { return solId; }
-
-    public boolean isValid() {
-      return empNo != null && !empNo.trim().isEmpty();
-    }
   }
 
   private static byte[] decodeKeyOrString(String str) {
