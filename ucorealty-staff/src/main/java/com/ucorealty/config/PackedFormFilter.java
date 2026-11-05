@@ -29,6 +29,7 @@ import java.util.Map;
 @Component
 public class PackedFormFilter extends OncePerRequestFilter {
 
+  private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(PackedFormFilter.class);
   static final String PACKED = "__packed";
   private static final int MAX_FIELDS = 500;   // a form has about 50; refuse anything absurd
 
@@ -46,6 +47,7 @@ public class PackedFormFilter extends OncePerRequestFilter {
     for (String pair : packed.split("&")) {
       if (pair.isEmpty()) continue;
       if (++count > MAX_FIELDS) {
+        log.warn("[UCO FORM] Refused {} {}: more than {} packed fields", request.getMethod(), request.getRequestURI(), MAX_FIELDS);
         response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Too many fields");
         return;
       }
@@ -58,6 +60,7 @@ public class PackedFormFilter extends OncePerRequestFilter {
         return all;
       });
     }
+    log.debug("[UCO FORM] Unpacked {} fields for {}", count, request.getRequestURI());
     chain.doFilter(new Unpacked(request, merged), response);
   }
 

@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.server.ResponseStatusException;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 /**
@@ -41,10 +42,10 @@ public class GlobalExceptionHandler {
 
   // Keep the real HTTP status (401/403/404/400) of RoleCheck and service rules instead of a 200 error page
   @ExceptionHandler(ResponseStatusException.class)
-  public String handleStatus(ResponseStatusException exc, HttpServletResponse response, Model model) {
+  public String handleStatus(ResponseStatusException exc, HttpServletRequest request, HttpServletResponse response, Model model) {
     int code = exc.getStatusCode().value();
     response.setStatus(code);
-    log.warn("Request refused with HTTP {}: {}", code, exc.getReason());
+    log.warn("[UCO HTTP {}] {} {} by {}: {}", code, request.getMethod(), request.getRequestURI(), who(request), exc.getReason());
     model.addAttribute("errorMessage", code == 403 ? "Access Denied: your role cannot open this page."
         : code == 404 ? "The requested item was not found."
         : code == 401 ? "Please sign in through the UCO Bank portal."
@@ -53,10 +54,14 @@ public class GlobalExceptionHandler {
   }
 
   @ExceptionHandler(Exception.class)
-  public String handleGeneralException(Exception exc, Model model) {
-    log.error("Unhandled exception caught by global handler: {}", exc.getMessage(), exc);
+  public String handleGeneralException(Exception exc, HttpServletRequest request, Model model) {
+    log.error("[UCO ERROR] Unhandled exception on {} {} by {}: {}", request.getMethod(), request.getRequestURI(), who(request), exc.getMessage(), exc);
     model.addAttribute("errorMessage", "An unexpected system error occurred. Please contact the SWDC Cell or Bank Administrator.");
     return "error";
+  }
+
+  private static String who(HttpServletRequest request) {
+    return request.getUserPrincipal() == null ? "anonymous" : request.getUserPrincipal().getName();
   }
 }
 

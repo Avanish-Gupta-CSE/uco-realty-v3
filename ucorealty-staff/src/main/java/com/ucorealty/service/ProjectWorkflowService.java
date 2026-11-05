@@ -9,6 +9,8 @@ import com.ucorealty.entity.ProjectStaging;
 import com.ucorealty.repository.ProjectImageRepository;
 import com.ucorealty.repository.ProjectRepository;
 import com.ucorealty.repository.ProjectStagingRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -38,6 +40,7 @@ public class ProjectWorkflowService {
   private static final List<String> NEW_PROJECT_ROWS = Arrays.asList(
       ProjectStaging.DRAFT, ProjectStaging.PENDING, ProjectStaging.NEEDS_CORRECTION, ProjectStaging.REJECTED);
   public static final int MAX_PHOTOS = 10;
+  private static final Logger log = LoggerFactory.getLogger(ProjectWorkflowService.class);
 
   private final ProjectRepository projects;
   private final ProjectStagingRepository staging;
@@ -190,6 +193,7 @@ public class ProjectWorkflowService {
     ProjectService.validateDetails(s);
     s = staging.save(s);
     audit.logActivity(username, "CREATE_DRAFT", "PROJECT", s.projectId, null, s.projectName);
+    log.info("[UCO WORKFLOW] {} saved a first draft of new project {} (request {})", username, s.projectId, s.id);
     return s;
   }
 
@@ -214,6 +218,7 @@ public class ProjectWorkflowService {
     ProjectStaging s = fromLive(p, ProjectStaging.UPDATE, ProjectStaging.DRAFT, username);
     s = saveNew(s);
     audit.logActivity(username, "CHANGE_DRAFT_STARTED", "PROJECT", projectId, "Started editing the approved project (a private working copy; the live project is unchanged)");
+    log.info("[UCO WORKFLOW] {} started editing approved project {} (request {})", username, projectId, s.id);
     return s;
   }
 
@@ -229,6 +234,7 @@ public class ProjectWorkflowService {
     s = staging.save(s);
     audit.logActivity(username, update ? "CHANGE_DRAFT_SAVED" : "EDIT_DRAFT", "PROJECT", s.projectId, null,
         update ? "Saved a draft change of the approved project (not sent for approval)" : s.projectName);
+    log.info("[UCO WORKFLOW] {} saved draft {} of project {} ({})", username, s.id, s.projectId, s.requestType);
     return s;
   }
 
@@ -247,6 +253,7 @@ public class ProjectWorkflowService {
     } else {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "That photo does not belong to this request");
     }
+    log.info("[UCO WORKFLOW] {} removed photo {} from request {} of project {}", username, imageId, id, s.projectId);
   }
 
   @Transactional
@@ -269,6 +276,7 @@ public class ProjectWorkflowService {
     s.checkerComment = null;
     s = staging.save(s);
     audit.logActivity(username, update ? "CHANGE_SUBMITTED" : "SUBMIT_FOR_APPROVAL", "PROJECT", s.projectId, null, trim(s.summary, 1000));
+    log.info("[UCO WORKFLOW] {} sent request {} ({}) of project {} for approval", username, s.id, s.requestType, s.projectId);
     return s;
   }
 
@@ -295,6 +303,7 @@ public class ProjectWorkflowService {
     s.submittedAt = LocalDateTime.now();
     s = saveNew(s);
     audit.logActivity(username, "CHANGE_SUBMITTED", "PROJECT", projectId, null, s.summary);
+    log.info("[UCO WORKFLOW] {} requested a unit reduction of {} on project {} (request {})", username, units, projectId, s.id);
     return s;
   }
 
@@ -314,6 +323,7 @@ public class ProjectWorkflowService {
     s.submittedAt = LocalDateTime.now();
     s = saveNew(s);
     audit.logActivity(username, "DELETE_REQUESTED", "PROJECT", projectId, null, s.summary);
+    log.info("[UCO WORKFLOW] {} requested deletion of project {} (request {})", username, projectId, s.id);
     return s;
   }
 
@@ -329,6 +339,7 @@ public class ProjectWorkflowService {
     staging.save(s);
     audit.logActivity(username, ProjectStaging.CREATE.equals(s.requestType) ? "DRAFT_DISCARDED" : "CHANGE_WITHDRAWN", "PROJECT", s.projectId, null,
         "Withdrawn by the maker" + (ProjectStaging.CREATE.equals(s.requestType) ? "" : "; the live project is unchanged"));
+    log.info("[UCO WORKFLOW] {} withdrew request {} ({}) of project {}", username, s.id, s.requestType, s.projectId);
   }
 
   // =====================================================================================================
@@ -342,11 +353,15 @@ public class ProjectWorkflowService {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only a request waiting for approval can be decided (current: " + s.status + ")");
     AppUser checker = projectService.requireActiveUser(checkerUsername);
     ProjectService.requireCheckerRole(checker);
-    if (checkerUsername.equals(s.createdBy))
+    if (checkerUsername.equals(s.createdBy)) {
+      log.warn("[UCO WORKFLOW] REFUSED: {} tried to decide on their own request {} of project {}", checkerUsername, s.id, s.projectId);
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "A maker cannot decide on his own request");
-    if ("ZO_CHECKER".equals(checker.role) && !ProjectService.sameText(checker.zone, zoneOf(s)))
+    }
+    if ("ZO_CHECKER".equals(checker.role) && !ProjectService.sameText(checker.zone, zoneOf(s))) {
+      log.warn("[UCO WORKFLOW] REFUSED: checker {} (zone {}) tried to decide on request {} of zone {}", checkerUsername, checker.zone, s.id, zoneOf(s));
       throw new ResponseStatusException(HttpStatus.FORBIDDEN,
           "ZO Checker (" + checker.zone + ") can only review projects from their own zone (" + zoneOf(s) + ")");
+    }
 
     ProjectService.requireNoMarkup("The remark", comment);
     String d = decision == null ? "" : decision.toLowerCase();
@@ -380,8 +395,11 @@ public class ProjectWorkflowService {
       s.checkedBy = checkerUsername;
       s.checkerComment = trim(comment, 1000);
       s.decidedAt = LocalDateTime.now();
-      return staging.saveAndFlush(s);
+      s = staging.saveAndFlush(s);
+      log.info("[UCO WORKFLOW] {} decided '{}' on {} request {} of project {} (maker {}) -> {}", checkerUsername, d, type, s.id, s.projectId, s.createdBy, s.status);
+      return s;
     } catch (ObjectOptimisticLockingFailureException e) {
+      log.warn("[UCO WORKFLOW] Decision on request {} by {} lost a race: someone else changed it at the same moment", id, checkerUsername);
       throw new ResponseStatusException(HttpStatus.CONFLICT, "Someone else changed this at the same moment. Reload and check it again");
     }
   }
@@ -408,8 +426,10 @@ public class ProjectWorkflowService {
 
   private void applyUpdate(ProjectStaging s, String checker, String comment) {
     Project p = liveProject(s.projectId);
-    if (s.baseVersion != null && !s.baseVersion.equals(p.rowVersion))
+    if (s.baseVersion != null && !s.baseVersion.equals(p.rowVersion)) {
+      log.warn("[UCO WORKFLOW] Cannot apply {} request {}: live project {} changed after the request was opened", s.requestType, s.id, s.projectId);
       throw new ResponseStatusException(HttpStatus.CONFLICT, "The live project changed after this request was opened. Return it to the maker");
+    }
     ProjectService.validateDetails(s);
     ProjectData.copyBusinessFields(s, p, true);          // the zone never changes
     for (Long imageId : removedImageIds(s)) {
@@ -423,8 +443,10 @@ public class ProjectWorkflowService {
 
   private void applyDelete(ProjectStaging s, String checker, String comment) {
     Project p = liveProject(s.projectId);
-    if (s.baseVersion != null && !s.baseVersion.equals(p.rowVersion))
+    if (s.baseVersion != null && !s.baseVersion.equals(p.rowVersion)) {
+      log.warn("[UCO WORKFLOW] Cannot apply {} request {}: live project {} changed after the request was opened", s.requestType, s.id, s.projectId);
       throw new ResponseStatusException(HttpStatus.CONFLICT, "The live project changed after this request was opened. Return it to the maker");
+    }
     p.status = Project.DELETED;
     p.isPublished = 0;
     p.isActive = 0;

@@ -2,6 +2,8 @@ package com.ucorealty.service;
 
 import com.ucorealty.entity.Lead;
 import com.ucorealty.repository.LeadRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,6 +14,7 @@ import java.util.regex.Pattern;
 /** Single place where an anonymous customer lead is validated and stored (web form and JSON API share it). */
 @Service
 public class LeadService {
+  private static final Logger log = LoggerFactory.getLogger(LeadService.class);
   public static final String STATUS_VISITOR = "Visitor";
   public static final String STATUS_INTEREST = "Showed interest in Home Loan";
   // a person's name: letters (any script), spaces, dots, apostrophes and hyphens; no markup
@@ -66,6 +69,7 @@ public class LeadService {
     l.branchSelected = branch;
     l.status = normalized;
     leads.save(l);
+    log.info("[UCO LEAD] Lead {} saved (status '{}', project {})", l.id, l.status, pid);   // name and phone are never logged
 
     return l;
   }

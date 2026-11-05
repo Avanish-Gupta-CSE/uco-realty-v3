@@ -2,6 +2,8 @@ package com.ucorealty.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
@@ -12,6 +14,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class MasterDataService {
+  private static final Logger log = LoggerFactory.getLogger(MasterDataService.class);
   private final List<String> zones;
   private final Map<String, List<String>> stateDistricts;
 
@@ -31,6 +34,7 @@ public class MasterDataService {
     }
     this.zones = Collections.unmodifiableList(new ArrayList<>(z));
     this.stateDistricts = Collections.unmodifiableMap(new LinkedHashMap<>(d));
+    log.info("[UCO MASTER] Reference data loaded: {} zones, {} states", zones.size(), stateDistricts.size());
   }
 
   private static <T> T read(ObjectMapper mapper, String path, TypeReference<T> type) throws IOException {

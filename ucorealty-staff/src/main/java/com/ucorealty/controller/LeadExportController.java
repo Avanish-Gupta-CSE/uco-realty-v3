@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/admin/leads")
 public class LeadExportController {
+  private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(LeadExportController.class);
   private final LeadRepository leads;
 
 
@@ -56,6 +57,7 @@ public class LeadExportController {
     String exporter = RoleCheck.require(auth, Roles.LEAD_ROLES);
 
     List<Lead> filtered = filterLeads(from, to, status, search);
+    log.info("[UCO LEAD] {} exports {} leads to Excel (from={}, to={}, status={})", exporter, filtered.size(), from, to, status);
 
     // Build dynamic date-based filename
     String filename = "uco-realty-leads";

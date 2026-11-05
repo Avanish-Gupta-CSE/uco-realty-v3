@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 /**
@@ -27,23 +28,29 @@ public class GlobalExceptionHandler {
 
   // 404 for unknown/unpublished projects, 400 for bad requests: keep their real HTTP status instead of a 200 page.
   @ExceptionHandler(ResponseStatusException.class)
-  public String handleStatus(ResponseStatusException exc, HttpServletResponse response, Model model) {
+  public String handleStatus(ResponseStatusException exc, HttpServletRequest request, HttpServletResponse response, Model model) {
     response.setStatus(exc.getStatusCode().value());
+    if (exc.getStatusCode().value() == 404) {   // visitors and bots ask for missing pages all the time: not a warning
+      log.info("[UCO HTTP 404] {} {}", request.getMethod(), request.getRequestURI());
+    } else {
+      log.warn("[UCO HTTP {}] {} {}: {}", exc.getStatusCode().value(), request.getMethod(), request.getRequestURI(), exc.getReason());
+    }
     model.addAttribute("errorMessage", exc.getStatusCode().value() == 404
         ? "That project is not available." : "The request could not be processed.");
     return "public-projects";
   }
 
   @ExceptionHandler(NoResourceFoundException.class)
-  public String handleNoResource(HttpServletResponse response, Model model) {
+  public String handleNoResource(HttpServletRequest request, HttpServletResponse response, Model model) {
     response.setStatus(404);
+    log.info("[UCO HTTP 404] {} {} (no such page or file)", request.getMethod(), request.getRequestURI());
     model.addAttribute("errorMessage", "That page is not available.");
     return "public-projects";
   }
 
   @ExceptionHandler(Exception.class)
-  public String handleGeneralException(Exception exc, Model model) {
-    log.error("Unhandled public portal exception: {}", exc.getMessage(), exc);
+  public String handleGeneralException(Exception exc, HttpServletRequest request, Model model) {
+    log.error("[UCO ERROR] Unhandled exception on {} {}: {}", request.getMethod(), request.getRequestURI(), exc.getMessage(), exc);
     model.addAttribute("errorMessage", "An error occurred while loading projects. Please try again.");
     return "public-projects";
   }

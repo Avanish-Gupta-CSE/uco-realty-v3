@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 @Controller
 @RequestMapping("/admin")
 public class AdminWebController {
+  private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(AdminWebController.class);
   private final ProjectRepository projectRepo;
   private final LeadRepository leadRepo;
   private final LeadExportController leadExportController;
@@ -109,6 +110,7 @@ public class AdminWebController {
                               Model model,
                               Authentication auth) {
     RoleCheck.require(auth, "SUPERADMIN_DIT");
+    log.info("[UCO AUDIT] {} opened the audit logs (tab {})", auth.getName(), activeSubTab);
 
     int pageSize = 15;
     Page<AuditLog> activityLogs = auditService.getActivityLogs(PageRequest.of(Math.max(0, pageActivity), pageSize));

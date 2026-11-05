@@ -65,6 +65,11 @@ java -jar ucorealty-staff.war        # standalone alternative to Tomcat; same fo
 ```
 The Java code contains no test employees and no fixed OTP: employees are always read from the HRMS tables (on a laptop those are stand-ins created from `db_migrations/03` and `05`, never part of a release). One thing does travel inside the WAR: `application-local.properties`, which holds a development SSO key, the test OTP and the dev login switch. It is only read when `SPRING_PROFILES_ACTIVE=local`, and the `prod` profile refuses to start if a test OTP is set. In `uat`/`prod` the dev conveniences are off: no plain `/sso?emp_id=` login, no test OTP (unless you set `UCO_SSO_TEST_OTP` on a closed UAT), and the bank SSO portal does the real OTP.
 
+### Logs
+Every line the application writes about its own work starts with a tag: `[UCO SSO]` sign-ins and sign-outs, `[UCO HRMS]` employee lookups, `[UCO WORKFLOW]` what a maker or checker did to which project, `[UCO LEAD]` lead saved or exported (never names or phone numbers), `[UCO ACCESS]` / `[UCO SECURITY]` / `[UCO HTTP 4xx]` refused actions (wrong role or zone, missing CSRF token, unknown URL), `[UCO ERROR]` unexpected failures with the full stack trace. On Tomcat they go to `catalina.out`; with `java -jar` to the terminal. Filter with `grep '\[UCO'`.
+* More detail: set `LOGGING_LEVEL_COM_UCOREALTY=DEBUG` (environment). To also write a file: `-Dlogging.file.name=/var/log/ucorealty/ucorealty-staff.log`.
+* The permanent record of who did what is the database (`audit_log`, `login_audit`; DIT Logs page); the log is for the server team.
+
 ## 3. Bank SSO integration
 The bank portal redirects the employee to `https://<intranet-host>/ucorealty-staff/entry?value=<token>` (also accepted: `/GetValue.jsp`, `/sso?value=`). The token is the encrypted string `emp_id=<empno>&sol_id=<sol>`; if it decrypts, the employee is genuine. The application then:
 1. looks the employee up in HRMS (the SOL in the token is **not** trusted; the HRMS posting decides),

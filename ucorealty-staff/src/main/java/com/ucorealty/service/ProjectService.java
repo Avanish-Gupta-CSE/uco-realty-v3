@@ -7,6 +7,8 @@ import com.ucorealty.entity.ProjectData;
 import com.ucorealty.repository.AuditLogRepository;
 import com.ucorealty.repository.ProjectRepository;
 import com.ucorealty.security.CurrentUser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -20,6 +22,7 @@ import java.util.stream.Collectors;
  */
 @Service
 public class ProjectService {
+  private static final Logger log = LoggerFactory.getLogger(ProjectService.class);
   private final ProjectRepository repo;
   private final AuditLogRepository audit;
 
@@ -33,7 +36,10 @@ public class ProjectService {
   /** The signed-in employee (role and zone were taken from HRMS at login and live in the session). */
   AppUser requireActiveUser(String username) {
     AppUser u = CurrentUser.find(username);
-    if (u == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Please sign in again");
+    if (u == null) {
+      log.warn("[UCO ACCESS] No signed-in session found for {}: asked to sign in again", username);
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Please sign in again");
+    }
     return u;
   }
 
@@ -51,20 +57,26 @@ public class ProjectService {
 
   // The screens hide buttons by role, but the rules must also hold when someone posts a form directly.
   static void requireMakerRole(AppUser u) {
-    if (!"ZO_MAKER".equals(u.role) && !isNationalMaker(u))
+    if (!"ZO_MAKER".equals(u.role) && !isNationalMaker(u)) {
+      log.warn("[UCO ACCESS] REFUSED: {} ({}) tried to create or change a project", u.username, u.role);
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Your role cannot create or change projects");
+    }
   }
 
   static void requireCheckerRole(AppUser u) {
-    if (!"ZO_CHECKER".equals(u.role) && !isNationalMaker(u))
+    if (!"ZO_CHECKER".equals(u.role) && !isNationalMaker(u)) {
+      log.warn("[UCO ACCESS] REFUSED: {} ({}) tried to approve, reject or return a request", u.username, u.role);
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only a Zonal Checker (or Head Office Marketing / DIT) can approve, reject or return a request");
+    }
   }
 
   /** A zonal maker/checker works only inside their own zone; national roles in every zone. */
   static void requireZoneAccess(AppUser u, String zone) {
     if (isNational(u)) return;
-    if (!sameText(u.zone, zone))
+    if (!sameText(u.zone, zone)) {
+      log.warn("[UCO ACCESS] REFUSED: {} ({}, zone {}) tried to open a project of zone {}", u.username, u.role, u.zone, zone);
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "This project belongs to another zone (" + zone + ")");
+    }
   }
 
   static void requireComment(String comment) {

@@ -1,11 +1,15 @@
 package com.ucorealty.security;
 
 import jakarta.servlet.DispatcherType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.access.AccessDeniedHandlerImpl;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.session.DisableEncodeUrlFilter;
 import com.ucorealty.config.SecurityHeadersFilter;
@@ -18,6 +22,8 @@ import com.ucorealty.config.SecurityHeadersFilter;
 @Configuration
 public class InternalSecurityConfig {
 
+  private static final Logger log = LoggerFactory.getLogger(InternalSecurityConfig.class);
+
   private final CustomLogoutSuccessHandler logoutSuccessHandler;
 
   public InternalSecurityConfig(CustomLogoutSuccessHandler logoutSuccessHandler) {
@@ -26,6 +32,13 @@ public class InternalSecurityConfig {
 
   @Bean
   public SecurityFilterChain chain(HttpSecurity http) throws Exception {
+    // Spring Security answers 403 by itself (wrong role, or a form posted without a valid CSRF token); this writes it to the log first.
+    AccessDeniedHandler standard = new AccessDeniedHandlerImpl();
+    AccessDeniedHandler logged = (request, response, denied) -> {
+      log.warn("[UCO SECURITY] 403 {} {} by {} from {}: {}", request.getMethod(), request.getRequestURI(),
+          request.getUserPrincipal() == null ? "anonymous" : request.getUserPrincipal().getName(), request.getRemoteAddr(), denied.getMessage());
+      standard.handle(request, response, denied);
+    };
     http
       // CSRF is on for every staff form/logout. Only the anonymous customer lead capture is exempt.
       .csrf(csrf -> csrf.ignoringRequestMatchers("/lead"))
@@ -44,7 +57,7 @@ public class InternalSecurityConfig {
         .requestMatchers("/admin/**", "/api/admin/**").authenticated()
         .anyRequest().authenticated()
       )
-      .exceptionHandling(ex -> ex.authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login")))
+      .exceptionHandling(ex -> ex.authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login")).accessDeniedHandler(logged))
       .logout(logout -> logout
         .logoutUrl("/logout")
         .logoutSuccessHandler(logoutSuccessHandler)
