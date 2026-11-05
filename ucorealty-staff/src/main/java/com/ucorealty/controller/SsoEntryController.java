@@ -9,8 +9,6 @@ import com.ucorealty.util.SsoCryptoUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.env.Environment;
-import org.springframework.core.env.Profiles;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
@@ -23,7 +21,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 
@@ -37,9 +34,8 @@ public class SsoEntryController {
 
   private static final Logger logger = LoggerFactory.getLogger(SsoEntryController.class);
 
-  // No default key on purpose. Without it the bank SSO entry (/entry) is switched off; that is allowed only for the UAT demo
-  // (demo users), never in production or with the real HRMS: see checkSsoKey().
-  @Value("${sso.encryption.key:}")
+  // No defaults on purpose: the application must refuse to start without the bank's SSO secrets.
+  @Value("${sso.encryption.key}")
   private String encryptionKey;
 
   @Value("${sso.encryption.iv:}")
@@ -54,27 +50,10 @@ public class SsoEntryController {
 
   private final HrmsService hrmsService;
   private final AuditService auditService;
-  private final Environment environment;
 
-  public SsoEntryController(HrmsService hrmsService, AuditService auditService, Environment environment) {
+  public SsoEntryController(HrmsService hrmsService, AuditService auditService) {
     this.hrmsService = hrmsService;
     this.auditService = auditService;
-    this.environment = environment;
-  }
-
-  @PostConstruct
-  void checkSsoKey() {
-    boolean prod = environment.acceptsProfiles(Profiles.of("prod"));
-    if (prod && devLoginEnabled) {
-      throw new IllegalStateException("uco.sso.dev-login-enabled must never be true in the prod profile");
-    }
-    if (encryptionKey != null && !encryptionKey.trim().isEmpty()) {
-      return;
-    }
-    if (prod || !hrmsService.isDemoDirectory()) {
-      throw new IllegalStateException("SSO_ENCRYPTION_KEY is required (the bank SSO key, Base64). Only the UAT demo (uco.auth.directory=demo) may run without it.");
-    }
-    logger.warn("[UCO SSO] No SSO key set: the bank SSO entry (/entry) is switched off; only the demo login works.");
   }
 
   @GetMapping("/")
@@ -107,12 +86,6 @@ public class SsoEntryController {
       }
       logger.info("[UCO SSO /entry] Access attempt without token. Redirecting to staff login.");
       return "redirect:/login";
-    }
-
-    if (encryptionKey == null || encryptionKey.trim().isEmpty()) {
-      logger.warn("[UCO SSO /entry] Token received but no SSO key is configured (demo mode): refused");
-      auditService.logLoginAttempt("UNKNOWN", extractClientIp(request), false, "SSO token refused: no SSO key configured (demo mode)");
-      return "redirect:/login?error=sso_failed";
     }
 
     try {
@@ -231,27 +204,7 @@ public class SsoEntryController {
       return "redirect:/admin/projects";
     }
     model.addAttribute("devLogin", devLoginEnabled);
-    model.addAttribute("localMode", environment.acceptsProfiles(Profiles.of("local")));   // laptop only: shows a hint about the test employees
-    model.addAttribute("demoUsers", hrmsService.demoUsers());                              // UAT demo: the four users to pick from
-    model.addAttribute("testOtpMissing", devLoginEnabled && !hrmsService.isTestOtpEnabled());
     return "login";
-  }
-
-  /**
-   * UAT demo login: employee number + password of a fixed demo user (see DemoUserDirectory). Works only when uco.auth.directory=demo.
-   */
-  @PostMapping("/demo-login")
-  public String demoLogin(@RequestParam String empId, @RequestParam String password, HttpServletRequest request) {
-    if (!hrmsService.isDemoDirectory()) {
-      return "redirect:/login?error=sso_failed";
-    }
-    String emp = empId == null ? "" : empId.trim();
-    if (!hrmsService.verifyDemoPassword(emp, password)) {
-      logger.warn("[UCO SSO] Demo login refused for '{}'", emp);
-      auditService.logLoginAttempt(emp.isEmpty() ? "UNKNOWN" : emp, extractClientIp(request), false, "UAT demo login - wrong employee number or password");
-      return "redirect:/login?error=bad_credentials";
-    }
-    return authenticateAndEstablishSession(emp, null, request, "UAT demo login (employee number + password)");
   }
 
   /**

@@ -53,7 +53,7 @@
     </c:if>
 
     <div class="alert alert-warning py-2 small mb-3 text-start" id="otp-dev-hint">
-        <strong>Security Check:</strong> Simulated SMS OTP sent. Check your server console/logs for code (Local mode: <code>123456</code>).
+        <strong>Test login:</strong> the OTP is <code>123456</code>.
     </div>
 
     <form action="${pageContext.request.contextPath}/otp-verify" method="post" id="otpForm">

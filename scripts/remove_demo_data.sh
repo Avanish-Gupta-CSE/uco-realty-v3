@@ -2,7 +2,7 @@
 # Removes everything created by scripts/load_demo_data.py and scripts/workflow_test.py:
 # projects whose name ends with "(Demo)" and the test builder "ZZ Workflow Builder" (live rows, staging rows, photos, audit rows) and demo leads.
 # Your own users and projects are not touched. Works on the local Docker Oracle, or on the in-memory H2 when
-# `scripts/dev-start.sh --h2` is running. Override Oracle credentials with DB_USER / DB_PASS if needed.
+# the h2 profile is running. Override Oracle credentials with DB_USER / DB_PASS if needed.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DB_USER="${DB_USER:-uco_realty}"; DB_PASS="${DB_PASS:-uco_realty_pwd}"
@@ -16,7 +16,7 @@ STATEMENTS=(
 "commit;"
 )
 
-if [ -f "$ROOT/.run/h2.pid" ] && lsof -nP -iTCP:9092 -sTCP:LISTEN >/dev/null 2>&1; then
+if lsof -nP -iTCP:9092 -sTCP:LISTEN >/dev/null 2>&1; then   # the h2 profile is running
   printf '%s\n' "${STATEMENTS[@]}" > "$ROOT/.run/h2-remove-demo.sql"
   java -cp "$H2_JAR" org.h2.tools.RunScript -url "jdbc:h2:tcp://localhost:9092/mem:ucorealty;MODE=Oracle;DB_CLOSE_DELAY=-1" -user sa -script "$ROOT/.run/h2-remove-demo.sql"
 else

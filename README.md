@@ -14,27 +14,25 @@ Project `ucorealty` (package `com.ucorealty`); the WAR file name is the URL path
 Both use the same Oracle schema. There are **no local user accounts**: staff sign in through the bank SSO (`/entry?value=<encrypted token>`), the employee is looked up in the bank HRMS tables, and the role is derived at login (SOL ID + cadre/scale). Details: `DEPLOYMENT.md`.
 
 ## Run locally
-Needs Java 25 and Maven, plus either Docker (Oracle XE, closest to UAT: `scripts/dev-start.sh`) or nothing else (`scripts/dev-start.sh --h2`, in-memory H2 with a web console; see TESTING_GUIDE.md section 1b).
-
+Needs Java 25 and Maven. Nothing else: the profile in `application.properties` is `h2`, so all tables and test employees are created in memory at start.
 ```bash
-scripts/dev-start.sh            # Oracle + tables + both portals (local profile)
+scripts/dev-start.sh            # build and start both apps (h2)
 scripts/dev-stop.sh
-scripts/dev-start.sh --reset    # wipe the database and start again
+scripts/dev-start.sh --oracle   # the same on Oracle in Docker (uat profile); add --reset to wipe it
 ```
 - Customer portal: http://localhost:8080/ucorealty-customer/projects
-- Staff portal: http://localhost:8081/ucorealty-staff/login (local profile only: sign in with a test employee id and OTP `123456`, e.g. `100001` DIT superadmin, `200001` Ajmer maker, `200002` Ajmer checker)
+- Staff portal: http://localhost:8081/ucorealty-staff/ (test employee `100001` to `600002`, OTP `123456`)
 
-More: `TESTING_GUIDE.md`.
+More: `TESTING_GUIDE.md`. Profiles: `DEPLOYMENT.md` section 2.
 
 ### Raw commands (without the scripts)
 ```bash
 # each app is self-sufficient: it has its own pom.xml and is built on its own
 (cd ucorealty-customer && mvn clean package -DskipTests)
 (cd ucorealty-staff && mvn clean package -DskipTests)
-SPRING_PROFILES_ACTIVE=local java -jar ucorealty-customer/target/ucorealty-customer.war
-SPRING_PROFILES_ACTIVE=local java -jar ucorealty-staff/target/ucorealty-staff.war   # second shell
+java -jar ucorealty-staff/target/ucorealty-staff.war
+java -jar ucorealty-customer/target/ucorealty-customer.war   # second shell
 ```
-The default profile is **prod**; local runs must say `local`.
 
 ### Eclipse / STS
 Import `ucorealty-customer` and `ucorealty-staff` as two separate *Existing Maven Projects* (each folder has its own `pom.xml`). Use a Java 25 JRE. Run `com.ucorealty.PublicPortalApplication` and/or `com.ucorealty.InternalPortalApplication` as a Java Application with VM argument `-Dspring.profiles.active=local` (add `-Dserver.port=8081` etc. only if you change ports).

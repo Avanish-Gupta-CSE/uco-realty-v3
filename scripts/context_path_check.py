@@ -4,7 +4,7 @@
 contains a root-relative link/form/script URL that does NOT start with the context path, when a redirect
 leaves the context path, or when the JS files or the public JSON API build such a URL.
 
-    python3 scripts/context_path_check.py                       # dev defaults (local profile runs under the context paths)
+    python3 scripts/context_path_check.py                       # dev defaults (h2 or uat profile runs under the context paths)
     PUBLIC_URL=http://host/ucorealty-customer INTERNAL_URL=http://host/ucorealty-staff python3 scripts/context_path_check.py
 """
 import json
@@ -109,7 +109,7 @@ audit_assets(PUBLIC, "customer")
 for emp, label in (("200001", "maker"), ("200002", "checker"), ("400001", "retail"), ("100001", "dit")):
     c = Client(INTERNAL)
     if not c.dev_login(emp):
-        problems.append(f"[{label}] could not sign in as {emp} (local profile only)")
+        problems.append(f"[{label}] could not sign in as {emp} (h2 or uat profile only)")
         continue
     start = ["/admin/projects", "/admin/projects/new"] + (["/admin/leads"] if label in ("retail", "dit") else []) + \
             (["/admin/audit-logs"] if label == "dit" else [])

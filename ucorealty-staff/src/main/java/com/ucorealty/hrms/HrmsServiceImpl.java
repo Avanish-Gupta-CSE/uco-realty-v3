@@ -9,9 +9,6 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.env.Profiles;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
-import java.util.List;
-
 /**
  * Who is this employee, and what may they do here. The employee data comes from the bank HRMS tables (HrmsRepository),
  * the role from RoleResolver. The OTP step belongs to the bank SSO portal; the only OTP this class knows is the optional
@@ -27,33 +24,18 @@ public class HrmsServiceImpl implements HrmsService {
   @Value("${uco.sso.test-otp:}")
   private String testOtp;
 
-  // hrms = the bank HRMS tables (the only value allowed in prod); demo = the four fixed UAT users of DemoUserDirectory
-  @Value("${uco.auth.directory:hrms}")
-  private String directory;
-
   private final HrmsRepository hrmsRepository;
-  private final DemoUserDirectory demoDirectory;
   private final RoleResolver roleResolver;
   private final Environment environment;
 
-  public HrmsServiceImpl(HrmsRepository hrmsRepository, DemoUserDirectory demoDirectory, RoleResolver roleResolver, Environment environment) {
+  public HrmsServiceImpl(HrmsRepository hrmsRepository, RoleResolver roleResolver, Environment environment) {
     this.hrmsRepository = hrmsRepository;
-    this.demoDirectory = demoDirectory;
     this.roleResolver = roleResolver;
     this.environment = environment;
   }
 
   @PostConstruct
   public void init() {
-    if (!"hrms".equals(directory) && !"demo".equals(directory)) {
-      throw new IllegalStateException("uco.auth.directory must be 'hrms' or 'demo', not '" + directory + "'");
-    }
-    if (isDemoDirectory()) {
-      if (environment.acceptsProfiles(Profiles.of("prod"))) {
-        throw new IllegalStateException("uco.auth.directory=demo (UAT demo users) must never be used in the prod profile");
-      }
-      logger.warn("[UCO HRMS] *** UAT DEMO USERS ARE ENABLED *** Employees are the fixed users of DemoUserDirectory, not the bank HRMS. Use only on a closed UAT.");
-    }
     if (isTestOtpEnabled()) {
       if (environment.acceptsProfiles(Profiles.of("prod"))) {
         throw new IllegalStateException("uco.sso.test-otp must never be set in the prod profile");
@@ -67,27 +49,7 @@ public class HrmsServiceImpl implements HrmsService {
     if (empId == null || empId.trim().isEmpty()) {
       return null;
     }
-    if (isDemoDirectory()) {
-      return demoDirectory.find(empId);
-    }
     return hrmsRepository.findByEmpNo(empId.trim()).orElse(null);
-  }
-
-  @Override
-  public boolean isDemoDirectory() {
-    return "demo".equals(directory);
-  }
-
-  @Override
-  public List<DemoUserDirectory.DemoUser> demoUsers() {
-    return isDemoDirectory() ? demoDirectory.users() : Collections.emptyList();
-  }
-
-  @Override
-  public boolean verifyDemoPassword(String empNo, String password) {
-    boolean ok = isDemoDirectory() && demoDirectory.passwordMatches(empNo, password);
-    if (ok) logger.warn("[UCO HRMS] Demo user {} signed in with a UAT demo password", empNo.trim());
-    return ok;
   }
 
   @Override

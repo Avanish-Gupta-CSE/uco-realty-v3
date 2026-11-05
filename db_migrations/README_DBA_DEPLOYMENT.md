@@ -19,11 +19,11 @@ Scripts for UCO Bank's Oracle database (UAT and Production). The application nee
 
 That is all. The application creates and changes no tables itself; in UAT it checks at start that the tables match the code (`validate`) and refuses to start otherwise.
 
-**Only a developer laptop uses the other scripts** (`03`, `05`, `06`, `07` are left out of the release bundle; `00` is in a UAT bundle only):
+**UAT also runs `03` and `05`** (test employees). `00`, `03`, `05` are in a UAT bundle only; `06`, `07` only for an old laptop database:
 | Script | Purpose |
 | :--- | :--- |
 | `00_DROP_ALL_TABLES.sql` | empties the application tables (also removes old, retired tables). Included in a UAT bundle for resets, **never run in production** |
-| `03_CREATE_HRMS_MOCK_TABLES.sql` + `05_LOCAL_TEST_EMPLOYEES.sql` | stand-ins for the bank's HRMS tables and 12 test employees, so a laptop uses the same HRMS code path as UAT (`scripts/dev-start.sh` loads them for you). UAT and production already have the real HRMS data in `hrms_dba` |
+| `03_CREATE_HRMS_MOCK_TABLES.sql` + `05_LOCAL_TEST_EMPLOYEES.sql` | stand-ins for the bank's HRMS tables and 12 test employees, in our own schema, for the `uat` profile. **Never in production** (`scripts/dev-start.sh --oracle` loads them for you). UAT and production already have the real HRMS data in `hrms_dba` |
 | `06_STAGING_MODEL.sql`, `07_DROP_UNUSED_TABLES.sql` | one-time upgrade of a laptop database created by earlier builds (old change-request design, `users` and `lead_transfer_log` tables). A new database never needs them |
 
 ## 3. Verification

@@ -13,7 +13,7 @@ Both WARs run two ways (same file): `java -jar <war>` (verified), or dropped int
 
 **URL path = WAR file name.** `ucorealty-staff.war` is served at `https://<host>/ucorealty-staff/`, `ucorealty-customer.war` at `/ucorealty-customer/` (use `ROOT.war` for the site root). All links in the application are relative to that path, so any name works. The bundle made by `scripts/package-release.sh` already uses these version-free names.
 
-**Names and URLs.** Project `ucorealty` (Java package `com.ucorealty`), two WARs: `ucorealty-customer.war` (customers, internet zone) and `ucorealty-staff.war` (staff, intranet). Whatever the WAR is called, no URL in the code is hard-coded: JSPs use `${pageContext.request.contextPath}`, JavaScript reads `data-context-path`, Java redirects are context-relative and the public JSON API builds photo URLs from `request.getContextPath()`. So `/api/public/projects` becomes `/ucorealty-customer/api/public/projects` on Tomcat with no code change. Local development runs under the same context paths (`application-local.properties`) and `python3 scripts/context_path_check.py` proves it before every hand-over.
+**Names and URLs.** Project `ucorealty` (Java package `com.ucorealty`), two WARs: `ucorealty-customer.war` (customers, internet zone) and `ucorealty-staff.war` (staff, intranet). Whatever the WAR is called, no URL in the code is hard-coded: JSPs use `${pageContext.request.contextPath}`, JavaScript reads `data-context-path`, Java redirects are context-relative and the public JSON API builds photo URLs from `request.getContextPath()`. So `/api/public/projects` becomes `/ucorealty-customer/api/public/projects` on Tomcat with no code change. `java -jar` runs under the same context paths (`application.properties`) and `python3 scripts/context_path_check.py` proves it before every hand-over.
 
 **External Tomcat setup (per server):** put the settings in `bin/setenv.sh` (Linux) / `bin/setenv.bat` (Windows), then copy the WAR to `webapps/` and start Tomcat:
 ```bash
@@ -24,76 +24,42 @@ export CATALINA_OPTS="-Dspring.profiles.active=uat \
 (`-D...` JVM properties and OS environment variables both work.) `server.port` and `server.servlet.context-path` in the application files are ignored on an external Tomcat; the connector port and the WAR name decide.
 
 ## 1. Database (DBA)
-Follow `db/README_DBA_DEPLOYMENT.md`. Order: `01_CREATE_TABLES.sql`; for an existing older database also `06_STAGING_MODEL.sql` and `07_DROP_UNUSED_TABLES.sql` (maker's working-copy table `project_staging`). There is no seed data and no application accounts. UAT and production use the bank's **real HRMS data** (`hrms_dba`); `03_`/`05_` scripts (stand-in HRMS tables and test employees) are only for a developer laptop.
+Follow `db/README_DBA_DEPLOYMENT.md`. Order: `01_CREATE_TABLES.sql`; for an existing older database also `06_STAGING_MODEL.sql` and `07_DROP_UNUSED_TABLES.sql` (maker's working-copy table `project_staging`). There is no seed data and no application accounts. With the `uat` profile also run `03_` and `05_` (test employees, in our own schema). Production uses the bank's **real HRMS data** and never `03_`/`05_`.
 The application schema user needs `SELECT` on the bank HRMS tables (`employee_contact_details`, and optionally `employee_tenure`, `employee_job_profile`). Columns read from `employee_contact_details`: `EMPNO, NAME, POSTING_SOL_ID, POSTING_SOL_DESC, SCALE_CODE, CADRE_CODE, POSTING_REGION_NAME, DESIG, MOBILE_NO, E_MAIL` (the table prefixes tried, in order, are the setting `uco.hrms.table-prefixes` / env `HRMS_TABLE_PREFIXES`; default `,hrms_dba.` = first no prefix, then `hrms_dba.`). Please verify these names against the real HRMS schema.
 
 ## 2. Configuration
-### How the settings files work (read this once)
-* **All four files are inside every WAR** (`WEB-INF/classes`): `application.properties`, `application-prod.properties`, `application-uat.properties`, `application-local.properties`. Nothing is copied to the server separately.
-* Spring **always** loads `application.properties` (the shared settings), then loads **one** `application-<profile>.properties` on top of it. The profile is the value of `SPRING_PROFILES_ACTIVE`; if it is not set, it is `prod`.
-* **Environment variables and JVM `-D` options beat both files.** That is why the server needs only a few variables (below), not edited files: the password never sits in a file.
+**One line decides everything:** `spring.profiles.active=` in `application.properties` of each app (now `h2`). Change it and rebuild, or set the environment variable `SPRING_PROFILES_ACTIVE`, which overrides it without a rebuild.
 
-| Profile (`SPRING_PROFILES_ACTIVE`) | Use it on | What it adds on top of `application.properties` |
-| :--- | :--- | :--- |
-| `prod` (default) | production | no table checks, 25 DB connections, quiet logs |
-| `uat` | UAT server | **checks the tables against the code at start** (refuses to start if they differ), 10 connections, normal logs |
-| `local` | a laptop only | the in-memory H2 database by default, the test employees in the HRMS stand-in tables (from `db_migrations/03` and `05`; test OTP 123456), the `/ucorealty-...` context path, plain-http cookies. Never on a bank server |
+| Profile | Use it when | Database | Who can sign in |
+| :--- | :--- | :--- | :--- |
+| `h2` (current) | laptop, or UAT **without** a database connection | H2 in memory, started inside the app. At every start the staff app runs all our SQL (`h2-init.sql` = `db_migrations` 01 + 03 + 05). Data is gone when the app stops | test employees 100001 to 600002, OTP 123456 |
+| `uat` | UAT **with** a database connection | Oracle: set `DB_URL`, `DB_USER`, `DB_PASS`. Run `db_migrations` 01, 03, 05 once first. The app checks the tables at start | the same test employees, same OTP |
+| `prod` | production | Oracle: set `DB_URL`, `DB_USER`, `DB_PASS`, plus `SSO_ENCRYPTION_KEY`, `SSO_ENCRYPTION_IV` and `SELECT` on the bank HRMS tables | bank SSO only. Test OTP refused |
 
-### UAT demo: fixed demo users, with or without Oracle (what the UAT bundle is for)
-The UAT bundle (`scripts/package-release.sh uat`) holds the same two WARs, built with the H2 driver. With the `uat` profile the staff site does **not** need the bank HRMS tables or the bank SSO key: it signs in four fixed demo users with an employee number and a password, so the whole workflow can be shown before the bank SSO is wired.
+**Tomcat, with `h2`:** copy both WARs into `webapps/` and start Tomcat. Nothing else to set.
 
-| Employee ID | Role (derived from its posting, like a real employee) |
-| :--- | :--- |
-| `UAT001` | DIT Superadmin (SOL 7115): maker + checker in every zone, Logs page |
-| `UAT002` | HO Marketing and Wealth Management (SOL 8028): maker + checker in every zone |
-| `UAT003` | Zonal Maker, Ajmer (SOL 7015, scale 2) |
-| `UAT004` | Zonal Checker, Ajmer (SOL 7015, scale 4, EXEC) |
-
-The passwords, and the only place to add or change a user, are in `ucorealty-staff/src/main/java/com/ucorealty/hrms/DemoUserDirectory.java` (rebuild the WAR after a change). Five wrong passwords lock that user for 5 minutes.
-
-**Run it in one of two ways (same WARs, set as environment variables, e.g. in Tomcat `bin/setenv.sh`):**
+**Tomcat, with `uat`:** create `bin/setenv.sh`:
 ```bash
-# A) No database connection available: a file database on this server (H2), shared by both WARs, kept across restarts
-export SPRING_PROFILES_ACTIVE=uat,h2
-export UCO_H2_DIR=/var/ucorealty/h2          # optional; default is the home folder of the user running Tomcat (must be writable)
-export SESSION_COOKIE_SECURE=false           # only if the UAT site is plain http
-
-# B) With an Oracle schema (the DBA ran 01_CREATE_TABLES.sql): the same demo users, data in Oracle, no HRMS tables needed
 export SPRING_PROFILES_ACTIVE=uat
 export DB_URL='jdbc:oracle:thin:@//db-host:1521/SERVICE' DB_USER='...' DB_PASS='...'
-export SESSION_COOKIE_SECURE=false           # only if the UAT site is plain http
 ```
-Start the **staff** WAR first (with A it creates the tables); both WARs then read the same data, so a project approved on the staff site appears on the customer site. `scripts/uat_demo_check.py` runs a 26-point check of this setup (login, roles, one project from maker to customer site).
+Plain http works in both (`SESSION_COOKIE_SECURE` defaults to `false` in `h2` and `uat`; set it to `true` on https).
 
-**Going from demo to real:** set `UCO_AUTH_DIRECTORY=hrms`, `SSO_ENCRYPTION_KEY` (and `SSO_ENCRYPTION_IV`) and give the schema user `SELECT` on the HRMS tables; the demo users then stop working without a rebuild. For production use the `prod` profile (default): it **refuses to start** with the demo directory, and without `SSO_ENCRYPTION_KEY`. Build production WARs with `scripts/package-release.sh prod` (no H2 driver inside); delete `DemoUserDirectory` if you do not want the demo code in them at all.
-
-### Which database does the application use?
-Whatever **`DB_URL`** points to; the files contain no database address. On UAT/production set `DB_URL=jdbc:oracle:thin:@//host:1521/SERVICE` with `DB_USER` and `DB_PASS`. The Oracle driver is in every WAR.
-* **H2 is for the UAT demo and laptops only.** A UAT bundle carries the H2 driver (profile `h2`, see above); a production WAR never does (`mvn -Ph2` adds it). H2 holds no bank HRMS tables, so **real employees cannot sign in on H2**: only the demo users can. The real UAT/production test of HRMS and SSO needs an Oracle schema with `SELECT` on the HRMS tables.
-* A closed demo without Oracle is possible, but it is the laptop setup on a test box (`local` profile, H2 server, test employees in the stand-in HRMS tables); keep it off the bank's network.
+**Before production:** set `spring.profiles.active=prod` in both `application.properties` files. `scripts/package-release.sh prod` refuses to build until you do.
 
 | Variable | Module | Required | Meaning |
 | :--- | :--- | :--- | :--- |
-| `SPRING_PROFILES_ACTIVE` | both | yes (`uat` or `prod`) | default is `prod`; never use `local` outside a laptop |
-| `DB_URL` / `DB_USER` / `DB_PASS` | both | yes | the same three names in UAT and production: `jdbc:oracle:thin:@//host:1521/SERVICE`, schema user, password. `uat` validates the tables against the code at start; `prod` does not |
+| `SPRING_PROFILES_ACTIVE` | both | no | overrides the line in `application.properties` |
+| `DB_URL` / `DB_USER` / `DB_PASS` | both | `uat`, `prod` | Oracle connection |
 | `DB_POOL_MAX` | both | no | connection pool size (default 10 in uat, 25 in prod) |
-| `SSO_ENCRYPTION_KEY` | internal | yes, except the UAT demo | bank SSO key (Base64). **The app refuses to start without it**, unless `UCO_AUTH_DIRECTORY=demo` (then the bank SSO entry `/entry` is simply switched off) |
-| `UCO_AUTH_DIRECTORY` | internal | no | `demo` (default in `uat`) = the four demo users; `hrms` = the bank HRMS tables (the only value `prod` accepts) |
-| `UCO_H2_DIR` | both | no | folder of the H2 file database when the `h2` profile is on (default: `ucorealty-h2` in the home folder) |
-| `SSO_ENCRYPTION_IV` | internal | if the bank uses AES-CBC | Base64 IV |
-| `APP_REDIRECT_URL` | internal | no | landing page after login, default `/admin/projects` |
-| `UCO_RBAC_RETAIL_SOLS` | internal | no (default 8001) | SOL(s) of HO Retail Banking, comma separated. Other role SOLs have defaults (`UCO_RBAC_SUPERADMIN_SOLS`=7115, `UCO_RBAC_MARKETING_SOLS`=8028, `UCO_RBAC_ZONAL_SOL_REGEX`=`70(0[1-9]|[1-4]\d)`) |
-| `HRMS_TABLE_PREFIXES` | internal | no | schema prefixes tried for the HRMS tables, in order. Default `,hrms_dba.` (first none, then `hrms_dba.`). Set to e.g. `hrms_dba.` once the bank confirms where the tables live |
-| `SESSION_COOKIE_SECURE` | both | no | default `true`; set `false` only for a plain-HTTP UAT |
-| `SERVER_PORT` | both | no | 8080 public / 8081 internal |
+| `SSO_ENCRYPTION_KEY` / `SSO_ENCRYPTION_IV` | staff | `prod` | bank SSO key and IV (Base64). `prod` refuses to start without the key; `h2` and `uat` use a development key until set |
+| `APP_REDIRECT_URL` | staff | no | landing page after login, default `/admin/projects` |
+| `HRMS_TABLE_PREFIXES` | staff | no | schema prefixes tried for the HRMS tables, default `,hrms_dba.` (first none, then `hrms_dba.`) |
+| `UCO_RBAC_RETAIL_SOLS` | staff | no (default 8001) | SOL(s) of HO Retail Banking. Others: `UCO_RBAC_SUPERADMIN_SOLS`=7115, `UCO_RBAC_MARKETING_SOLS`=8028, `UCO_RBAC_ZONAL_SOL_REGEX` |
+| `SESSION_COOKIE_SECURE` | both | no | `false` in `h2`/`uat`, `true` in `prod` |
+| `SERVER_PORT` | both | no | 8080 customer / 8081 staff (`java -jar` only) |
 
-```bash
-export SPRING_PROFILES_ACTIVE=uat
-export DB_URL='jdbc:oracle:thin:@//db-host:1521/SERVICE' DB_USER='...' DB_PASS='...'
-export SSO_ENCRYPTION_KEY='...' SSO_ENCRYPTION_IV='...'
-java -jar ucorealty-staff.war        # standalone alternative to Tomcat; same for ucorealty-customer.war (without the SSO variables)
-```
-The only fixed logins in the Java code are the UAT demo users in `DemoUserDirectory` (inactive unless `uco.auth.directory=demo`, refused by `prod`); there is no fixed OTP. Otherwise employees are read from the HRMS tables (on a laptop those are stand-ins created from `db_migrations/03` and `05`, never part of a release). One thing does travel inside the WAR: `application-local.properties`, which holds a development SSO key, the test OTP and the dev login switch. It is only read when `SPRING_PROFILES_ACTIVE=local`, and the `prod` profile refuses to start if a test OTP is set. In `uat`/`prod` the dev conveniences are off: no plain `/sso?emp_id=` login, no test OTP (unless you set `UCO_SSO_TEST_OTP` on a closed UAT), and the bank SSO portal does the real OTP.
+Every WAR holds all the profile files and the H2 driver; only the active profile is used.
 
 ### Logs
 Every line the application writes about its own work starts with a tag: `[UCO SSO]` sign-ins and sign-outs, `[UCO HRMS]` employee lookups, `[UCO WORKFLOW]` what a maker or checker did to which project, `[UCO LEAD]` lead saved or exported (never names or phone numbers), `[UCO ACCESS]` / `[UCO SECURITY]` / `[UCO HTTP 4xx]` refused actions (wrong role or zone, missing CSRF token, unknown URL), `[UCO ERROR]` unexpected failures with the full stack trace. On Tomcat they go to `catalina.out`; with `java -jar` to the terminal. Filter with `grep '\[UCO'`.
@@ -118,8 +84,8 @@ Terminate HTTPS at the proxy, pass `X-Forwarded-For` (overwrite any client-suppl
 
 ## 5. Smoke test after deployment
 1. Customer site: catalog loads, only approved projects, `/login` and `/admin` return 403.
-2. UAT demo (profile `uat`): run `python3 scripts/uat_demo_check.py` (needs Python 3 and the sources) or sign in by hand as `UAT003`, create and submit a project, approve it as `UAT004`, check the customer site. Real UAT with the bank SSO: open the UAT SSO portal link with real UAT employees: one at SOL 7115 (DIT), one at 8028 (Marketing), one at 8001 (Retail), a Scale 1–3 officer and a Scale 4+ executive at the same zonal office (e.g. 7001 Patna), and an employee at an ordinary branch (must be refused).
+2. Test login (`h2`, `uat`): sign in with employee `200001`, OTP `123456`. With the bank SSO: open the UAT SSO portal link with real UAT employees: one at SOL 7115 (DIT), one at 8028 (Marketing), one at 8001 (Retail), a Scale 1–3 officer and a Scale 4+ executive at the same zonal office (e.g. 7001 Patna), and an employee at an ordinary branch (must be refused).
 3. Maker creates a project with photos and submits; the checker of the same zone approves; it appears on the customer site; a customer lead is saved; leads export to Excel; DIT sees the Logs page and a maker does not.
 
 ## 6. Hand-over bundle
-`scripts/package-release.sh uat|prod` on the build machine → zip with both WARs (a `uat` bundle includes the H2 driver, a `prod` bundle never does), DBA scripts (production bundles omit drop/mock/test scripts), this guide and SHA-256 checksums.
+`scripts/package-release.sh uat|prod` on the build machine → zip with both WARs DBA scripts (production bundles omit drop/mock/test scripts), this guide and SHA-256 checksums.

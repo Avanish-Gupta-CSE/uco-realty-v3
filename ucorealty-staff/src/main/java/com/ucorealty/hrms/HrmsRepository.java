@@ -21,8 +21,8 @@ import java.util.regex.Pattern;
  * (or reached through a synonym) or in the HRMS schema "hrms_dba". Which of the two is a bank question, so the prefixes
  * to try, in order, are a setting: uco.hrms.table-prefixes (env HRMS_TABLE_PREFIXES), default ",hrms_dba." = first no prefix, then hrms_dba.
  *
- * On a laptop the same tables are created from db_migrations/03_CREATE_HRMS_MOCK_TABLES.sql and filled by 05_LOCAL_TEST_EMPLOYEES.sql,
- * so the code path is identical to UAT; there are no test employees in the Java code.
+ * In the h2 and uat profiles these tables are created from db_migrations/03_CREATE_HRMS_MOCK_TABLES.sql and filled by 05_LOCAL_TEST_EMPLOYEES.sql,
+ * so the code path is identical everywhere; there are no test employees in the Java code.
  */
 @Repository
 public class HrmsRepository {

@@ -92,13 +92,13 @@ def main():
     s, _, body = probe.get("/login")
     if s != 200 or b"ssoOtpForm" not in body:
         sys.exit("Refusing to run: the dev employee-id login is not available here. "
-                 "This script is for the local local profile only.")
+                 "This script is for the h2 or uat profile only.")
 
     sessions = {}
     for zone, (maker, checker) in CREW.items():
         mk, ck = Client(BASE), Client(BASE)
         if not (mk.dev_login(maker) and ck.dev_login(checker)):
-            sys.exit(f"Could not sign in test employees {maker}/{checker}. Is the local profile running?")
+            sys.exit(f"Could not sign in test employees {maker}/{checker}. Is the h2 or uat profile running?")
         sessions[zone] = (mk, ck)
 
     approved = 0

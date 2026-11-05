@@ -1,17 +1,13 @@
-# Testing UCO Realty by hand (local, local profile)
+# Testing UCO Realty by hand (`h2` or `uat` profile)
 
 ## 1. Start
 ```bash
-scripts/dev-start.sh            # needs Docker Desktop; starts Oracle, creates tables, starts both portals
-scripts/dev-stop.sh
-scripts/dev-start.sh --reset    # wipe the database and start again
+scripts/dev-start.sh            # build and start both apps with the h2 profile (nothing else needed)
+scripts/dev-stop.sh             # stop; with h2 the data is gone
+scripts/dev-start.sh --oracle   # the same on Oracle in Docker (uat profile); add --reset to wipe it
 ```
-| What | Address |
-|---|---|
-| Customer portal | http://localhost:8080/ucorealty-customer/projects |
-| Staff portal (sign-in) | http://localhost:8081/ucorealty-staff/login |
 
-Staff sign in with an **employee id** and the OTP `123456` (local profile only; UAT/production use the bank SSO). There are no passwords and no user-management screens. The roles come from the employee's posting (SOL), exactly as in the bank:
+Staff sign in with an **employee id** and the OTP `123456` (`h2` and `uat`; production uses the bank SSO). There are no passwords and no user-management screens. The roles come from the employee's posting (SOL), exactly as in the bank:
 
 | Employee id | Posting (SOL) | Role | Can do |
 |---|---|---|---|
@@ -22,21 +18,12 @@ Staff sign in with an **employee id** and the OTP `123456` (local profile only; 
 | `200001` / `200002` | 7015 Ajmer Zonal Office | Maker / Checker | Ajmer zone only |
 | `300001` / `300002` | 7022 Bhopal Zonal Office | Maker (Scale 1) / Checker (Scale 5) | Bhopal zone only |
 
-Anything else is refused. In the local profile only the ids above exist (`999999` is "not found"); the real bank rules for refusing branch staff and scale 0 are in section 5.
+Anything else is refused. Only the ids above exist (`999999` is "not found"); the real bank rules for refusing branch staff and scale 0 are in section 5.
 
 Sample photos for uploads: `.brain/07_REFERENCE/sample-uploads/UCR-PROJ-0001/`.
 
-## 1b. No Docker: in-memory H2 (optional)
-```bash
-scripts/dev-start.sh --h2            # H2 database server + both apps; no Docker needed
-scripts/dev-start.sh --h2 --reset    # fresh empty database
-scripts/dev-stop.sh                  # also stops H2 (the in-memory data is gone); dev-stop.sh --apps-only keeps it
-```
-* The tables come from the **same** DBA script `db_migrations/01_CREATE_TABLES.sql`, converted on the fly by `scripts/h2_schema.py` (H2 in Oracle mode). Every start of a fresh H2 runs the DROP + CREATE statements, so it is always clean.
-* **H2 console:** http://localhost:8082, JDBC URL `jdbc:h2:tcp://localhost:9092/mem:ucorealty`, user `sa`, empty password. Both apps share this one database (that is why H2 runs as its own small server: an in-memory database lives inside one process, and the customer and staff apps are two).
-* The H2 driver is added only by the `h2` Maven build option (`-Ph2`) (`mvn -Ph2 clean package` inside each app folder, done by the script); the normal build, and so every UAT/production WAR, contains no H2.
-* Same results as Oracle: `smoke_test.py` 35/35, `workflow_test.py` 83/83, `context_path_check.py` OK. What H2 cannot check: the Oracle-only unique index `ux_staging_one_open` (the app still enforces it), the SecureFiles photo storage, the real HRMS tables, and schema validation (H2 and Oracle name the number types differently). Use Oracle in Docker (default start) before you hand over, and the UAT database for the final run (`SPRING_PROFILES_ACTIVE=uat`, `DB_URL`, `DB_USER`, `DB_PASS`, the DBA runs `db_migrations/01_CREATE_TABLES.sql`).
-* `scripts/remove_demo_data.sh` works on both.
+## 1b. Look inside H2
+With the `h2` profile open the web console at http://localhost:8082 (JDBC URL `jdbc:h2:tcp://localhost:9092/mem:ucorealty;MODE=Oracle;DB_CLOSE_DELAY=-1`, user `sa`, empty password). Every start gives a fresh database: all tables and the test employees, no projects. `python3 scripts/load_demo_data.py` fills it with demo projects. The Oracle-only unique index `ux_staging_one_open` is not in H2; the application still checks that rule.
 
 ## 2. Automatic check (about 5 seconds)
 ```bash
@@ -126,40 +113,14 @@ Watch it between the steps: *Save as Draft* changes only `project_staging`; *Sen
 
 ## 4. Optional demo data
 ```bash
-python3 scripts/load_demo_data.py     # local profile only; refuses to run elsewhere
+python3 scripts/load_demo_data.py     # needs the test login (h2 or uat profile); refuses to run elsewhere
 scripts/remove_demo_data.sh           # removes everything whose project name ends in "(Demo)" and the demo leads
 ```
 
-## 5. Employees and sign-in on this Mac
-There are no test employees in the Java code. The application always reads employees from the HRMS tables; on your Mac those tables are stand-ins (`db_migrations/03_CREATE_HRMS_MOCK_TABLES.sql`) filled with 12 test employees (`05_LOCAL_TEST_EMPLOYEES.sql`). `scripts/dev-start.sh` loads them into Oracle, and `scripts/h2_schema.py` adds them to H2, so the sign-in code is the same as in UAT. The `local` profile sets the test OTP (`uco.sso.test-otp=123456`), so any employee in those tables signs in with their number and `123456`.
-
-To try the bank-style token entry instead of the form (laptop only), run the staff app with the form switched off and open `/entry?value=<token>`, where the token is `emp_id=<EMPNO>&sol_id=<SOL>` encrypted with the dev key/iv (`SsoCryptoUtil.encryptAesCbc`; values in `application-local.properties`):
-```bash
-DB_URL=jdbc:oracle:thin:@localhost:1521/XEPDB1 DB_USER=uco_realty DB_PASS=uco_realty_pwd \
-java -jar ucorealty-staff/target/ucorealty-staff.war --server.port=8181 \
-     --spring.profiles.active=local --uco.sso.dev-login-enabled=false
-```
-`600001` (branch SOL) and `600002` (scale 0) must be refused with "not authorised".
-
-## 5a. UAT demo users (employee number + password)
-With the `uat` profile the staff site uses four fixed demo users (`UAT001` DIT superadmin, `UAT002` HO Marketing, `UAT003` zonal maker, `UAT004` zonal checker, all in `DemoUserDirectory.java`) and needs neither HRMS tables nor the bank SSO key. Try it on your Mac exactly as on the UAT server, without a database:
-```bash
-export UCO_H2_DIR=/tmp/ucorealty-h2 SESSION_COOKIE_SECURE=false SPRING_PROFILES_ACTIVE=uat,h2
-java -Dserver.port=8081 -jar ucorealty-staff/target/ucorealty-staff.war &      # build first with: (cd ucorealty-staff && mvn -Ph2 clean package -DskipTests)
-java -Dserver.port=8080 -jar ucorealty-customer/target/ucorealty-customer.war &
-python3 scripts/uat_demo_check.py                                              # 26 checks
-```
-For Oracle instead of H2 set `SPRING_PROFILES_ACTIVE=uat` and `DB_URL`, `DB_USER`, `DB_PASS`. The regular tests (`smoke_test.py`, `workflow_test.py`) still need the `local` profile.
-
-## 5b. UAT before the SSO is wired (closed test only)
-Until the bank PC and key arrive, the UAT server can offer a **basic employee-id + test-OTP page** against the real HRMS data. It is off by default and needs both settings (JVM `-D...` or environment variables):
-```
-UCO_SSO_DEV_LOGIN_ENABLED=true      # shows the employee-id form on /login
-UCO_SSO_TEST_OTP=<a secret you choose, 6 digits>      # the one OTP that works for any real HRMS employee
-```
-The form lists no test employees and shows no OTP hint. Every sign-in with the test OTP is written as a warning in the log and in the login audit. The **prod profile refuses to start** if `UCO_SSO_TEST_OTP` is set. Remove both settings the day the SSO goes live; nothing else changes.
+## 5. Test employees
+The test employees are rows in `db_migrations/05_LOCAL_TEST_EMPLOYEES.sql`, in the tables from `03_CREATE_HRMS_MOCK_TABLES.sql`; the code reads them like the bank's HRMS tables. The same 12 work in `h2` and `uat`, with OTP `123456` (settings `uco.sso.dev-login-enabled`, `uco.sso.test-otp` in those two profile files). `600001` and `600002` are refused on purpose (branch SOL, scale 0). After changing 01, 03 or 05 run `python3 scripts/h2_schema.py`.
 
 ## 6. If something goes wrong
 * Logs: `.run/public.log`, `.run/internal.log`.
 * "Port already in use": `scripts/dev-stop.sh`.
-* Login page shows "Single Sign-On required" and no form: the app is not running with the local profile.
+* Login page shows "Single Sign-On required" and no form: the app is running with the `prod` profile.

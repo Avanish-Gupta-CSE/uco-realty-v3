@@ -5,7 +5,7 @@
     PUBLIC_URL=http://localhost:8080/ucorealty-customer INTERNAL_URL=http://localhost:8081/ucorealty-staff python3 scripts/smoke_test.py
 
 Checks the customer lockdown, security headers, SSO error paths, CSRF, role isolation and logout. The role checks
-need the local profile (employee-id + OTP form with the test employees from db_migrations/05); against a UAT/prod build it runs
+need the h2 or uat profile (employee-id + OTP form with the test employees from db_migrations/05); against a UAT/prod build it runs
 the checks that do not need a login and says what it skipped. It never creates projects.
 Exit code is 0 only when every check passes.
 """
@@ -54,7 +54,7 @@ check("POST without CSRF token is 403", internal.post("/sso/generate-otp", {"emp
 if not dev_login:
     print("\n  (dev login form not present: this looks like a UAT/prod build, role checks skipped)")
 else:
-    print("\n== Roles (local profile test employees)")
+    print("\n== Roles (h2 or uat profile test employees)")
     dit, maker, checker, retail = Client(INTERNAL), Client(INTERNAL), Client(INTERNAL), Client(INTERNAL)
     check("DIT 100001 (SOL 7115) signs in", dit.dev_login("100001"))
     check("Maker 200001 signs in", maker.dev_login("200001"))

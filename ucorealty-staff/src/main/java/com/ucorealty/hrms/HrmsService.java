@@ -2,8 +2,6 @@ package com.ucorealty.hrms;
 
 import com.ucorealty.entity.AppUser;
 
-import java.util.List;
-
 public interface HrmsService {
 
   /** The employee as HRMS knows them, or null when unknown. */
@@ -14,15 +12,6 @@ public interface HrmsService {
 
   /** Checks the test OTP for an employee who exists in HRMS. The real OTP is the bank SSO portal's job. */
   boolean verifyOtp(String empId, String otp);
-
-  /** UAT demo: true when employees come from the four fixed demo users (uco.auth.directory=demo) instead of the HRMS tables. */
-  boolean isDemoDirectory();
-
-  /** The demo users to list on the login page; empty unless the demo directory is on. */
-  List<DemoUserDirectory.DemoUser> demoUsers();
-
-  /** Demo login: employee number + password of a demo user. Always false unless the demo directory is on. */
-  boolean verifyDemoPassword(String empNo, String password);
 
   AppUser toAppUser(HrmsUserProfile profile);
 

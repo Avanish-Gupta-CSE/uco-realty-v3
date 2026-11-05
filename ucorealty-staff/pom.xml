@@ -112,6 +112,12 @@
       <artifactId>poi-ooxml</artifactId>
       <version>${poi.version}</version>
     </dependency>
+
+    <!-- H2 database, used only by the Spring profile h2 (see application-h2.properties) -->
+    <dependency>
+      <groupId>com.h2database</groupId>
+      <artifactId>h2</artifactId>
+    </dependency>
   </dependencies>
 
   <build>
@@ -125,19 +131,4 @@
     </plugins>
   </build>
 
-  <profiles>
-    <!-- A BUILD option (not the Spring runtime profile in application-*.properties). Off by default: only `mvn -Ph2 package`
-         turns it on, adding the H2 driver for local testing without Docker (the h2 option of scripts/dev-start.sh does this).
-         A normal build, and so every UAT/production WAR, never contains H2. -->
-    <profile>
-      <id>h2</id>
-      <dependencies>
-        <dependency>
-          <groupId>com.h2database</groupId>
-          <artifactId>h2</artifactId>
-          <scope>runtime</scope>
-        </dependency>
-      </dependencies>
-    </profile>
-  </profiles>
 </project>

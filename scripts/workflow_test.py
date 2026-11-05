@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""End-to-end test of the maker-checker workflow (STAGING model) on a RUNNING local setup (local profile).
+"""End-to-end test of the maker-checker workflow (STAGING model) on a RUNNING local setup (h2 or uat profile).
 
     python3 scripts/workflow_test.py
     PUBLIC_URL=http://localhost:8080/ucorealty-customer INTERNAL_URL=http://localhost:8081/ucorealty-staff python3 scripts/workflow_test.py
@@ -8,7 +8,7 @@ The model under test: the master table holds only APPROVED projects; everything 
 reduction, deletion) is a row in the STAGING table that he edits until he sends it for approval, and only a checker's
 approval applies it to the master. The test creates two projects named "ZZ Workflow ..." and walks them through every
 path, checking at each step what the maker, the checker, other roles and the public customer site can see.
-Only for the local profile. Exit code 0 only when every check passes.
+Only for the h2 or uat profile. Exit code 0 only when every check passes.
 """
 import os
 import re
@@ -33,7 +33,7 @@ def check(name, ok, detail=""):
 def login(emp):
     c = Client(INTERNAL)
     if not c.dev_login(emp):
-        sys.exit(f"Cannot sign in {emp}: run this against the local profile (scripts/dev-start.sh)")
+        sys.exit(f"Cannot sign in {emp}: run this against the h2 or uat profile (scripts/dev-start.sh)")
     return c
 
 

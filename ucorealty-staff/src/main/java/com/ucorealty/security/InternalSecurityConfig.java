@@ -48,7 +48,7 @@ public class InternalSecurityConfig {
         // Full intranet access to catalog, bank production SSO entry points, OTP, static assets, JSP views, and error page:
         .requestMatchers("/", "/projects", "/project/**", "/lead", "/files/**",
                          "/entry", "/GetValue.jsp", "/GetValue", "/getvalue", "/getvalue.jsp",
-                         "/sso/**", "/login", "/demo-login", "/otp", "/otp-verify", "/error-page", "/error",
+                         "/sso/**", "/login", "/otp", "/otp-verify", "/error-page", "/error",
                          "/assets/**", "/css/**", "/images/**", "/js/**", "/WEB-INF/jsp/**").permitAll()
         // Superadmin DIT audit logs strictly restricted:
         .requestMatchers("/admin/audit-logs/**").hasRole("SUPERADMIN_DIT")
