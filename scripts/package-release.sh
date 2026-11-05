@@ -20,9 +20,12 @@ if [ -d "/opt/homebrew/opt/openjdk@25/libexec/openjdk.jdk/Contents/Home" ]; then
 fi
 
 echo "==> Building both WARs"
+# A UAT build also carries the H2 driver (Maven profile h2) so the same WAR runs with Oracle OR, with no database, on H2.
+# A production build never contains H2.
+H2_PROFILE=""; [ "$MODE" = "uat" ] && H2_PROFILE="-Ph2"
 # shellcheck disable=SC2086
 for m in ucorealty-customer ucorealty-staff; do
-  (cd "$ROOT/$m" && mvn -q ${MVN_OPTS:-} clean package -DskipTests)
+  (cd "$ROOT/$m" && mvn -q ${MVN_OPTS:-} $H2_PROFILE clean package -DskipTests)
 done
 
 PUBLIC_WAR="$ROOT/ucorealty-customer/target/ucorealty-customer.war"

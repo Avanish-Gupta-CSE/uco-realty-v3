@@ -141,6 +141,16 @@ java -jar ucorealty-staff/target/ucorealty-staff.war --server.port=8181 \
 ```
 `600001` (branch SOL) and `600002` (scale 0) must be refused with "not authorised".
 
+## 5a. UAT demo users (employee number + password)
+With the `uat` profile the staff site uses four fixed demo users (`UAT001` DIT superadmin, `UAT002` HO Marketing, `UAT003` zonal maker, `UAT004` zonal checker, all in `DemoUserDirectory.java`) and needs neither HRMS tables nor the bank SSO key. Try it on your Mac exactly as on the UAT server, without a database:
+```bash
+export UCO_H2_DIR=/tmp/ucorealty-h2 SESSION_COOKIE_SECURE=false SPRING_PROFILES_ACTIVE=uat,h2
+java -Dserver.port=8081 -jar ucorealty-staff/target/ucorealty-staff.war &      # build first with: (cd ucorealty-staff && mvn -Ph2 clean package -DskipTests)
+java -Dserver.port=8080 -jar ucorealty-customer/target/ucorealty-customer.war &
+python3 scripts/uat_demo_check.py                                              # 26 checks
+```
+For Oracle instead of H2 set `SPRING_PROFILES_ACTIVE=uat` and `DB_URL`, `DB_USER`, `DB_PASS`. The regular tests (`smoke_test.py`, `workflow_test.py`) still need the `local` profile.
+
 ## 5b. UAT before the SSO is wired (closed test only)
 Until the bank PC and key arrive, the UAT server can offer a **basic employee-id + test-OTP page** against the real HRMS data. It is off by default and needs both settings (JVM `-D...` or environment variables):
 ```

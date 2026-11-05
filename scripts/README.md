@@ -69,8 +69,9 @@ The script then waits until each log says "Started ...Application" and prints th
 | Script | What it does | Needed for deployment? |
 | :--- | :--- | :--- |
 | `dev-stop.sh` | kills the two apps (and, without `--apps-only`, the H2 server) | no |
-| `package-release.sh uat|prod` | builds both WARs and zips them with the SQL files, the deployment guide and SHA-256 checksums (never mock HRMS tables or demo data) | optional: a convenient hand-over bundle |
+| `package-release.sh uat|prod` | builds both WARs and zips them with the SQL files, the deployment guide and SHA-256 checksums (never mock HRMS tables or demo data). A `uat` build adds the H2 driver (`-Ph2`) so the same WAR runs with Oracle or, with no database, on an H2 file; a `prod` build never contains H2 | optional: a convenient hand-over bundle |
 | `h2_schema.py` | converts `db_migrations/01_CREATE_TABLES.sql` for H2 (drops the Oracle-only storage clause and the expression index) | no (H2 only) |
+| `uat_demo_check.py` | 26 checks of the UAT demo setup (`uco.auth.directory=demo`): demo login page, wrong password, closed SSO doors, the four roles, one project from maker to checker to the customer site. Reads the passwords from `DemoUserDirectory.java` | no (run against the apps started with `SPRING_PROFILES_ACTIVE=uat,h2` or `uat`) |
 | `smoke_test.py` | 35 quick checks: lockdown of the customer site, headers, CSRF, bad tokens, role access, logout | no (run before a release, local profile only) |
 | `workflow_test.py` | 83 checks of the whole maker-checker flow through the real screens; leaves two test projects behind | no (local profile only) |
 | `context_path_check.py` | crawls both apps as several roles and fails if any URL lacks the context path | no (run before a release) |
