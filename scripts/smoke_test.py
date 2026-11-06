@@ -31,7 +31,7 @@ s, h, b = pub.get("/projects")
 check("catalog loads", s == 200, s)
 hl = {k.lower() for k in h}
 check("security headers present", {"content-security-policy", "x-frame-options", "x-content-type-options"} <= hl, sorted(hl))
-for path in ("/login", "/admin/projects", "/sso", "/entry", "/api/admin/geo"):
+for path in ("/login", "/admin/projects", "/entry", "/api/admin/geo"):
     check(f"{path} is refused", pub.get(path)[0] == 403, pub.get(path)[0])
 check("unknown project is 404", pub.get("/project/UCR-PROJ-NOPE")[0] == 404)
 check("customer name with markup is refused (400)", pub.post("/lead", {"name": "<b>x</b>", "phone": "9876543210"},
@@ -47,8 +47,8 @@ dev_login = b"ssoOtpForm" in b
 check("security headers present", "content-security-policy" in {k.lower() for k in h})
 s, h, _ = internal.get("/admin/projects")
 check("anonymous /admin/projects redirects to /login", s == 302 and location(h).endswith("/login"), (s, location(h)))
-s, h, _ = internal.get("/entry?value=not-a-real-token")
-check("bad SSO token is refused", s == 302 and "sso_failed" in location(h), (s, location(h)))
+s, h, _ = internal.get("/entry?Value=not-a-real-token")
+check("bad SSO token is refused", s == 302 and "reason=unauthorized" in location(h), (s, location(h)))
 check("POST without CSRF token is 403", internal.post("/sso/generate-otp", {"empId": "100001"})[0] == 403)
 
 if not dev_login:

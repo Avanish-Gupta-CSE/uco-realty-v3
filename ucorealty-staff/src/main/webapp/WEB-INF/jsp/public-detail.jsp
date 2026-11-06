@@ -7,7 +7,7 @@
                 <c:set var="activeTab" value="public" scope="request" />
                 <jsp:include page="common/header.jsp" />
 
-                <main class="container py-4" id="main-project-detail">
+                <main class="container-xxl py-4" id="main-project-detail">
                     <div class="mb-3">
                         <a href="${pageContext.request.contextPath}/projects" class="btn-back" id="btn-back-projects">
                             &larr; Back to All Housing Projects
@@ -119,13 +119,12 @@
                                     </div>
                                     <div class="col-sm-6 col-md-3">
                                         <div class="text-muted small">Average Rate</div>
-                                        <div id="spec-avg-rate"><c:out value="${project.avgRate != null ? project.avgRate : 'Not
-                                            provided'}"/></div>
+                                        <div id="spec-avg-rate"><c:out value="${project.avgRate != null ? project.avgRate : 'On request'}"/></div>
                                     </div>
                                     <div class="col-sm-6 col-md-3">
                                         <div class="text-muted small">Total Units</div>
                                         <div id="spec-total-inventory">${project.totalInventory != null ?
-                                            project.totalInventory : 'Not provided'}</div>
+                                            project.totalInventory : '-'}</div>
                                     </div>
                                     <div class="col-sm-6 col-md-3">
                                         <div class="text-muted small">Available Units</div>
@@ -143,57 +142,71 @@
                                 <div class="table-responsive">
                                     <table class="table table-bordered table-spec mb-0" id="table-property-specs">
                                         <tbody>
+                                            <c:if test="${not empty project.typeOfUnit}">
                                             <tr>
                                                 <th>Type of Units</th>
                                                 <td id="spec-unit-type"><c:out value="${project.typeOfUnit != null ?
                                                     project.typeOfUnit : 'Not provided'}"/></td>
                                             </tr>
+                                            </c:if>
+                                            <c:if test="${not empty project.totalProjectArea}">
                                             <tr>
                                                 <th>Total Project Area</th>
                                                 <td id="spec-total-area"><c:out value="${project.totalProjectArea != null ?
                                                     project.totalProjectArea : 'Not provided'}"/></td>
                                             </tr>
+                                            </c:if>
+                                            <c:if test="${not empty project.carpetMin || not empty project.carpetMax}">
                                             <tr>
                                                 <th>Carpet Area</th>
                                                 <td id="spec-carpet-area">
                                                     <c:out value="${project.carpetMin != null ? (project.carpetMin += ' sq.ft.') :
-                                                    'N/A'}"/>
+                                                    ''}"/>
                                                     <c:out value="${project.carpetMin != null && project.carpetMax != null ? '–' : ''}"/>
                                                     <c:out value="${project.carpetMax != null ? (project.carpetMax += ' sq.ft.') : ''}"/>
                                                 </td>
                                             </tr>
+                                            </c:if>
+                                            <c:if test="${not empty project.buildupMin || not empty project.buildupMax}">
                                             <tr>
                                                 <th>Super Built-up Area</th>
                                                 <td id="spec-buildup-area">
                                                     <c:out value="${project.buildupMin != null ? (project.buildupMin += ' sq.ft.') :
-                                                    'N/A'}"/>
+                                                    ''}"/>
                                                     <c:out value="${project.buildupMin != null && project.buildupMax != null ? '–' :
                                                     ''}"/>
                                                     <c:out value="${project.buildupMax != null ? (project.buildupMax += ' sq.ft.') :
                                                     ''}"/>
                                                 </td>
                                             </tr>
+                                            </c:if>
+                                            <c:if test="${project.noOfTowers != null || project.aptPerFloor != null}">
                                             <tr>
                                                 <th>Towers &amp; Floors</th>
-                                                <td id="spec-towers-floors">${project.noOfTowers != null ?
-                                                    (project.noOfTowers += ' Towers') : 'N/A'}, ${project.aptPerFloor !=
-                                                    null ? (project.aptPerFloor += ' units per floor') : ''}</td>
+                                                <td id="spec-towers-floors"><c:if test="${project.noOfTowers != null}"><c:out value="${project.noOfTowers}"/> towers</c:if><c:if test="${project.noOfTowers != null && project.aptPerFloor != null}">, </c:if><c:if test="${project.aptPerFloor != null}"><c:out value="${project.aptPerFloor}"/> units per floor</c:if></td>
                                             </tr>
+                                            </c:if>
+                                            <c:if test="${not empty project.distRailway}">
                                             <tr>
                                                 <th>Distance to Railway</th>
                                                 <td id="spec-dist-railway"><c:out value="${project.distRailway != null ?
                                                     project.distRailway : 'Not provided'}"/></td>
                                             </tr>
+                                            </c:if>
+                                            <c:if test="${not empty project.distAirport}">
                                             <tr>
                                                 <th>Distance to Airport</th>
                                                 <td id="spec-dist-airport"><c:out value="${project.distAirport != null ?
                                                     project.distAirport : 'Not provided'}"/></td>
                                             </tr>
+                                            </c:if>
+                                            <c:if test="${not empty project.projectAddress}">
                                             <tr>
                                                 <th>Project Address</th>
                                                 <td id="spec-project-address"><c:out value="${project.projectAddress != null ?
                                                     project.projectAddress : 'Not provided'}"/></td>
                                             </tr>
+                                            </c:if>
                                             <c:if test="${project.amenities != null}">
                                                 <tr>
                                                     <th>Amenities</th>

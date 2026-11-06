@@ -8,6 +8,6 @@
 <!-- Bootstrap 5.3.2 JS Bundle (Bank Standard) -->
 <script id="bootstrap-bundle-js" src="${pageContext.request.contextPath}/assets/js/bootstrap.bundle.min.js"></script>
 <!-- UCO Bank Application Script -->
-<script id="uco-app-js" src="${pageContext.request.contextPath}/assets/js/app.js"></script>
+<script id="uco-app-js" src="${pageContext.request.contextPath}/assets/js/app.js?v=20261106a"></script>
 </body>
 </html>

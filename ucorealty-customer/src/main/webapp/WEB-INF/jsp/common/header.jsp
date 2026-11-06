@@ -10,7 +10,7 @@
     <!-- Bootstrap 5.3.2 CSS (Bank Standard) -->
     <link rel="stylesheet" id="bootstrap-css" href="${pageContext.request.contextPath}/assets/css/bootstrap.min.css">
     <!-- UCO Bank Theme Stylesheet -->
-    <link rel="stylesheet" id="uco-theme-css" href="${pageContext.request.contextPath}/assets/css/style.css">
+    <link rel="stylesheet" id="uco-theme-css" href="${pageContext.request.contextPath}/assets/css/style.css?v=20261106a">
 </head>
 <body>
 
@@ -29,7 +29,7 @@
 
             <!-- Customer Portal Contact Pill -->
             <div class="user-menu" id="customer-support-pill">
-                <a href="https://www.uco.bank.in/home-loan" class="btn btn-outline-light btn-sm" id="btn-header-apply-loan">
+                <a href="https://www.uco.bank.in/home-loan" class="btn btn-outline-primary btn-sm" id="btn-header-apply-loan">
                     Apply for UCO Home Loan
                 </a>
             </div>

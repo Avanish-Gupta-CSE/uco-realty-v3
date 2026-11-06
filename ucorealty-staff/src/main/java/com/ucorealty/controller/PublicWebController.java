@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
  */
 @Controller
 public class PublicWebController {
+  private static final int PAGE_SIZE = 12;
 
   private final ProjectService projectService;
   private final MasterDataService masterDataService;
@@ -49,6 +50,7 @@ public class PublicWebController {
   public String listProjects(@RequestParam(required = false) String state,
                              @RequestParam(required = false) String city,
                              @RequestParam(required = false) String search,
+                             @RequestParam(defaultValue = "1") int pageNo,
                              Authentication auth,
                              Model model) {
     boolean isStaff = (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getName()));
@@ -76,7 +78,15 @@ public class PublicWebController {
       list = projectService.publicList(state, city, search);
     }
 
-    model.addAttribute("projects", list);
+    // 12 cards per page
+    int total = list.size();
+    int pageCount = Math.max(1, (total + PAGE_SIZE - 1) / PAGE_SIZE);
+    int current = Math.min(Math.max(1, pageNo), pageCount);
+    List<Project> pageItems = list.subList((current - 1) * PAGE_SIZE, Math.min(current * PAGE_SIZE, total));
+    model.addAttribute("projects", pageItems);
+    model.addAttribute("projectCount", total);
+    model.addAttribute("pageCount", pageCount);
+    model.addAttribute("pageNo", current);
     model.addAttribute("states", masterDataService.getStates());
     model.addAttribute("isStaff", isStaff);
 
@@ -93,10 +103,9 @@ public class PublicWebController {
     model.addAttribute("cities", cities);
 
     Map<String, Long> thumbnails = new HashMap<>();
-    for (Project p : list) {
-      List<ProjectImage> imgs = imageRepo.findByProjectId(p.id);
-      if (!imgs.isEmpty()) {
-        thumbnails.put(p.id, imgs.get(0).id);
+    if (!pageItems.isEmpty()) {
+      for (Object[] row : imageRepo.findFirstImageIds(pageItems.stream().map(p -> p.id).collect(Collectors.toList()))) {
+        thumbnails.put((String) row[1], (Long) row[0]);
       }
     }
     model.addAttribute("projectThumbnails", thumbnails);

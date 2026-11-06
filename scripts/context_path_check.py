@@ -116,7 +116,7 @@ for emp, label in (("200001", "maker"), ("200002", "checker"), ("400001", "retai
     crawl(INTERNAL, label, c, start)
 audit_assets(INTERNAL, "staff")
 anon = Client(INTERNAL)
-for p in ("/admin/projects", "/login", "/entry", "/sso", "/error-page?reason=invalid_employee"):
+for p in ("/admin/projects", "/login", "/entry", "/error-page?reason=invalid_employee"):
     audit_page(anon, INTERNAL, p, "anonymous")
 
 print(f"{pages} page fetches audited under {ctx_of(PUBLIC)} and {ctx_of(INTERNAL)}")

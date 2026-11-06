@@ -6,12 +6,12 @@
 <c:set var="activeTab" value="audit" scope="request"/>
 <jsp:include page="common/header.jsp"/>
 
-<main class="container-fluid px-lg-4 px-3 py-4" id="main-audit-logs">
+<main class="container-xxl py-4" id="main-audit-logs">
     <!-- Breadcrumb & Header Row -->
     <div class="mb-4" id="audit-header-row">
         <nav aria-label="breadcrumb" id="audit-breadcrumb-nav">
             <ol class="breadcrumb mb-2" id="audit-breadcrumb-list">
-                <li class="breadcrumb-item" id="breadcrumb-home"><a href="${pageContext.request.contextPath}/admin/projects" id="link-breadcrumb-home">Project Management</a></li>
+                <li class="breadcrumb-item" id="breadcrumb-home"><a href="${pageContext.request.contextPath}/admin/projects" id="link-breadcrumb-home">Projects</a></li>
                 <li class="breadcrumb-item active" aria-current="page" id="breadcrumb-current">Logs</li>
             </ol>
         </nav>
@@ -153,7 +153,7 @@
                                 <li class="page-item <c:if test='${not activityLogs.hasPrevious()}'>disabled</c:if>">
                                     <a class="page-link" href="?pageActivity=${activityLogs.number - 1}&pageLogin=${pageLogin}&tab=activity" id="link-act-prev">&laquo; Prev</a>
                                 </li>
-                                <c:forEach var="i" begin="0" end="${activityLogs.totalPages - 1}">
+                                <c:forEach var="i" begin="${activityLogs.number > 3 ? activityLogs.number - 3 : 0}" end="${activityLogs.number + 3 < activityLogs.totalPages - 1 ? activityLogs.number + 3 : activityLogs.totalPages - 1}">
                                     <li class="page-item <c:if test='${activityLogs.number == i}'>active</c:if>">
                                         <a class="page-link" href="?pageActivity=${i}&pageLogin=${pageLogin}&tab=activity" id="link-act-page-${i}">${i + 1}</a>
                                     </li>
@@ -250,7 +250,7 @@
                                 <li class="page-item <c:if test='${not loginAudits.hasPrevious()}'>disabled</c:if>">
                                     <a class="page-link" href="?pageActivity=${pageActivity}&pageLogin=${loginAudits.number - 1}&tab=login" id="link-log-prev">&laquo; Prev</a>
                                 </li>
-                                <c:forEach var="i" begin="0" end="${loginAudits.totalPages - 1}">
+                                <c:forEach var="i" begin="${loginAudits.number > 3 ? loginAudits.number - 3 : 0}" end="${loginAudits.number + 3 < loginAudits.totalPages - 1 ? loginAudits.number + 3 : loginAudits.totalPages - 1}">
                                     <li class="page-item <c:if test='${loginAudits.number == i}'>active</c:if>">
                                         <a class="page-link" href="?pageActivity=${pageActivity}&pageLogin=${i}&tab=login" id="link-log-page-${i}">${i + 1}</a>
                                     </li>

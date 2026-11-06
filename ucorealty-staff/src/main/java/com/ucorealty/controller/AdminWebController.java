@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 @Controller
 @RequestMapping("/admin")
 public class AdminWebController {
+  private static final int LEADS_PER_PAGE = 20;
   private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(AdminWebController.class);
   private final ProjectRepository projectRepo;
   private final LeadRepository leadRepo;
@@ -46,38 +47,20 @@ public class AdminWebController {
                           @RequestParam(required = false) String to,
                           @RequestParam(required = false) String status,
                           @RequestParam(required = false) String search,
+                          @RequestParam(defaultValue = "1") int pageNo,
                           Authentication auth,
                           Model model) {
     // The nav link is hidden for other roles, but hiding is not protection: customer phone numbers need a real check
     RoleCheck.require(auth, Roles.LEAD_ROLES);
-    List<Lead> leads = leadRepo.findAll();
+    List<Lead> leads = leadExportController.filterLeads(from, to, status, search);
 
-    // In-memory date & status filter
-    if (from != null && !from.trim().isEmpty()) {
-      LocalDate f = LocalDate.parse(from.trim());
-      leads = leads.stream().filter(l -> l.createdAt != null && !l.createdAt.toLocalDate().isBefore(f)).collect(Collectors.toList());
-    }
-    if (to != null && !to.trim().isEmpty()) {
-      LocalDate t = LocalDate.parse(to.trim());
-      leads = leads.stream().filter(l -> l.createdAt != null && !l.createdAt.toLocalDate().isAfter(t)).collect(Collectors.toList());
-    }
-    if (status != null && !status.trim().isEmpty()) {
-      String st = status.trim();
-      leads = leads.stream().filter(l -> {
-        if (l.status == null) return false;
-        if (st.equalsIgnoreCase(l.status)) return true;
-        if ("Visitor".equalsIgnoreCase(st) && "VISITOR".equalsIgnoreCase(l.status)) return true;
-        if ("Showed interest in Home Loan".equalsIgnoreCase(st) && "SUCCESSFUL_APPLIED".equalsIgnoreCase(l.status)) return true;
-        return false;
-      }).collect(Collectors.toList());
-    }
-    if (search != null && !search.trim().isEmpty()) {
-      String q = search.trim().toLowerCase();
-      leads = leads.stream().filter(l ->
-          (l.customerName != null && l.customerName.toLowerCase().contains(q)) ||
-          (l.phone != null && l.phone.contains(q))
-      ).collect(Collectors.toList());
-    }
+    int total = leads.size();
+    int pages = Math.max(1, (total + LEADS_PER_PAGE - 1) / LEADS_PER_PAGE);
+    int current = Math.min(Math.max(1, pageNo), pages);
+    leads = leads.subList((current - 1) * LEADS_PER_PAGE, Math.min(current * LEADS_PER_PAGE, total));
+    model.addAttribute("leadCount", total);
+    model.addAttribute("pageCount", pages);
+    model.addAttribute("pageNo", current);
 
     // Map project IDs to project names for friendly display
     Map<String, String> projectNames = new HashMap<>();
@@ -97,6 +80,7 @@ public class AdminWebController {
                           @RequestParam(required = false) String search,
                           jakarta.servlet.http.HttpServletResponse res,
                           Authentication auth) throws IOException {
+    RoleCheck.require(auth, Roles.LEAD_ROLES);   // before the audit row: a refused export must not be recorded as an export
     auditService.logActivity(auth.getName(), "EXPORT_LEADS", "LEAD", "EXCEL", "Exported leads to Excel");
     leadExportController.export(from, to, status, search, res, auth);
   }

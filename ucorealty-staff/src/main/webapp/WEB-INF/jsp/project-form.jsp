@@ -7,14 +7,14 @@
 <c:set var="activeTab" value="projects" scope="request" />
 <jsp:include page="common/header.jsp" />
 
-<main class="container py-4" id="main-project-form">
+<main class="container-xxl py-4" id="main-project-form">
     <div class="d-flex justify-content-between align-items-center mb-3" id="form-top-nav">
         <a href="${pageContext.request.contextPath}/admin/projects" class="btn-back" id="btn-back-project-mgmt">
             &larr; Back to Project Management
         </a>
         <c:if test="${isEdit}">
             <a href="${pageContext.request.contextPath}/admin/projects/staging/<c:out value="${staging.id}"/>/preview" class="btn btn-outline-secondary btn-sm" id="btn-form-preview-project">
-                👁️ Preview Project
+                Preview Project
             </a>
         </c:if>
     </div>
@@ -35,8 +35,7 @@
 
         <c:if test="${not empty error}">
             <div id="formErrorAlert" class="form-error-alert d-flex align-items-center gap-2">
-                <span class="fs-5">⚠️</span>
-                <div id="form-error-text"><strong>Submission Error:</strong> <c:out value="${error}"/></div>
+                                <div id="form-error-text"><strong>Please check:</strong> <c:out value="${error}"/></div>
             </div>
         </c:if>
 
@@ -430,12 +429,12 @@
             </div>
 
             <!-- Submission Actions -->
-            <div class="d-flex gap-2 mt-4 pt-3 border-top flex-wrap" id="form-action-buttons">
+            <div class="d-flex gap-2 flex-wrap sticky-actions" id="form-action-buttons">
                 <button type="submit" name="action" value="draft" formnovalidate class="btn btn-secondary px-4" id="btn-save-draft">
-                    ${changeMode ? 'Save as Draft' : 'Save Draft'}
+                    Save as Draft
                 </button>
                 <button type="submit" name="action" value="submit" class="btn btn-success px-4" id="btn-save-submit" data-confirm="${changeMode ? 'Send this change to the checker? The approved project stays live until it is approved.' : 'Submit this project for Checker approval?'}">
-                    ${changeMode ? 'Send for Approval' : 'Save &amp; Request Approval'}
+                    Send for Approval
                 </button>
                 <a href="${pageContext.request.contextPath}/admin/projects" class="btn btn-outline-secondary ms-auto" id="btn-cancel-form">
                     Cancel

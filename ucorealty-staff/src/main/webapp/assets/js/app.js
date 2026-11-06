@@ -14,6 +14,14 @@ document.addEventListener("DOMContentLoaded", function () {
 /**
  * Arrival Gate & Customer Lead Capture Modal
  */
+function showLeadError(text) {
+    var box = document.getElementById("leadFormError");
+    if (box) {
+        box.textContent = text;
+        box.classList.remove("d-none");
+    }
+}
+
 function initArrivalGateModal() {
     var modalEl = document.getElementById("customerLeadModal");
     if (!modalEl) return;
@@ -71,7 +79,7 @@ function initArrivalGateModal() {
             var status = statusInput ? statusInput.value : "Visitor";
 
             if (!name || !phone || !/^[0-9]{10}$/.test(phone)) {
-                alert("Please enter your valid name and 10-digit mobile number.");
+                showLeadError("Please enter your name and a 10-digit mobile number.");
                 return;
             }
 
@@ -101,7 +109,20 @@ function initArrivalGateModal() {
                 },
                 body: formData.toString()
             })
-            .then(function () {
+            .then(function (res) {
+                if (!res.ok) {
+                    // The details were refused: say why and let the customer correct them
+                    sessionStorage.removeItem("uco_cust_name");
+                    sessionStorage.removeItem("uco_cust_phone");
+                    sessionStorage.removeItem("uco_gate_dismissed");
+                    return res.json().catch(function () { return {}; }).then(function (body) {
+                        showLeadError(body.error || "Please check your details and try again.");
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                            submitBtn.innerText = "Continue";
+                        }
+                    });
+                }
                 var bsModal = bootstrap.Modal.getInstance(modalEl);
                 if (bsModal) bsModal.hide();
 

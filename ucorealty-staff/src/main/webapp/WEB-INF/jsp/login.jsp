@@ -8,7 +8,7 @@
     <title>Staff Login - UCO Bank Realty Portal</title>
     <link rel="icon" type="image/png" id="favicon-link" href="${pageContext.request.contextPath}/assets/images/favicon.png">
     <link rel="stylesheet" id="bootstrap-css" href="${pageContext.request.contextPath}/assets/css/bootstrap.min.css">
-    <link rel="stylesheet" id="uco-theme-css" href="${pageContext.request.contextPath}/assets/css/style.css">
+    <link rel="stylesheet" id="uco-theme-css" href="${pageContext.request.contextPath}/assets/css/style.css?v=20261106a">
 </head>
 <body class="login-bg" id="login-page-body">
 
@@ -57,14 +57,14 @@
                 </label>
                 <input type="text" id="empId" name="empId" class="form-control" placeholder="Employee number" required autofocus autocomplete="off">
                 <div class="form-text small text-muted" id="emp-id-hint">
-                    Enter your official 6-digit UCO Bank Employee Number.
+                    Your role comes from your HRMS posting.
                 </div>
             </div>
 
 
 
             <div class="alert alert-info py-2 small mb-3" id="alert-sso-info">
-                <strong>HRMS Single Sign-On:</strong> Roles (Maker/Checker/Admin) are automatically derived from HRMS SOL ID &amp; Cadre Scale. Test employees: 100001 to 600002, OTP 123456.
+                <strong>Test login.</strong> DIT 100001, HO Marketing 400002, HO Retail 400001, Maker 200001, Checker 200002. OTP 123456.
             </div>
 
             <button type="submit" class="btn btn-primary w-100 py-2 mt-2" id="btn-sso-otp">

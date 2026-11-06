@@ -937,3 +937,117 @@ a:hover {
 
 /* Dashboard action buttons ("Reduce Units", "Withdraw request"...) must stay on one line */
 .col-th-actions .btn { white-space: nowrap; }
+
+/* ==========================================================================
+   Design layer: calm spacing, one button style, readable tables, mobile cards
+   ========================================================================== */
+:root {
+  --ui-bg: #f4f6fa;
+  --ui-border: #e3e8ef;
+  --ui-border-strong: #cbd5e1;
+  --ui-text: #1e293b;
+  --ui-muted: #5b6b80;
+  --ui-radius: 10px;
+  --ui-shadow: 0 1px 2px rgba(15, 23, 42, .05), 0 2px 8px rgba(15, 23, 42, .04);
+}
+body { background-color: var(--ui-bg); color: var(--ui-text); font-size: .925rem; line-height: 1.5; }
+.text-muted { color: var(--ui-muted) !important; }
+h1, h2, h3, h4 { letter-spacing: -.01em; }
+
+/* header */
+.header { box-shadow: 0 1px 0 var(--ui-border); }
+.header-top { gap: .75rem 1.5rem; flex-wrap: wrap; padding-top: .6rem; padding-bottom: .6rem; }
+.logo-img { height: 46px; width: auto; border-radius: 4px; }
+.logo-text h1 { font-size: 1.15rem; margin-bottom: 0; }
+.logo-text p { font-size: .78rem; margin-bottom: 0; color: var(--ui-muted); }
+.user-menu { gap: .5rem; flex-wrap: wrap; align-items: center; }
+.user-pill { display: inline-flex; gap: .3rem; align-items: center; padding: .22rem .65rem; border: 1px solid var(--ui-border); border-radius: 999px; background: #f8fafc; font-size: .78rem; color: var(--ui-muted); white-space: nowrap; }
+.user-pill strong { color: var(--ui-text); font-weight: 600; }
+.user-pill-role { background: var(--uco-light-blue); border-color: var(--uco-border-blue); color: var(--uco-navy); font-weight: 600; }
+.navbar-custom .nav-link { font-size: .875rem; }
+
+/* surfaces */
+.card-custom, .filter-bar, .project-card, .project-header-card {
+  border: 1px solid var(--ui-border);
+  border-radius: 12px;
+  box-shadow: var(--ui-shadow);
+}
+.card-title-custom { font-size: 1.05rem; }
+.page-head { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: .75rem; margin-bottom: 1.25rem; }
+.page-head h2 { font-size: 1.35rem; font-weight: 700; color: var(--uco-navy); margin-bottom: .15rem; }
+.page-head p { color: var(--ui-muted); margin-bottom: 0; font-size: .875rem; }
+
+/* buttons and inputs */
+.btn { border-radius: 8px; font-weight: 500; }
+.btn-sm { border-radius: 7px; }
+.btn-secondary { background: #fff; border-color: var(--ui-border-strong); color: #334155; }
+.btn-secondary:hover, .btn-secondary:focus { background: #f1f5f9; border-color: #94a3b8; color: #1e293b; }
+.btn:focus-visible, a:focus-visible { outline: 2px solid var(--uco-navy); outline-offset: 2px; box-shadow: none; }
+.form-control, .form-select { border-radius: 8px; border-color: var(--ui-border-strong); }
+.form-control-sm, .form-select-sm { min-height: 36px; font-size: .875rem; }
+.form-control:focus, .form-select:focus { border-color: var(--uco-navy); box-shadow: 0 0 0 3px rgba(0, 51, 102, .12); }
+.form-label { color: #334155; margin-bottom: .3rem; }
+.form-section-title { margin-top: 1.75rem; padding-top: 1.25rem; border-top: 1px solid var(--ui-border); border-bottom: 0; font-size: 1rem; }
+.form-section-title:first-of-type { margin-top: .5rem; padding-top: 0; border-top: 0; }
+
+/* status tabs with counts */
+.status-tabs { display: flex; gap: .4rem; flex-wrap: wrap; }
+.status-tab { display: inline-flex; align-items: center; gap: .45rem; padding: .32rem .75rem; border: 1px solid var(--ui-border-strong); border-radius: 999px; background: #fff; color: #334155; font-size: .82rem; font-weight: 500; }
+.status-tab:hover { background: #f1f5f9; text-decoration: none; color: #1e293b; }
+.status-tab-count { background: #eef2f7; border-radius: 999px; padding: 0 .45rem; font-size: .74rem; font-weight: 600; color: #475569; }
+.status-tab.active { background: var(--uco-navy); border-color: var(--uco-navy); color: #fff; }
+.status-tab.active .status-tab-count { background: rgba(255, 255, 255, .2); color: #fff; }
+.review-callout { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .5rem; padding: .7rem 1rem; margin-bottom: 1rem; border: 1px solid #fde68a; border-left: 4px solid #f59e0b; border-radius: 10px; background: #fffbeb; color: #78350f; }
+
+/* tables */
+.table { --bs-table-hover-bg: #f8fafc; }
+.table > thead th { font-size: .76rem; text-transform: uppercase; letter-spacing: .03em; color: var(--ui-muted); font-weight: 600; background: #f8fafc; white-space: nowrap; }
+.table > tbody td { padding-top: .7rem; padding-bottom: .7rem; }
+.table > tbody tr:last-child td { border-bottom: 0; }
+.table-admin-projects td { font-size: .875rem; }
+.table-admin-projects .extra-small { max-width: 260px; }
+.project-title { font-weight: 600; }
+.project-badge-id { font-size: .72rem; }
+.badge { font-weight: 600; border-radius: 6px; }
+.pagination-custom .page-item.active .page-link { background: var(--uco-navy); border-color: var(--uco-navy); color: #fff; }
+.pagination-custom .page-link { color: var(--uco-navy); }
+
+/* sticky action bars: form save and checker decision stay in reach on long pages */
+.sticky-actions { position: sticky; bottom: 0; z-index: 5; margin: 1.5rem -1.5rem -1.5rem; padding: .85rem 1.5rem; background: rgba(255, 255, 255, .96); border-top: 1px solid var(--ui-border); border-radius: 0 0 12px 12px; }
+
+/* specification lists */
+.table-spec th { width: 38%; font-weight: 500; color: var(--ui-muted); background: #f8fafc; }
+.table-spec th, .table-spec td { border-color: var(--ui-border); padding: .6rem .8rem; }
+
+/* catalog cards */
+.project-card { transition: box-shadow .15s ease, transform .15s ease; overflow: hidden; }
+.project-card:hover { box-shadow: 0 6px 20px rgba(15, 23, 42, .1); transform: translateY(-2px); }
+.hero-banner { border-radius: 14px; }
+
+/* error page */
+.error-card { border-radius: 14px; box-shadow: var(--ui-shadow); border: 1px solid var(--ui-border); }
+.error-icon-info { background: var(--uco-light-blue); color: var(--uco-navy); }
+
+/* phone and small tablet */
+@media (max-width: 767.98px) {
+  .logo-img { height: 36px; }
+  .logo-text h1 { font-size: .98rem; }
+  .logo-text p { display: none; }
+  .header-top { justify-content: space-between; }
+  .user-menu { width: 100%; }
+  .navbar-custom .navbar-nav { overflow-x: auto; white-space: nowrap; }
+  .sticky-actions { margin: 1rem -1rem -1rem; padding: .7rem 1rem; }
+  .table-spec th { width: 42%; }
+
+  /* tables become stacked cards so nothing, especially the action buttons, is hidden off-screen */
+  .table-cards thead { display: none; }
+  .table-cards, .table-cards tbody, .table-cards tr, .table-cards td { display: block; width: 100%; }
+  .table-cards tr { padding: .75rem 1rem; border-bottom: 1px solid var(--ui-border); }
+  .table-cards tr:last-child { border-bottom: 0; }
+  .table-cards td { border: 0; padding: .2rem 0 !important; min-width: 0 !important; }
+  .table-cards td[data-label]::before { content: attr(data-label); display: block; font-size: .7rem; text-transform: uppercase; letter-spacing: .03em; color: var(--ui-muted); margin-top: .35rem; }
+  .table-cards .col-th-actions { text-align: left !important; padding-top: .6rem !important; white-space: normal; }
+  .table-cards .col-th-actions > div { display: flex !important; flex-wrap: wrap; justify-content: flex-start !important; }
+  .table-responsive { overflow-x: visible; }
+  .table-admin-projects .extra-small { max-width: 100%; white-space: normal; }
+}

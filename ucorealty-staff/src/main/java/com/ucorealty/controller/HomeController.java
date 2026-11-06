@@ -21,139 +21,86 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import java.security.GeneralSecurityException;
 
 /**
- * UCO Bank Corporate Intranet Single Sign-On (SSO) Entry Controller.
- * Implements bank production AES-GCM encrypted handoff (/entry?value=...)
- * alongside OTP verification and direct intranet redirection.
+ * Staff login. The bank SSO portal sends the employee to /entry?Value=<encrypted>; this class decrypts it, checks the employee
+ * in HRMS, stores emp_id and sol_id in the session and goes to /home. Without those attributes /home goes to the login page.
+ * Every other staff page is guarded by SessionInterceptor. In the h2 and uat profiles the login page also offers the test login.
  */
 @Controller
-public class SsoEntryController {
+public class HomeController {
 
-  private static final Logger logger = LoggerFactory.getLogger(SsoEntryController.class);
+  private static final Logger logger = LoggerFactory.getLogger(HomeController.class);
 
-  // No defaults on purpose: the application must refuse to start without the bank's SSO secrets.
+  // The bank's SSO key, as plain text. No default on purpose: the application refuses to start without a valid one (init below).
   @Value("${sso.encryption.key}")
   private String encryptionKey;
 
-  @Value("${sso.encryption.iv:}")
-  private String encryptionIv;
-
-  // Local/UAT-only conveniences (plain /sso handoff, app-issued OTP, test-user picker). Always false in prod.
+  // Test login (employee number + test OTP) on the login page: only the h2 and uat profiles turn this on.
   @Value("${uco.sso.dev-login-enabled:false}")
   private boolean devLoginEnabled;
-
-  @Value("${app.redirect.url:/admin/projects}")
-  private String redirectUrl;
 
   private final HrmsService hrmsService;
   private final AuditService auditService;
 
-  public SsoEntryController(HrmsService hrmsService, AuditService auditService) {
+  public HomeController(HrmsService hrmsService, AuditService auditService) {
     this.hrmsService = hrmsService;
     this.auditService = auditService;
   }
 
+  @PostConstruct
+  void init() {
+    if (!SsoCryptoUtil.isValidKey(encryptionKey)) {
+      throw new IllegalStateException("sso.encryption.key (SSO_ENCRYPTION_KEY) must be 16, 24 or 32 characters long");
+    }
+  }
+
   @GetMapping("/")
-  public String rootRedirect(Authentication auth) {
-    if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getName())) {
-      return "redirect:/admin/projects";
-    }
-    return "redirect:/login";   // staff site: the first thing an employee who is not signed in sees is the login page
+  public String root() {
+    return "redirect:/home";
   }
 
-  /**
-   * Bank Production Single Sign-On Entry Point.
-   * Parameter 'value' or 'Value' contains Base64-encoded encrypted token.
-   * Directly supports GetValue.jsp specification (AES/CBC/PKCS5Padding) from db-login-reference
-   * alongside AES-GCM encrypted tokens.
-   */
-  @GetMapping({"/entry", "/GetValue.jsp", "/GetValue", "/getvalue", "/getvalue.jsp", "/sso/entry"})
-  public String entryPoint(@RequestParam(value = "value", required = false) String value,
-                           @RequestParam(value = "Value", required = false) String capitalValue,
-                           @RequestParam(value = "token", required = false) String token,
-                           HttpServletRequest request,
-                           Model model) {
-    String rawToken = (value != null && !value.trim().isEmpty()) ? value :
-                      ((capitalValue != null && !capitalValue.trim().isEmpty()) ? capitalValue : token);
-
-    if (rawToken == null || rawToken.trim().isEmpty()) {
-      HttpSession session = request.getSession(false);
-      if (session != null && (session.getAttribute("emp_id") != null)) {
-        return "redirect:" + redirectUrl;
-      }
-      logger.info("[UCO SSO /entry] Access attempt without token. Redirecting to staff login.");
-      return "redirect:/login";
+  /** Where the bank SSO portal sends the employee: /entry?Value=<encrypted emp_id and sol_id>. */
+  @GetMapping("/entry")
+  public String entry(@RequestParam(value = "Value", required = false) String value, HttpServletRequest request) {
+    if (value == null || value.trim().isEmpty()) {
+      return "redirect:/home";
     }
-
+    String empNo;
+    String sol;
     try {
-      String normalized = rawToken.replaceAll("\\s+", "+");
-      String decrypted = SsoCryptoUtil.decryptPayload(normalized, encryptionKey, encryptionIv);
-
-      SsoCryptoUtil.SsoAuthInfo authInfo = SsoCryptoUtil.parseAuthInfo(decrypted);
-      if (authInfo == null || authInfo.getEmpNo() == null || authInfo.getEmpNo().trim().isEmpty()) {
-        logger.warn("[UCO SSO /entry] Decrypted payload missing employee identifier");
-        auditService.logLoginAttempt("UNKNOWN", extractClientIp(request), false, "SSO token decrypted but has no employee id");
-        return "redirect:/login?error=invalid_token";
-      }
-
-      return authenticateAndEstablishSession(authInfo.getEmpNo().trim(), authInfo.getSolId(),
-          request, "SSO Encrypted Payload (/entry / GetValue.jsp)");
-
-    } catch (Exception e) {
-      logger.error("[UCO SSO /entry] Decryption failed: {}", e.getMessage());
+      String text = SsoCryptoUtil.decrypt(value, encryptionKey);
+      empNo = SsoCryptoUtil.employeeNumber(text);
+      sol = SsoCryptoUtil.solId(text);
+    } catch (GeneralSecurityException | IllegalArgumentException e) {
+      logger.warn("[UCO SSO /entry] Token could not be decrypted: {}", e.getMessage());
       auditService.logLoginAttempt("UNKNOWN", extractClientIp(request), false, "SSO token could not be decrypted");
-      return "redirect:/login?error=sso_failed";
+      return "redirect:/error-page?reason=unauthorized";
     }
+    if (empNo == null) {
+      logger.warn("[UCO SSO /entry] Decrypted token has no employee number");
+      auditService.logLoginAttempt("UNKNOWN", extractClientIp(request), false, "SSO token decrypted but has no employee number");
+      return "redirect:/error-page?reason=unauthorized";
+    }
+    logger.info("[UCO SSO /entry] Token accepted for employee {} (token SOL {})", empNo, sol);
+    return authenticateAndEstablishSession(empNo, request, "Bank SSO");
   }
 
-  /**
-   * Intranet Portal Forwarding Endpoint (/sso).
-   * Supports encrypted 'value'/'Value' token and query parameter fallback (?emp_id=...&sol_id=... or ?empno=...&sol=...).
-   */
-  @GetMapping("/sso")
-  public String portalRedirectSso(@RequestParam(value = "value", required = false) String value,
-                                  @RequestParam(value = "Value", required = false) String capitalValue,
-                                  @RequestParam(value = "token", required = false) String token,
-                                  @RequestParam(value = "emp_id", required = false) String empId,
-                                  @RequestParam(value = "empno", required = false) String empno,
-                                  @RequestParam(value = "sol_id", required = false) String solId,
-                                  @RequestParam(value = "sol", required = false) String sol,
-                                  HttpServletRequest request) {
-    if (value != null && !value.trim().isEmpty()) {
-      return entryPoint(value, null, null, request, null);
-    }
-    if (capitalValue != null && !capitalValue.trim().isEmpty()) {
-      return entryPoint(null, capitalValue, null, request, null);
-    }
-    if (token != null && !token.trim().isEmpty()) {
-      return entryPoint(null, null, token, request, null);
-    }
-
-    // A plain ?emp_id= URL carries no proof of identity. It exists for local/UAT testing only.
-    if (!devLoginEnabled) {
-      logger.warn("[UCO SSO /sso] Plain employee-id handoff rejected (dev login disabled)");
-      auditService.logLoginAttempt("UNKNOWN", extractClientIp(request), false, "Plain /sso handoff rejected in this environment");
-      return "redirect:/login?error=sso_failed";
-    }
-
-    String effectiveEmpId = (empId != null && !empId.trim().isEmpty()) ? empId : empno;
-    String effectiveSolId = (solId != null && !solId.trim().isEmpty()) ? solId : sol;
-
-    if (effectiveEmpId == null || effectiveEmpId.trim().isEmpty()) {
-      return "redirect:/login";
-    }
-
-    return authenticateAndEstablishSession(effectiveEmpId.trim(), effectiveSolId, request, "Direct Portal SSO handoff (/sso)");
+  /** The landing page after login: the project dashboard if the session is set, otherwise the login page. */
+  @GetMapping("/home")
+  public String home(HttpSession session) {
+    boolean signedIn = session.getAttribute("emp_id") != null && session.getAttribute("sol_id") != null;
+    return signedIn ? "redirect:/admin/projects" : "redirect:/login";
   }
 
   /**
    * Core helper to authenticate employee against HRMS, build the signed-in user, and set the session attributes.
    */
-  private String authenticateAndEstablishSession(String empId, String solId,
-                                                HttpServletRequest request, String loginMechanism) {
+  private String authenticateAndEstablishSession(String empId, HttpServletRequest request, String loginMechanism) {
     HrmsUserProfile profile = hrmsService.fetchUserProfile(empId);
     if (profile == null || !profile.isActive()) {
       logger.warn("[UCO SSO] Employee record {} could not be verified in HRMS.", empId);
@@ -161,11 +108,7 @@ public class SsoEntryController {
       return "redirect:/error-page?reason=invalid_employee";
     }
 
-    // Role and zone come from the HRMS posting, never from the URL. Only local/UAT test handoffs may override the SOL.
-    if (devLoginEnabled && solId != null && !solId.trim().isEmpty()) {
-      profile.setPostingSolId(solId.trim());
-    }
-
+    // Role and zone come from the HRMS posting, never from the URL.
     if (hrmsService.resolveRole(profile) == null) {
       logger.warn("[UCO SSO] Employee {} (SOL {}) has no role in this portal.", profile.getEmpNo(), profile.getPostingSolId());
       auditService.logLoginAttempt(empId, extractClientIp(request), false,
@@ -192,7 +135,7 @@ public class SsoEntryController {
     logger.info("[UCO SSO] Successfully established intranet session for empId={}, solId={}, role={}",
         profile.getEmpNo(), profile.getPostingSolId(), appUser.role);
 
-    return "redirect:/admin/projects";
+    return "redirect:/home";
   }
 
   /**
@@ -201,7 +144,7 @@ public class SsoEntryController {
   @GetMapping("/login")
   public String loginPage(Authentication auth, Model model) {
     if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getName())) {
-      return "redirect:/admin/projects";
+      return "redirect:/home";
     }
     model.addAttribute("devLogin", devLoginEnabled);
     return "login";
@@ -274,44 +217,12 @@ public class SsoEntryController {
       return "redirect:/otp?error=otp";
     }
 
-    HrmsUserProfile profile = hrmsService.fetchUserProfile(empId);
-    if (profile == null) {
-      return "redirect:/login?error=invalid_employee";
-    }
-    if (hrmsService.resolveRole(profile) == null) {
-      logger.warn("[UCO SSO] Employee {} (SOL {}) has no role in this portal.", profile.getEmpNo(), profile.getPostingSolId());
-      auditService.logLoginAttempt(empId, extractClientIp(request), false,
-          "SSO OTP Login - not authorised for this portal (SOL " + profile.getPostingSolId() + ")");
-      session.invalidate();
-      return "redirect:/error-page?reason=not_authorized";
-    }
-
-    AppUser appUser = hrmsService.toAppUser(profile);
-    session = freshSession(request);
-
-    UserDetails userDetails = new StaffPrincipal(appUser);
-    Authentication auth = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-    SecurityContext context = SecurityContextHolder.createEmptyContext();
-    context.setAuthentication(auth);
-    SecurityContextHolder.setContext(context);
-    session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
-
-    populateBankSessionAttributes(session, profile);
-
-    String ip = extractClientIp(request);
-    auditService.logLoginAttempt(appUser.username, ip, true,
-        "SSO OTP Login - Cadre: " + profile.getCadre() + ", Role: " + appUser.role);
-
     session.removeAttribute("PENDING_OTP_EMP_ID");
     session.removeAttribute("PENDING_OTP_NAME");
     session.removeAttribute("PENDING_OTP_SOL");
     session.removeAttribute("PENDING_OTP_MOBILE");
     session.removeAttribute("PENDING_OTP_ROLE");
-
-    logger.info("[UCO SSO] Successfully authenticated employee {} ({}) with role {}",
-        profile.getEmpNo(), profile.getName(), appUser.role);
-
-    return "redirect:/admin/projects";
+    return authenticateAndEstablishSession(empId, request, "Test login");
   }
 
   /**
@@ -320,13 +231,13 @@ public class SsoEntryController {
   @GetMapping("/error-page")
   public String errorPage(@RequestParam(value = "reason", required = false) String reason, Model model) {
     logger.warn("[UCO Portal] Rendering security error page with reason code: {}", reason);
-    String errorMessage = "Access Denied: Missing Single Sign-On parameters. Please access the application through the authorized UCO Bank portal.";
+    String errorMessage = "Please open the Realty portal from the UCO Bank intranet portal.";
     if ("unauthorized".equals(reason)) {
-      errorMessage = "Security Authentication Failure: Invalid or unauthorized SSO token. Direct URL browsing is strictly prohibited.";
+      errorMessage = "We could not verify your sign-in link. Please open the Realty portal again from the UCO Bank intranet portal.";
     } else if ("not_authorized".equals(reason)) {
-      errorMessage = "Access Denied: Your posting (SOL) does not have access to the Realty portal. Please contact DIT SWDC Cell if you need access.";
+      errorMessage = "Your posting (SOL) does not have access to the Realty portal. Please contact the DIT SWDC Cell if you need access.";
     } else if ("invalid_employee".equals(reason)) {
-      errorMessage = "Employee Authorization Failure: Your employee record could not be verified in the bank HRMS database. Please contact DIT SWDC Cell.";
+      errorMessage = "Your employee record could not be verified in HRMS. Please contact the DIT SWDC Cell.";
     }
     model.addAttribute("errorMessage", errorMessage);
     return "error";
@@ -338,10 +249,7 @@ public class SsoEntryController {
     session.setAttribute("sol_id", profile.getPostingSolId());
   }
 
-  /**
-   * New session id for every login (prevents session fixation); pre-login attributes such as the
-   * pending OTP employee are carried over by changeSessionId().
-   */
+  /** New session id for every login (prevents session fixation). */
   private HttpSession freshSession(HttpServletRequest request) {
     if (request.getSession(false) != null) {
       request.changeSessionId();

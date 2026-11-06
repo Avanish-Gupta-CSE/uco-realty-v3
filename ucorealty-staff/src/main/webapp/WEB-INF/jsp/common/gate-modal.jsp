@@ -14,6 +14,8 @@
                         Explore approved housing projects. Please share your details for quick home loan assistance, or continue browsing.
                     </p>
 
+                    <div id="leadFormError" class="alert alert-danger py-2 small d-none" role="alert"></div>
+
                     <input type="hidden" id="modalProjectId" name="projectId" value="">
                     <input type="hidden" id="modalStatus" name="status" value="Visitor">
 

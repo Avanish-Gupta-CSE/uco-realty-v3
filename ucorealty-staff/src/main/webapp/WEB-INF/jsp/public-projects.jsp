@@ -6,14 +6,14 @@
 <c:set var="activeTab" value="public" scope="request"/>
 <jsp:include page="common/header.jsp"/>
 
-<main class="container py-4" id="main-public-catalog">
+<main class="container-xxl py-4" id="main-public-catalog">
     <c:if test="${isStaff}">
-        <div class="alert alert-info d-flex justify-content-between align-items-center mb-4" id="alert-staff-banner">
+        <div class="alert alert-info d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4" id="alert-staff-banner">
             <div>
-                <strong>Intranet Staff Mode:</strong> Showing all projects across UCO Bank (Drafts, Pending Approvals, and Approved).
+                This is how customers see approved projects.
             </div>
             <a href="${pageContext.request.contextPath}/admin/projects" class="btn btn-primary btn-sm" id="btn-staff-banner-mgmt">
-                Open Project Management &rarr;
+                Back to Projects
             </a>
         </div>
     </c:if>
@@ -31,9 +31,9 @@
             <div class="col-md-3">
                 <label for="filter-state" class="form-label fw-semibold small">State</label>
                 <select id="filter-state" name="state" class="form-select form-select-sm">
-                    <option value="">-- All States --</option>
+                    <option value="">All states</option>
                     <c:forEach var="st" items="${states}">
-                        <option value="${st}" ${param.state == st ? 'selected' : ''}>${st}</option>
+                        <option value="${fn:escapeXml(st)}" ${param.state == st ? 'selected' : ''}><c:out value="${st}"/></option>
                     </c:forEach>
                 </select>
             </div>
@@ -41,16 +41,16 @@
             <div class="col-md-3">
                 <label for="filter-city" class="form-label fw-semibold small">City / District</label>
                 <select id="filter-city" name="city" class="form-select form-select-sm">
-                    <option value="">-- All Cities --</option>
+                    <option value="">All cities</option>
                     <c:forEach var="ct" items="${cities}">
-                        <option value="${ct}" ${param.city == ct ? 'selected' : ''}>${ct}</option>
+                        <option value="${fn:escapeXml(ct)}" ${param.city == ct ? 'selected' : ''}><c:out value="${ct}"/></option>
                     </c:forEach>
                 </select>
             </div>
 
             <div class="col-md-4">
                 <label for="filter-search" class="form-label fw-semibold small">Search (Project, Builder, RERA, Pincode)</label>
-                <input type="text" id="filter-search" name="search" class="form-control form-control-sm" value="${param.search}" placeholder="e.g. Green Valley or 700001">
+                <input type="text" id="filter-search" name="search" class="form-control form-control-sm" value="${fn:escapeXml(param.search)}" placeholder="e.g. Green Valley or 700001">
             </div>
 
             <div class="col-md-2 d-flex gap-2">
@@ -71,7 +71,7 @@
         </c:when>
         <c:otherwise>
             <div class="mb-3 small text-muted" id="projects-count-display">
-                Showing <strong id="count-number">${fn:length(projects)}</strong> approved property projects
+                <strong id="count-number">${projectCount}</strong> approved ${projectCount == 1 ? 'project' : 'projects'}
             </div>
 
             <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="projects-grid-container">
@@ -138,6 +138,17 @@
                     </div>
                 </c:forEach>
             </div>
+
+            <c:if test="${pageCount > 1}">
+                <nav class="mt-4 d-flex justify-content-center" aria-label="Project pages" id="nav-catalog-pages">
+                    <ul class="pagination pagination-custom mb-0" id="ul-catalog-pages">
+                        <c:forEach var="n" begin="1" end="${pageCount}">
+                            <c:url var="pageUrl" value="/projects"><c:param name="state" value="${param.state}"/><c:param name="city" value="${param.city}"/><c:param name="search" value="${param.search}"/><c:param name="pageNo" value="${n}"/></c:url>
+                            <li class="page-item ${pageNo == n ? 'active' : ''}" id="li-catalog-page-${n}"><a class="page-link" href="${pageUrl}" id="link-catalog-page-${n}">${n}</a></li>
+                        </c:forEach>
+                    </ul>
+                </nav>
+            </c:if>
         </c:otherwise>
     </c:choose>
 </main>

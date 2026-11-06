@@ -231,7 +231,7 @@ public class LeadExportController {
     }
   }
 
-  private List<Lead> filterLeads(String from, String to, String status, String search) {
+  List<Lead> filterLeads(String from, String to, String status, String search) {
     LocalDate fromDate = null;
     LocalDate toDate = null;
     try {

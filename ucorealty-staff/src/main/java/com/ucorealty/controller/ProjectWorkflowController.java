@@ -70,16 +70,6 @@ public class ProjectWorkflowController {
     AppUser user = CurrentUser.find(username);
     List<ProjectRow> rows = new ArrayList<>(workflow.dashboard(username));
 
-    if (status != null && !status.trim().isEmpty() && !"ALL".equalsIgnoreCase(status.trim())) {
-      String st = status.trim();
-      if ("CHANGE_PENDING".equalsIgnoreCase(st)) {            // live projects with an edit / deletion waiting for a checker
-        rows = rows.stream().filter(r -> r.getPendingKind() != null).collect(Collectors.toList());
-      } else if ("PENDING_APPROVAL".equalsIgnoreCase(st)) {   // anything waiting for a checker (new projects and changes)
-        rows = rows.stream().filter(ProjectRow::isWaitingForChecker).collect(Collectors.toList());
-      } else {
-        rows = rows.stream().filter(r -> r.status != null && r.status.equalsIgnoreCase(st)).collect(Collectors.toList());
-      }
-    }
     if (zone != null && !zone.trim().isEmpty() && !"ALL".equalsIgnoreCase(zone.trim())) {
       String z = zone.trim();
       rows = rows.stream().filter(r -> r.zoneName != null && r.zoneName.equalsIgnoreCase(z)).collect(Collectors.toList());
@@ -88,6 +78,22 @@ public class ProjectWorkflowController {
       String q = search.trim().toLowerCase();
       rows = rows.stream().filter(r -> has(r.id, q) || has(r.projectName, q) || has(r.builderName, q) || has(r.reraNo, q)
           || has(r.cityName, q) || has(r.stateName, q) || has(r.branchName, q) || has(r.zoneName, q)).collect(Collectors.toList());
+    }
+
+    // The number on each status tab (within the current search and zone), and what waits for this user's decision
+    Map<String, Long> counts = new HashMap<>();
+    counts.put("ALL", (long) rows.size());
+    for (String st : List.of("DRAFT", "PENDING_APPROVAL", "APPROVED", "NEEDS_CORRECTION", "REJECTED", "CHANGE_PENDING")) {
+      counts.put(st, rows.stream().filter(r -> hasStatus(r, st)).count());
+    }
+    model.addAttribute("statusCounts", counts);
+    boolean checker = user != null && !"ZO_MAKER".equals(user.role) && !"HO_RETAIL".equals(user.role);
+    model.addAttribute("waitingForMe", checker
+        ? rows.stream().filter(r -> r.isWaitingForChecker() && !username.equals(r.getStagingOwner())).count() : 0L);
+
+    if (status != null && !status.trim().isEmpty() && !"ALL".equalsIgnoreCase(status.trim())) {
+      String st = status.trim();
+      rows = rows.stream().filter(r -> hasStatus(r, st)).collect(Collectors.toList());
     }
     rows.sort((a, b) -> {
       if (a.updatedAt == null && b.updatedAt == null) return 0;
@@ -117,6 +123,12 @@ public class ProjectWorkflowController {
   }
 
   private static boolean has(String v, String q) { return v != null && v.toLowerCase().contains(q); }
+
+  private static boolean hasStatus(ProjectRow r, String st) {
+    if ("CHANGE_PENDING".equalsIgnoreCase(st)) return r.getPendingKind() != null;      // live project with an edit / deletion waiting
+    if ("PENDING_APPROVAL".equalsIgnoreCase(st)) return r.isWaitingForChecker();       // anything waiting for a checker
+    return r.status != null && r.status.equalsIgnoreCase(st);
+  }
 
   // ================================================================================ maker: forms
 

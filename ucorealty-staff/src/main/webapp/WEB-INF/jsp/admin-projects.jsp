@@ -1,28 +1,37 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags"%>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions"%>
 
 <c:set var="pageTitle" value="Project Management - UCO Realty" scope="request"/>
 <c:set var="activeTab" value="projects" scope="request"/>
 <jsp:include page="common/header.jsp"/>
 
-<main class="container-fluid px-lg-4 px-3 py-4" id="main-admin-projects">
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2" id="admin-header-row">
+<main class="container-xxl py-4" id="main-admin-projects">
+    <div class="page-head" id="admin-header-row">
         <div>
-            <h2 class="h4 text-primary fw-bold mb-1" id="admin-title">Approved Housing Project Directory</h2>
-            <p class="text-muted small mb-0" id="admin-subtitle">
-                Maker-Checker workflow for zonal and corporate office housing approvals.
+            <h2 id="admin-title">Projects</h2>
+            <p id="admin-subtitle">
+                <c:choose>
+                    <c:when test="${userRole == 'ZO_MAKER'}">Create projects and send changes for approval in <strong><c:out value="${userZone}"/></strong> zone. Customers see a project only after a checker approves it.</c:when>
+                    <c:when test="${userRole == 'ZO_CHECKER'}">Review what makers send in <strong><c:out value="${userZone}"/></strong> zone. Nothing reaches customers until you approve it.</c:when>
+                    <c:when test="${userRole == 'HO_RETAIL'}">All approved projects across zones (view only).</c:when>
+                    <c:otherwise>All zones. You can create projects and decide requests raised by others.</c:otherwise>
+                </c:choose>
             </p>
         </div>
-
-        <div>
-            <sec:authorize access="hasAnyRole('ZO_MAKER', 'HO_MARKETING', 'SUPERADMIN_DIT')">
-                <a href="${pageContext.request.contextPath}/admin/projects/new" class="btn btn-primary" id="btn-add-new-project">
-                    + Add New Project
-                </a>
-            </sec:authorize>
-        </div>
+        <sec:authorize access="hasAnyRole('ZO_MAKER', 'HO_MARKETING', 'SUPERADMIN_DIT')">
+            <a href="${pageContext.request.contextPath}/admin/projects/new" class="btn btn-primary" id="btn-add-new-project">+ Add New Project</a>
+        </sec:authorize>
     </div>
+
+    <c:if test="${waitingForMe > 0}">
+        <div class="review-callout" id="review-callout">
+            <span><strong>${waitingForMe}</strong> ${waitingForMe == 1 ? 'request is' : 'requests are'} waiting for your decision.</span>
+            <c:url var="waitingUrl" value="/admin/projects"><c:param name="status" value="PENDING_APPROVAL"/></c:url>
+            <a href="${waitingUrl}" class="btn btn-warning btn-sm" id="btn-show-waiting">Show them</a>
+        </div>
+    </c:if>
 
     <!-- Alert messages -->
     <c:if test="${message != null}">
@@ -35,61 +44,55 @@
     <!-- Search & Filter Controls -->
     <div class="filter-bar mb-4" id="card-projects-filter">
         <form action="${pageContext.request.contextPath}/admin/projects" method="get" class="row g-3 align-items-end" id="form-admin-projects-filter">
-            <div class="col-lg-5 col-md-6">
-                <label for="search-projects" class="form-label fw-semibold small">Search Projects</label>
+            <input type="hidden" name="status" value="${fn:escapeXml(currentStatus)}">
+            <div class="col-lg-6 col-md-6">
+                <label for="search-projects" class="form-label fw-semibold small">Search</label>
                 <input type="text" id="search-projects" name="search" class="form-control form-control-sm"
-                       value="${currentSearch}" placeholder="Project Name, ID, Builder, RERA, City, Pincode...">
-            </div>
-
-            <div class="col-lg-3 col-md-3">
-                <label for="select-status" class="form-label fw-semibold small">Project Status</label>
-                <select id="select-status" name="status" class="form-select form-select-sm">
-                    <option value="">-- All Statuses --</option>
-                    <option value="DRAFT" ${currentStatus == 'DRAFT' ? 'selected' : ''}>Draft</option>
-                    <option value="PENDING_APPROVAL" ${currentStatus == 'PENDING_APPROVAL' ? 'selected' : ''}>Waiting for a Checker (all kinds)</option>
-                    <option value="APPROVED" ${currentStatus == 'APPROVED' ? 'selected' : ''}>Approved</option>
-                    <option value="NEEDS_CORRECTION" ${currentStatus == 'NEEDS_CORRECTION' ? 'selected' : ''}>Correction Required</option>
-                    <option value="REJECTED" ${currentStatus == 'REJECTED' ? 'selected' : ''}>Rejected</option>
-                    <option value="CHANGE_PENDING" ${currentStatus == 'CHANGE_PENDING' ? 'selected' : ''}>Change / Deletion Pending</option>
-                </select>
+                       value="${fn:escapeXml(currentSearch)}" placeholder="Project name, code, builder, RERA, city...">
             </div>
 
             <sec:authorize access="hasAnyRole('SUPERADMIN_DIT', 'HO_MARKETING', 'HO_RETAIL')">
-                <div class="col-lg-2 col-md-3">
+                <div class="col-lg-3 col-md-3">
                     <label for="select-zone" class="form-label fw-semibold small">Zonal Office</label>
                     <select id="select-zone" name="zone" class="form-select form-select-sm">
-                        <option value="">-- All Zones --</option>
+                        <option value="">All zones</option>
                         <c:forEach var="z" items="${zones}">
-                            <option value="${z}" ${currentZone == z ? 'selected' : ''}>${z} Zone</option>
+                            <option value="${fn:escapeXml(z)}" ${currentZone == z ? 'selected' : ''}><c:out value="${z}"/></option>
                         </c:forEach>
                     </select>
                 </div>
             </sec:authorize>
 
-            <div class="col-lg-2 col-md-12 d-flex gap-2">
+            <div class="col-lg-3 col-md-3 d-flex gap-2">
                 <button type="submit" class="btn btn-primary btn-sm flex-fill" id="btn-projects-filter-apply">Search</button>
                 <a href="${pageContext.request.contextPath}/admin/projects" class="btn btn-secondary btn-sm flex-fill" id="btn-projects-filter-reset">Reset</a>
             </div>
         </form>
 
-        <!-- Quick Status Filter Pills -->
-        <div class="d-flex gap-2 flex-wrap align-items-center mt-3 pt-3 border-top small" id="status-filters-wrap">
-            <span class="fw-semibold text-secondary me-2" id="text-filter-by-status">Quick Status:</span>
-            <a href="?status=&search=${currentSearch}&zone=${currentZone}" class="btn btn-sm ${empty currentStatus ? 'btn-primary' : 'btn-outline-secondary'}" id="filter-status-all">All</a>
-            <a href="?status=DRAFT&search=${currentSearch}&zone=${currentZone}" class="btn btn-sm ${currentStatus == 'DRAFT' ? 'btn-primary' : 'btn-outline-secondary'}" id="filter-status-draft">Draft</a>
-            <a href="?status=PENDING_APPROVAL&search=${currentSearch}&zone=${currentZone}" class="btn btn-sm ${currentStatus == 'PENDING_APPROVAL' ? 'btn-primary' : 'btn-outline-secondary'}" id="filter-status-pending">Pending Approval</a>
-            <a href="?status=APPROVED&search=${currentSearch}&zone=${currentZone}" class="btn btn-sm ${currentStatus == 'APPROVED' ? 'btn-primary' : 'btn-outline-secondary'}" id="filter-status-approved">Approved</a>
-            <a href="?status=NEEDS_CORRECTION&search=${currentSearch}&zone=${currentZone}" class="btn btn-sm ${currentStatus == 'NEEDS_CORRECTION' ? 'btn-primary' : 'btn-outline-secondary'}" id="filter-status-correction">Correction Required</a>
-            <a href="?status=REJECTED&search=${currentSearch}&zone=${currentZone}" class="btn btn-sm ${currentStatus == 'REJECTED' ? 'btn-primary' : 'btn-outline-secondary'}" id="filter-status-rejected">Rejected</a>
-            <a href="?status=CHANGE_PENDING&search=${currentSearch}&zone=${currentZone}" class="btn btn-sm ${currentStatus == 'CHANGE_PENDING' ? 'btn-primary' : 'btn-outline-secondary'}" id="filter-status-change-pending">Changes Pending</a>
+        <!-- Status tabs -->
+        <div class="status-tabs mt-3 pt-3 border-top" id="status-filters-wrap">
+            <c:url var="tabUrl" value="/admin/projects"><c:param name="status" value=""/><c:param name="search" value="${currentSearch}"/><c:param name="zone" value="${currentZone}"/></c:url>
+            <a href="${tabUrl}" class="status-tab ${currentStatus == '' ? 'active' : ''}" id="filter-status-all">All <span class="status-tab-count">${statusCounts['ALL']}</span></a>
+            <c:url var="tabUrl" value="/admin/projects"><c:param name="status" value="DRAFT"/><c:param name="search" value="${currentSearch}"/><c:param name="zone" value="${currentZone}"/></c:url>
+            <a href="${tabUrl}" class="status-tab ${currentStatus == 'DRAFT' ? 'active' : ''}" id="filter-status-draft">Draft <span class="status-tab-count">${statusCounts['DRAFT']}</span></a>
+            <c:url var="tabUrl" value="/admin/projects"><c:param name="status" value="PENDING_APPROVAL"/><c:param name="search" value="${currentSearch}"/><c:param name="zone" value="${currentZone}"/></c:url>
+            <a href="${tabUrl}" class="status-tab ${currentStatus == 'PENDING_APPROVAL' ? 'active' : ''}" id="filter-status-pending">Waiting for approval <span class="status-tab-count">${statusCounts['PENDING_APPROVAL']}</span></a>
+            <c:url var="tabUrl" value="/admin/projects"><c:param name="status" value="APPROVED"/><c:param name="search" value="${currentSearch}"/><c:param name="zone" value="${currentZone}"/></c:url>
+            <a href="${tabUrl}" class="status-tab ${currentStatus == 'APPROVED' ? 'active' : ''}" id="filter-status-approved">Approved <span class="status-tab-count">${statusCounts['APPROVED']}</span></a>
+            <c:url var="tabUrl" value="/admin/projects"><c:param name="status" value="NEEDS_CORRECTION"/><c:param name="search" value="${currentSearch}"/><c:param name="zone" value="${currentZone}"/></c:url>
+            <a href="${tabUrl}" class="status-tab ${currentStatus == 'NEEDS_CORRECTION' ? 'active' : ''}" id="filter-status-correction">Needs correction <span class="status-tab-count">${statusCounts['NEEDS_CORRECTION']}</span></a>
+            <c:url var="tabUrl" value="/admin/projects"><c:param name="status" value="REJECTED"/><c:param name="search" value="${currentSearch}"/><c:param name="zone" value="${currentZone}"/></c:url>
+            <a href="${tabUrl}" class="status-tab ${currentStatus == 'REJECTED' ? 'active' : ''}" id="filter-status-rejected">Rejected <span class="status-tab-count">${statusCounts['REJECTED']}</span></a>
+            <c:url var="tabUrl" value="/admin/projects"><c:param name="status" value="CHANGE_PENDING"/><c:param name="search" value="${currentSearch}"/><c:param name="zone" value="${currentZone}"/></c:url>
+            <a href="${tabUrl}" class="status-tab ${currentStatus == 'CHANGE_PENDING' ? 'active' : ''}" id="filter-status-change">Change or deletion pending <span class="status-tab-count">${statusCounts['CHANGE_PENDING']}</span></a>
         </div>
     </div>
 
     <!-- Table of Projects -->
     <div class="card-custom p-0 overflow-hidden mb-4" id="card-projects-table">
-        <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center py-2" id="header-projects-summary">
+        <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center py-2 px-3" id="header-projects-summary">
             <span class="fw-semibold text-secondary small" id="text-projects-summary">
-                Showing <strong class="text-dark">${projectPage.numberOfElements}</strong> of <strong class="text-dark">${projectPage.totalElements}</strong> housing projects
+                Showing <strong class="text-dark">${projectPage.numberOfElements}</strong> of <strong class="text-dark">${projectPage.totalElements}</strong> projects
             </span>
             <c:if test="${not empty currentSearch || not empty currentStatus || not empty currentZone}">
                 <span class="badge bg-light text-primary border" id="badge-active-filters">Filtered</span>
@@ -97,13 +100,13 @@
         </div>
 
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0 table-admin-projects" id="table-admin-projects">
+            <table class="table table-hover align-middle mb-0 table-admin-projects table-cards" id="table-admin-projects">
                 <thead class="table-light">
                     <tr>
-                        <th class="ps-3 col-th-project">Project ID &amp; Name</th>
-                        <th class="col-th-location">Zone &amp; Location</th>
+                        <th class="ps-3 col-th-project">Project</th>
+                        <th class="col-th-location">Location</th>
                         <th class="col-th-builder">Builder</th>
-                        <th class="col-th-inventory">Inventory</th>
+                        <th class="col-th-inventory">Units</th>
                         <th class="col-th-status">Status</th>
                         <th class="col-th-creator">Created By</th>
                         <th class="text-end pe-3 col-th-actions">Actions</th>
@@ -132,16 +135,16 @@
                                         <div class="project-title mb-1" id="row-name-${p.id}"><c:out value="${p.projectName}"/></div>
                                         <span class="project-badge-id font-monospace" id="row-id-${p.id}"><c:out value="${p.id}"/></span>
                                     </td>
-                                    <td class="col-th-location">
+                                    <td data-label="Location" class="col-th-location">
                                         <div><c:choose><c:when test="${empty p.zoneName}"><span class="text-muted">Zone not set</span></c:when><c:otherwise><strong><c:out value="${p.zoneName}"/></strong> Zone</c:otherwise></c:choose></div>
                                         <small class="text-muted"><c:out value="${p.cityName}"/>, <c:out value="${p.stateName}"/></small>
                                     </td>
-                                    <td class="col-th-builder"><c:out value="${p.builderName != null ? p.builderName : '-'}"/></td>
-                                    <td class="col-th-inventory">
+                                    <td data-label="Builder" class="col-th-builder"><c:out value="${p.builderName != null ? p.builderName : '-'}"/></td>
+                                    <td data-label="Units" class="col-th-inventory">
                                         <div><strong>${p.unsoldInventory != null ? p.unsoldInventory : 0}</strong> avail.</div>
                                         <small class="text-muted">${p.totalInventory != null ? p.totalInventory : 0} total units</small>
                                     </td>
-                                    <td class="col-th-status">
+                                    <td data-label="Status" class="col-th-status">
                                         <c:choose>
                                             <c:when test="${p.status == 'APPROVED'}">
                                                 <span class="badge badge-approved" id="badge-status-${p.id}">Approved</span>
@@ -179,7 +182,7 @@
                                             </div>
                                         </c:if>
                                     </td>
-                                    <td class="col-th-creator"><span class="creator-tag" id="row-creator-${p.id}" title="<c:out value="${p.createdBy}"/>"><c:out value="${p.createdBy != null ? p.createdBy : '-'}"/></span></td>
+                                    <td data-label="Created by" class="col-th-creator"><span class="creator-tag" id="row-creator-${p.id}" title="<c:out value="${p.createdBy}"/>"><c:out value="${p.createdBy != null ? p.createdBy : '-'}"/></span></td>
                                     <td class="text-end pe-3 col-th-actions">
                                         <div class="d-inline-flex justify-content-end align-items-center gap-1" id="actions-wrap-${p.id}">
                                             <!-- Preview: a live project as customers see it; an unapproved one as it would look -->
@@ -258,22 +261,22 @@
 
         <!-- Projects Pagination Footer -->
         <c:if test="${projectPage.totalPages > 1}">
-            <div class="card-footer bg-white border-top d-flex justify-content-between align-items-center py-3 flex-wrap gap-2" id="footer-projects-pagination">
+            <div class="card-footer bg-white border-top d-flex justify-content-between align-items-center py-3 px-3 flex-wrap gap-2" id="footer-projects-pagination">
                 <small class="text-muted" id="text-projects-page-info">
-                    Showing page <strong>${projectPage.number + 1}</strong> of <strong>${projectPage.totalPages}</strong> (${projectPage.totalElements} total projects)
+                    Showing page <strong>${projectPage.number + 1}</strong> of <strong>${projectPage.totalPages}</strong> (${projectPage.totalElements} projects)
                 </small>
                 <nav aria-label="Projects pagination" id="nav-projects-pagination">
                     <ul class="pagination pagination-sm pagination-custom mb-0" id="ul-projects-pagination">
                         <li class="page-item <c:if test='${not projectPage.hasPrevious()}'>disabled</c:if>" id="li-proj-prev">
-                            <a class="page-link" href="?page=${projectPage.number - 1}&status=${currentStatus}&search=${currentSearch}&zone=${currentZone}" id="link-proj-prev">&laquo; Prev</a>
+                            <a class="page-link" href="?page=${projectPage.number - 1}&status=${fn:escapeXml(currentStatus)}&search=${fn:escapeXml(currentSearch)}&zone=${fn:escapeXml(currentZone)}" id="link-proj-prev">&laquo; Prev</a>
                         </li>
-                        <c:forEach var="i" begin="0" end="${projectPage.totalPages - 1}">
+                        <c:forEach var="i" begin="${projectPage.number > 3 ? projectPage.number - 3 : 0}" end="${projectPage.number + 3 < projectPage.totalPages - 1 ? projectPage.number + 3 : projectPage.totalPages - 1}">
                             <li class="page-item <c:if test='${projectPage.number == i}'>active</c:if>" id="li-proj-page-${i}">
-                                <a class="page-link" href="?page=${i}&status=${currentStatus}&search=${currentSearch}&zone=${currentZone}" id="link-proj-page-${i}">${i + 1}</a>
+                                <a class="page-link" href="?page=${i}&status=${fn:escapeXml(currentStatus)}&search=${fn:escapeXml(currentSearch)}&zone=${fn:escapeXml(currentZone)}" id="link-proj-page-${i}">${i + 1}</a>
                             </li>
                         </c:forEach>
                         <li class="page-item <c:if test='${not projectPage.hasNext()}'>disabled</c:if>" id="li-proj-next">
-                            <a class="page-link" href="?page=${projectPage.number + 1}&status=${currentStatus}&search=${currentSearch}&zone=${currentZone}" id="link-proj-next">Next &raquo;</a>
+                            <a class="page-link" href="?page=${projectPage.number + 1}&status=${fn:escapeXml(currentStatus)}&search=${fn:escapeXml(currentSearch)}&zone=${fn:escapeXml(currentZone)}" id="link-proj-next">Next &raquo;</a>
                         </li>
                     </ul>
                 </nav>

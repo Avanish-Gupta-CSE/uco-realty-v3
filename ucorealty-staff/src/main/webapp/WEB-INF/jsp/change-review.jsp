@@ -6,7 +6,7 @@
 <c:set var="activeTab" value="projects" scope="request" />
 <jsp:include page="common/header.jsp" />
 
-<main class="container py-4" id="main-change-review">
+<main class="container-xxl py-4" id="main-change-review">
     <div class="mb-3" id="review-top-nav">
         <a href="${pageContext.request.contextPath}/admin/projects" class="btn-back" id="btn-back-from-review">&larr; Back to Project Management</a>
         <a href="${pageContext.request.contextPath}/admin/projects/staging/<c:out value="${staging.id}"/>/preview" class="btn btn-outline-secondary btn-sm ms-2" id="btn-review-preview">Preview as customers would see it</a>

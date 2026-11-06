@@ -19,7 +19,7 @@
   <properties>
     <java.version>25</java.version>
     <maven.compiler.release>25</maven.compiler.release>
-    <poi.version>5.2.5</poi.version>
+    <poi.version>5.4.1</poi.version>
   </properties>
 
   <artifactId>ucorealty-staff</artifactId>

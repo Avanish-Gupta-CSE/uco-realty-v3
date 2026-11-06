@@ -19,7 +19,7 @@ Both WARs run two ways (same file): `java -jar <war>` (verified), or dropped int
 ```bash
 export CATALINA_OPTS="-Dspring.profiles.active=uat \
   -DDB_URL=jdbc:oracle:thin:@//db-host:1521/SERVICE -DDB_USER=... -DDB_PASS=... \
-  -DSSO_ENCRYPTION_KEY=... -DSSO_ENCRYPTION_IV=... -DSESSION_COOKIE_SECURE=true"
+  -DSSO_ENCRYPTION_KEY=... -DSESSION_COOKIE_SECURE=true"
 ```
 (`-D...` JVM properties and OS environment variables both work.) `server.port` and `server.servlet.context-path` in the application files are ignored on an external Tomcat; the connector port and the WAR name decide.
 
@@ -34,7 +34,7 @@ The application schema user needs `SELECT` on the bank HRMS tables (`employee_co
 | :--- | :--- | :--- | :--- |
 | `h2` (current) | laptop, or UAT **without** a database connection | H2 in memory, started inside the app. At every start the staff app runs all our SQL (`h2-init.sql` = `db_migrations` 01 + 03 + 05). Data is gone when the app stops | test employees 100001 to 600002, OTP 123456 |
 | `uat` | UAT **with** a database connection | Oracle: set `DB_URL`, `DB_USER`, `DB_PASS`. Run `db_migrations` 01, 03, 05 once first. The app checks the tables at start | the same test employees, same OTP |
-| `prod` | production | Oracle: set `DB_URL`, `DB_USER`, `DB_PASS`, plus `SSO_ENCRYPTION_KEY`, `SSO_ENCRYPTION_IV` and `SELECT` on the bank HRMS tables | bank SSO only. Test OTP refused |
+| `prod` | production | Oracle: set `DB_URL`, `DB_USER`, `DB_PASS`, plus `SSO_ENCRYPTION_KEY` and `SELECT` on the bank HRMS tables | bank SSO only. Test OTP refused |
 
 **Tomcat, with `h2`:** copy both WARs into `webapps/` and start Tomcat. Nothing else to set.
 
@@ -52,8 +52,7 @@ Plain http works in both (`SESSION_COOKIE_SECURE` defaults to `false` in `h2` an
 | `SPRING_PROFILES_ACTIVE` | both | no | overrides the line in `application.properties` |
 | `DB_URL` / `DB_USER` / `DB_PASS` | both | `uat`, `prod` | Oracle connection |
 | `DB_POOL_MAX` | both | no | connection pool size (default 10 in uat, 25 in prod) |
-| `SSO_ENCRYPTION_KEY` / `SSO_ENCRYPTION_IV` | staff | `prod` | bank SSO key and IV (Base64). `prod` refuses to start without the key; `h2` and `uat` use a development key until set |
-| `APP_REDIRECT_URL` | staff | no | landing page after login, default `/admin/projects` |
+| `SSO_ENCRYPTION_KEY` | staff | `prod` | the bank SSO key as plain text (16, 24 or 32 characters). The app refuses to start without a valid key in `prod`; `h2` and `uat` use a development key until set |
 | `HRMS_TABLE_PREFIXES` | staff | no | schema prefixes tried for the HRMS tables, default `,hrms_dba.` (first none, then `hrms_dba.`) |
 | `UCO_RBAC_RETAIL_SOLS` | staff | no (default 8001) | SOL(s) of HO Retail Banking. Others: `UCO_RBAC_SUPERADMIN_SOLS`=7115, `UCO_RBAC_MARKETING_SOLS`=8028, `UCO_RBAC_ZONAL_SOL_REGEX` |
 | `SESSION_COOKIE_SECURE` | both | no | `false` in `h2`/`uat`, `true` in `prod` |
@@ -67,12 +66,17 @@ Every line the application writes about its own work starts with a tag: `[UCO SS
 * The permanent record of who did what is the database (`audit_log`, `login_audit`; DIT Logs page); the log is for the server team.
 
 ## 3. Bank SSO integration
-The bank portal redirects the employee to `https://<intranet-host>/ucorealty-staff/entry?value=<token>` (also accepted: `/GetValue.jsp`, `/sso?value=`). The token is the encrypted string `emp_id=<empno>&sol_id=<sol>`; if it decrypts, the employee is genuine. The application then:
-1. looks the employee up in HRMS (the SOL in the token is **not** trusted; the HRMS posting decides),
-2. derives the role from the posting SOL (configurable, see the environment table above): **7115** DIT superadmin (Logs page), **8028** HO Marketing and Wealth Management (create/approve in any zone), **8001** HO Retail Banking (customer leads and Excel only), **7001–7049** zonal offices (e.g. 7001 Patna): Scale 4+ or EXEC cadre = Checker, Scale 1–3 = Maker, in their own zone only. The zone comes from the SOL description (`PATNA ZONAL OFFICE` → Patna). **Any other posting, and scale 0/blank, is refused**,
-3. starts a new session and writes the attempt (success or failure) to the Logs page.
+Register this URL with the SSO team: `https://<host>/ucorealty-staff/entry` . The portal opens it as `/entry?Value=<token>`.
 
-Open points to confirm with the SSO team before go-live: key/IV and cipher (CBC vs GCM), whether the token can carry an expiry (it has none today, so a captured link can be replayed), and the real HRMS column names.
+The token is the bank's standard: Base64 of a 12-byte IV followed by AES/GCM data with a 128-bit tag, using `SSO_ENCRYPTION_KEY` as raw text. After decrypting it reads `emp_id=<empno>&sol_id=<sol>`.
+
+The code is in `HomeController`:
+1. `/entry` decrypts the token and looks the employee up in HRMS (the SOL in the token is **not** trusted; the HRMS posting decides).
+2. The role comes from the posting: **7115** DIT superadmin, **8028** HO Marketing and Wealth Management, **8001** HO Retail Banking, **7001 to 7049** zonal offices (scale 4+ or EXEC = checker, scale 1 to 3 = maker). Any other posting is refused.
+3. It starts a new session holding `emp_id` and `sol_id`, writes the attempt to the Logs page, and goes to `/home`.
+4. `/home` opens the dashboard, or the login page when those session values are missing. `SessionInterceptor` applies the same check to every `/admin` page.
+
+Open point for the SSO team: the token has no expiry, so a captured link can be replayed until the key changes.
 
 ## 4. Network rules (reverse proxy / firewall)
 | Path | Internet | Intranet |

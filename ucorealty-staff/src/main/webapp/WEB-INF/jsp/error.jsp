@@ -5,27 +5,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Security Authentication Notice - UCO Realty Intranet Portal</title>
+  <title>Notice - UCO Bank Realty Portal</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/bootstrap.min.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css?v=20261106a">
 </head>
 <body class="error-layout">
   <div class="error-card">
-    <div class="error-icon">&#x2715;</div>
-    <h1 class="error-title">Security Authentication Notice</h1>
-    <p class="error-desc"><c:out value="${errorMessage != null ? errorMessage : 'Missing or invalid Single Sign-On parameters. Please sign in via the official bank portal or use direct staff authentication.'}"/></p>
-    <div class="error-hint">
-      Please contact the SWDC Cell / DIT Central Administrator or access this system via the official UCO Bank intranet terminal portal.
-    </div>
-    <div class="error-system-code">
-      System Code: 403 UNAUTHORIZED / SEC_ERR_SSO
-    </div>
+    <div class="error-icon error-icon-info" id="error-icon">!</div>
+    <h1 class="error-title" id="error-title">We could not open this page</h1>
+    <p class="error-desc" id="error-message"><c:out value="${errorMessage != null ? errorMessage : 'Please open the Realty portal from the UCO Bank intranet portal.'}"/></p>
     <div class="mt-4 d-flex justify-content-center gap-3">
       <a href="${pageContext.request.contextPath}/login" class="btn btn-primary btn-sm">
-        &larr; Go to Staff Login
+        Go to Staff Login
       </a>
       <a href="${pageContext.request.contextPath}/projects" class="btn btn-secondary btn-sm">
-        Browse Projects Catalog
+        Browse Projects
       </a>
     </div>
   </div>

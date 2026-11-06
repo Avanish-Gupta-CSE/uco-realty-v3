@@ -6,7 +6,7 @@
 | :-: | :--- | :--- | :--- |
 | 1 | Create the tables | DBA | run `db_migrations` 01, and for `uat` also 03 and 05, as the application schema user |
 | 2 | Build the two WARs | you | `cd ucorealty-customer && mvn clean package -DskipTests`, then the same in `ucorealty-staff` (JDK 25). Result: `target/ucorealty-customer.war`, `target/ucorealty-staff.war` |
-| 3 | Set the settings on each server | server admin | `SPRING_PROFILES_ACTIVE=uat` (or set it in `application.properties`), `DB_URL`, `DB_USER`, `DB_PASS`; staff server also `SSO_ENCRYPTION_KEY`, `SSO_ENCRYPTION_IV` (e.g. in Tomcat's `bin/setenv.sh`) |
+| 3 | Set the settings on each server | server admin | `SPRING_PROFILES_ACTIVE=uat` (or set it in `application.properties`), `DB_URL`, `DB_USER`, `DB_PASS`; staff server also `SSO_ENCRYPTION_KEY` (e.g. in Tomcat's `bin/setenv.sh`) |
 | 4 | Copy the WAR into Tomcat's `webapps/` | server admin | customer WAR on the internet-zone server, staff WAR on the intranet server; Tomcat 11 + JDK 25 |
 | 5 | Open the URL | everyone | `https://<host>/ucorealty-customer/projects`, `https://<host>/ucorealty-staff/` |
 
@@ -32,7 +32,7 @@ It stops old runs, builds both apps, starts staff then customer, and waits until
 | `dev-stop.sh` | kills the two apps (with `h2`, that also ends the in-memory database) | no |
 | `package-release.sh uat|prod` | builds both WARs and zips them with the SQL files, the deployment guide and SHA-256 checksums. `uat` includes the test employees (03, 05); `prod` never does and refuses to build unless `spring.profiles.active=prod` | optional: a convenient hand-over bundle |
 | `h2_schema.py` | regenerates `ucorealty-staff/src/main/resources/h2-init.sql` from `db_migrations` 01, 03, 05. **Run it after changing any of those** | no |
-| `smoke_test.py` | 35 quick checks: lockdown of the customer site, headers, CSRF, bad tokens, role access, logout | no (run before a release, `h2` or `uat` profile) |
+| `smoke_test.py` | 34 quick checks: lockdown of the customer site, headers, CSRF, bad tokens, role access, logout | no (run before a release, `h2` or `uat` profile) |
 | `workflow_test.py` | 83 checks of the whole maker-checker flow through the real screens; leaves two test projects behind | no (`h2` or `uat` profile) |
 | `context_path_check.py` | crawls both apps as several roles and fails if any URL lacks the context path | no (run before a release) |
 | `load_demo_data.py` / `remove_demo_data.sh` | create / delete nine demo projects, leads and photos (all names end in "(Demo)") | no |

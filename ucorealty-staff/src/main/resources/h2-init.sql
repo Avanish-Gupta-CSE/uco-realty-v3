@@ -257,13 +257,13 @@ CREATE TABLE employee_contact_details (
   EMPNO               VARCHAR2(6)   NOT NULL PRIMARY KEY,
   NAME                VARCHAR2(100) NOT NULL,
   POSTING_SOL_ID      VARCHAR2(4)   NOT NULL,
-  POSTING_SOL_DESC    VARCHAR2(150),
+  POSTING_SOL_DESC    VARCHAR2(100),
   SCALE_CODE          VARCHAR2(2),
   CADRE_CODE          VARCHAR2(4),
   POSTING_REGION_NAME VARCHAR2(50),
   DESIG               VARCHAR2(100),
-  MOBILE_NO           VARCHAR2(20),
-  E_MAIL              VARCHAR2(100)
+  MOBILE_NO           VARCHAR2(15),
+  E_MAIL              VARCHAR2(50)
 );
 
 -- Optional enrichment tables (used when present; they override SOL / scale / designation of the row above)
@@ -289,7 +289,7 @@ CREATE TABLE employee_job_profile (
 -- LOCAL TEST EMPLOYEES for a developer machine (MacBook): the application reads these rows exactly as it reads the bank's HRMS tables.
 -- NOT for UAT or production: those environments already have the real data in the bank's HRMS tables.
 -- Requires 03_CREATE_HRMS_MOCK_TABLES.sql first. scripts/dev-start.sh (Oracle) and scripts/h2_schema.py (H2) load 03 and 05 for you;
--- sign in with the employee number and the local test OTP, or open /entry?value=<token> (token = encrypted  emp_id=<EMPNO>&sol_id=<SOL>, see TESTING_GUIDE.md).
+-- sign in with the employee number and the local test OTP, or open /entry?Value=<token> (token = encrypted  emp_id=<EMPNO>&sol_id=<SOL>, see TESTING_GUIDE.md).
 -- SOLs follow the real structure: 7115 DIT superadmin, 8028 HO Marketing and Wealth Management,
 -- 8001 HO Retail Banking, 7001–7049 zonal offices (7001 = Patna).
 -- Idempotent (MERGE).

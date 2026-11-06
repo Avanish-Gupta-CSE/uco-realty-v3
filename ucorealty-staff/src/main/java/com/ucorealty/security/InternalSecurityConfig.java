@@ -14,7 +14,7 @@ import org.springframework.security.web.session.DisableEncodeUrlFilter;
 import com.ucorealty.config.SecurityHeadersFilter;
 
 /**
- * Staff authentication happens only through bank SSO / OTP (see SsoEntryController), which builds the
+ * Staff authentication happens only through bank SSO / test OTP (see HomeController), which builds the
  * Spring Security context itself. There is no form login, so unauthenticated requests to protected
  * pages are sent to /login (the SSO landing page).
  */
@@ -45,11 +45,10 @@ public class InternalSecurityConfig {
       .addFilterBefore(new SecurityHeadersFilter(), DisableEncodeUrlFilter.class)
       .authorizeHttpRequests(auth -> auth
         .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.ERROR).permitAll()
-        // Full intranet access to catalog, bank production SSO entry points, OTP, static assets, JSP views, and error page:
-        .requestMatchers("/", "/projects", "/project/**", "/lead", "/files/**",
-                         "/entry", "/GetValue.jsp", "/GetValue", "/getvalue", "/getvalue.jsp",
-                         "/sso/**", "/login", "/otp", "/otp-verify", "/error-page", "/error",
-                         "/assets/**", "/css/**", "/images/**", "/js/**", "/WEB-INF/jsp/**").permitAll()
+        // Open pages: the catalog, the login steps, static files. Everything else needs a login.
+        .requestMatchers("/", "/home", "/entry", "/projects", "/project/**", "/lead", "/files/**",
+                         "/login", "/sso/generate-otp", "/otp", "/otp-verify", "/error-page", "/error",
+                         "/assets/**", "/css/**", "/images/**", "/js/**").permitAll()
         // Superadmin DIT audit logs strictly restricted:
         .requestMatchers("/admin/audit-logs/**").hasRole("SUPERADMIN_DIT")
         // All other internal features require authentication:

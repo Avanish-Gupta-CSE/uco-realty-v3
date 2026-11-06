@@ -11,7 +11,7 @@ Project `ucorealty` (package `com.ucorealty`); the WAR file name is the URL path
 | `ucorealty-customer` | 8080 | Internet customers | Read-only catalog of **approved** projects, photos, Home Loan lead capture, JSON API `/api/public/**`. No login, no staff routes. |
 | `ucorealty-staff` | 8081 | Bank staff (intranet) | Everything above (staff see all statuses) plus bank SSO login, Maker–Checker `/admin/projects`, leads + Excel export, DIT-only **Logs** page. |
 
-Both use the same Oracle schema. There are **no local user accounts**: staff sign in through the bank SSO (`/entry?value=<encrypted token>`), the employee is looked up in the bank HRMS tables, and the role is derived at login (SOL ID + cadre/scale). Details: `DEPLOYMENT.md`.
+Both use the same Oracle schema. There are **no local user accounts**: staff sign in through the bank SSO (`/entry?Value=<encrypted token>`), the employee is looked up in the bank HRMS tables, and the role is derived at login (SOL ID + cadre/scale). Details: `DEPLOYMENT.md`.
 
 ## Run locally
 Needs Java 25 and Maven. Nothing else: the profile in `application.properties` is `h2`, so all tables and test employees are created in memory at start.

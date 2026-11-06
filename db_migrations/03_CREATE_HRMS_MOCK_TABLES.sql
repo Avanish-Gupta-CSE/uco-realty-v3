@@ -13,13 +13,13 @@ CREATE TABLE employee_contact_details (
   EMPNO               VARCHAR2(6)   NOT NULL PRIMARY KEY,
   NAME                VARCHAR2(100) NOT NULL,
   POSTING_SOL_ID      VARCHAR2(4)   NOT NULL,
-  POSTING_SOL_DESC    VARCHAR2(150),
+  POSTING_SOL_DESC    VARCHAR2(100),
   SCALE_CODE          VARCHAR2(2),
   CADRE_CODE          VARCHAR2(4),
   POSTING_REGION_NAME VARCHAR2(50),
   DESIG               VARCHAR2(100),
-  MOBILE_NO           VARCHAR2(20),
-  E_MAIL              VARCHAR2(100)
+  MOBILE_NO           VARCHAR2(15),
+  E_MAIL              VARCHAR2(50)
 );
 
 -- Optional enrichment tables (used when present; they override SOL / scale / designation of the row above)
