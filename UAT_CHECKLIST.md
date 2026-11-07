@@ -1,0 +1,74 @@
+# UAT checklist: what to do, in order (no secrets in this file)
+
+Fill in the real values only on your own PC. Do not commit the password or the SSO key.
+
+## A. Before building the WARs (edit two files, then rebuild)
+| What | File | Line | Change |
+| :--- | :--- | :--- | :--- |
+| DB password | `ucorealty-staff/src/main/resources/application.properties` | 22 | in `${DB_PASS:...}` replace what is after the colon with the real `HRMS_DBA` UAT password |
+| DB password | `ucorealty-customer/src/main/resources/application.properties` | 22 | the same |
+| (DB address and user are already right, lines 20 and 21) | | | `10.21.128.29:1530/CLDBUAT`, `HRMS_DBA` |
+| SSO key, when you get it | staff `application.properties` | 45 | replace what is after the colon in `${SSO_ENCRYPTION_KEY:...}` (16, 24 or 32 characters). Not needed for the first UAT run |
+
+Then: `scripts/package-release.sh uat` gives both WARs in `release/ucorealty-uat-<date>/`.
+
+## B. Queries to run in SQL Developer, connected as HRMS_DBA on CLDBUAT
+1. Check you are the right user: `SELECT USER FROM dual;` (must say HRMS_DBA)
+2. Check our table names are free (must return NO rows; if it returns rows, stop and ask the senior):
+   ```sql
+   SELECT table_name FROM user_tables
+   WHERE table_name IN ('PROJECTS','PROJECT_STAGING','PROJECT_IMAGES','LEADS','AUDIT_LOG','LOGIN_AUDIT');
+   ```
+3. Check the HRMS table has the retired flag (must return 1 row):
+   ```sql
+   SELECT column_name FROM user_tab_columns WHERE table_name='EMPLOYEE_CONTACT_DETAILS' AND column_name='RETIRE_FLAG';
+   ```
+4. Create our 6 tables: run the whole file `db_migrations/01_CREATE_TABLES.sql` (Run Script, F5).
+5. Check they exist (must say 6):
+   ```sql
+   SELECT COUNT(*) FROM user_tables
+   WHERE table_name IN ('PROJECTS','PROJECT_STAGING','PROJECT_IMAGES','LEADS','AUDIT_LOG','LOGIN_AUDIT');
+   ```
+6. Find real testers (or ask the senior for numbers), one query per role:
+   ```sql
+   -- DIT superadmin
+   SELECT empno, name, posting_sol_id, scale_code, cadre_code, retire_flag FROM employee_contact_details WHERE posting_sol_id='7115' AND NVL(retire_flag,'N')<>'RT';
+   -- HO Marketing
+   SELECT empno, name, posting_sol_id, scale_code, cadre_code, retire_flag FROM employee_contact_details WHERE posting_sol_id='8028' AND NVL(retire_flag,'N')<>'RT';
+   -- zonal maker (scale 1 to 3) and checker (scale 4 or more / EXEC) of ONE zone, e.g. Bhopal 7013
+   SELECT empno, name, posting_sol_id, scale_code, cadre_code FROM employee_contact_details WHERE posting_sol_id='7013' AND NVL(retire_flag,'N')<>'RT' ORDER BY scale_code;
+   ```
+7. The app also reads the CURRENT posting from the tenure table, which wins over the contact table. For each tester:
+   ```sql
+   SELECT empno, posting_sol, scale_code, cadre_code, tenure_as FROM employee_tenure
+   WHERE empno = '<EMPNO>' AND SYSDATE BETWEEN eff_from_date AND eff_to_date AND status_flag = 'V';
+   ```
+8. Zone names (compare with `ucorealty-staff/src/main/resources/geo/zones.json`; the text must read `<ZONE NAME> ZONAL OFFICE`):
+   ```sql
+   SELECT DISTINCT posting_sol_id, posting_sol_desc FROM employee_contact_details
+   WHERE posting_sol_id BETWEEN '7001' AND '7099' ORDER BY 1;
+   ```
+9. Only if you get no real testers and the senior agrees: run `db_migrations/UAT_TEST_USERS.sql` (employees 990001 to 990004). Remove them after testing (script has the DELETE).
+   Do NOT run `03_CREATE_HRMS_MOCK_TABLES.sql` or `05_LOCAL_TEST_EMPLOYEES.sql` here: the real HRMS tables already exist.
+
+## C. Deploy
+1. Copy `ucorealty-staff.war` and `ucorealty-customer.war` to Tomcat's `webapps` folder (the senior helps). Tomcat 11, JDK 25.
+2. Open `http://<server>:<port>/ucorealty-staff/` and `http://<server>:<port>/ucorealty-customer/projects`.
+3. Sign in with an employee number from B6 and OTP `123456` (the test login).
+4. Logs: the `logs` folder in Tomcat's working folder: `ucorealty-staff.log`, `ucorealty-customer.log`.
+
+## D. If you cannot reach the Oracle database
+Run on H2 instead (in memory, test employees 100001 to 600003, data lost when Tomcat stops):
+add the Java option `-Dspring.profiles.active=h2` to the Tomcat service (Tomcat configuration tool > Java > Java Options), restart.
+Remove the option to go back to Oracle.
+
+## E. Before production (nothing to delete in Java)
+1. Staff `application.properties` line 48: `uco.sso.dev-login-enabled=false`; delete line 49 (`uco.sso.test-otp`).
+2. Put the real SSO key on line 45.
+3. Run `UAT_TEST_USERS.sql`'s DELETE if you used it.
+4. Rebuild with `scripts/package-release.sh prod`. After that only the portal link `/entry?Value=...` signs people in.
+
+## F. Ask the senior (only these)
+1. The `HRMS_DBA` password for UAT.
+2. Four UAT employee numbers (DIT, HO Marketing, zonal maker, zonal checker of the same zone), or OK to run `UAT_TEST_USERS.sql`.
+3. The intranet portal link (the SSO): who adds "UCO Realty" to the bank's intranet portal and gives us the key? When a person clicks our link there, the portal sends them to `http://<server>:<port>/ucorealty-staff/entry?Value=<encrypted>`. The portal team must be told that address, and they tell us the secret key their portal encrypts with. Only needed when you want the real portal link to work, not for the first UAT run.

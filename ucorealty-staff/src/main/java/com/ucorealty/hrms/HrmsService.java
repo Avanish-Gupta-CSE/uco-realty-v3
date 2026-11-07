@@ -13,6 +13,9 @@ public interface HrmsService {
   /** Checks the test OTP for an employee who exists in HRMS. The real OTP is the bank SSO portal's job. */
   boolean verifyOtp(String empId, String otp);
 
+  /** empNo -> name for these employees (one query), so screens can show names instead of numbers. */
+  java.util.Map<String, String> namesOf(java.util.Collection<String> empNos);
+
   AppUser toAppUser(HrmsUserProfile profile);
 
   /** Portal role for this posting, or null when the employee has no access. */

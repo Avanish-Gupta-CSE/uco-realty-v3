@@ -28,24 +28,25 @@ Follow `db/README_DBA_DEPLOYMENT.md`. Order: `01_CREATE_TABLES.sql`; for an exis
 The application schema user needs `SELECT` on the bank HRMS tables (`employee_contact_details`, and optionally `employee_tenure`, `employee_job_profile`). Columns read from `employee_contact_details`: `EMPNO, NAME, POSTING_SOL_ID, POSTING_SOL_DESC, SCALE_CODE, CADRE_CODE, POSTING_REGION_NAME, DESIG, MOBILE_NO, E_MAIL` (the table prefixes tried, in order, are the setting `uco.hrms.table-prefixes` / env `HRMS_TABLE_PREFIXES`; default `,hrms_dba.` = first no prefix, then `hrms_dba.`). Please verify these names against the real HRMS schema.
 
 ## 2. Configuration
-**One line decides everything:** `spring.profiles.active=` in `application.properties` of each app (now `h2`). Change it and rebuild, or set the environment variable `SPRING_PROFILES_ACTIVE`, which overrides it without a rebuild.
+**Single `application.properties` per module (aligned with the bank IndiaPost UAT pattern, Decision 133):**
+Each app maintains only one `application.properties` file (`WEB-INF/classes/application.properties`). No separate profile files exist.
+The bank UAT database connection is embedded directly as defaults:
+- URL: `jdbc:oracle:thin:@//10.21.128.29:1530/CLDBUAT`
+- User: `HRMS_DBA`
+- Password: UAT password
+- SSO key: UAT testing key
 
-| Profile | Use it when | Database | Who can sign in |
-| :--- | :--- | :--- | :--- |
-| `h2` (current) | laptop, or UAT **without** a database connection | H2 in memory, started inside the app. At every start the staff app runs all our SQL (`h2-init.sql` = `db_migrations` 01 + 03 + 05). Data is gone when the app stops | test employees 100001 to 600002, OTP 123456 |
-| `uat` | UAT **with** a database connection | Oracle: set `DB_URL`, `DB_USER`, `DB_PASS`. Run `db_migrations` 01, 03, 05 once first. The app checks the tables at start | the same test employees, same OTP |
-| `prod` | production | Oracle: set `DB_URL`, `DB_USER`, `DB_PASS`, plus `SSO_ENCRYPTION_KEY` and `SELECT` on the bank HRMS tables | bank SSO only. Test OTP refused |
+**Tomcat on Windows VM (the bank way):**
+Simply copy both WAR files into Tomcat's `webapps/` folder and start Tomcat. Zero server configuration or environment variables are required.
 
-**Tomcat, with `h2`:** copy both WARs into `webapps/` and start Tomcat. Nothing else to set.
-
-**Tomcat, with `uat`:** create `bin/setenv.sh`:
+**Optional overrides (if connecting to a different DB or port):**
+Any setting can still be overridden using JVM `-D` flags or environment variables:
 ```bash
-export SPRING_PROFILES_ACTIVE=uat
-export DB_URL='jdbc:oracle:thin:@//db-host:1521/SERVICE' DB_USER='...' DB_PASS='...'
+-DDB_URL='jdbc:oracle:thin:@//different-host:1521/SERVICE' -DDB_USER=... -DDB_PASS=...
 ```
-Plain http works in both (`SESSION_COOKIE_SECURE` defaults to `false` in `h2` and `uat`; set it to `true` on https).
 
-**Before production:** set `spring.profiles.active=prod` in both `application.properties` files. `scripts/package-release.sh prod` refuses to build until you do.
+**Before production:**
+Set `uco.sso.dev-login-enabled=false` in `ucorealty-staff/src/main/resources/application.properties`, provide the production `SSO_ENCRYPTION_KEY`, and set `server.servlet.session.cookie.secure=true` on HTTPS. `scripts/package-release.sh prod` enforces that `dev-login-enabled` is false.
 
 | Variable | Module | Required | Meaning |
 | :--- | :--- | :--- | :--- |

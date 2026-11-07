@@ -11,3 +11,4 @@ release/
 *.jar
 *.zip
 .brain/
+logs/

@@ -19,7 +19,8 @@ CREATE TABLE employee_contact_details (
   POSTING_REGION_NAME VARCHAR2(50),
   DESIG               VARCHAR2(100),
   MOBILE_NO           VARCHAR2(15),
-  E_MAIL              VARCHAR2(50)
+  E_MAIL              VARCHAR2(50),
+  RETIRE_FLAG         VARCHAR2(2)
 );
 
 -- Optional enrichment tables (used when present; they override SOL / scale / designation of the row above)

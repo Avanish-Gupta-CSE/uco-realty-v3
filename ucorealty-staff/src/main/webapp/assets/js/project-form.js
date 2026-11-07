@@ -167,7 +167,7 @@ function initDistrictSelector() {
                 var val = customCityInput ? customCityInput.value.trim() : "";
                 if (!val) {
                     e.preventDefault();
-                    alert("Please enter a custom district / city name, or click 'Back to List' to select one.");
+                    showFormNotice("Please enter a custom district / city name, or click 'Back to List' to select one.");
                     if (customCityInput) customCityInput.focus();
                     return false;
                 }
@@ -230,7 +230,7 @@ function initPhotoSlots() {
 
             // Size ceiling: 2MB (2 * 1024 * 1024 bytes)
             if (file.size > 2 * 1024 * 1024) {
-                alert("File \"" + file.name + "\" exceeds the 2MB limit (" + (file.size / 1024 / 1024).toFixed(2) + " MB). Please choose an image under 2MB.");
+                showFormNotice("File \"" + file.name + "\" exceeds the 2MB limit (" + (file.size / 1024 / 1024).toFixed(2) + " MB). Please choose an image under 2MB.");
                 input.value = "";
                 return;
             }
@@ -238,7 +238,7 @@ function initPhotoSlots() {
             // Type check
             var allowed = ["image/jpeg", "image/png", "image/webp"];
             if (allowed.indexOf(file.type.toLowerCase()) === -1) {
-                alert("Only JPG, PNG, and WEBP images are accepted.");
+                showFormNotice("Only JPG, PNG, and WEBP images are accepted.");
                 input.value = "";
                 return;
             }
@@ -335,23 +335,24 @@ function initPhotoSlots() {
             var context = btn.getAttribute("data-context-path") || "";
 
             if (!imgId || !projectId) return;
-            if (!confirm("Are you sure you want to delete this saved photo?")) return;
+            window.ucoConfirm("Delete this saved photo?", "Yes, delete photo", "danger", function () {
 
-            var form = document.createElement("form");
-            form.method = "POST";
-            // the button carries the URL of the maker's working copy (staging request)
-            form.action = btn.getAttribute("data-delete-url");
-            if (!form.action) return;
-            var csrf = document.querySelector('input[name="_csrf"]');
-            if (csrf) {
-                var token = document.createElement("input");
-                token.type = "hidden";
-                token.name = csrf.name;
-                token.value = csrf.value;
-                form.appendChild(token);
-            }
-            document.body.appendChild(form);
-            form.submit();
+                var form = document.createElement("form");
+                form.method = "POST";
+                // the button carries the URL of the maker's working copy (staging request)
+                form.action = btn.getAttribute("data-delete-url");
+                if (!form.action) return;
+                var csrf = document.querySelector('input[name="_csrf"]');
+                if (csrf) {
+                    var token = document.createElement("input");
+                    token.type = "hidden";
+                    token.name = csrf.name;
+                    token.value = csrf.value;
+                    form.appendChild(token);
+                }
+                document.body.appendChild(form);
+                form.submit();
+            });
         });
     });
 
@@ -440,4 +441,13 @@ function packTextFields(formData) {
         formData.delete(name);
     });
     formData.append("__packed", packed.toString());
+}
+
+/** A red notice at the top of the form instead of the browser's popup. */
+function showFormNotice(text) {
+    var box = document.getElementById("formClientNotice");
+    if (!box) return;
+    box.textContent = text;
+    box.classList.remove("d-none");
+    box.scrollIntoView({ behavior: "smooth", block: "center" });
 }

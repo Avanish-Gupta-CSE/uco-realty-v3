@@ -53,6 +53,11 @@ public class HrmsServiceImpl implements HrmsService {
   }
 
   @Override
+  public java.util.Map<String, String> namesOf(java.util.Collection<String> empNos) {
+    return hrmsRepository.findNames(empNos);
+  }
+
+  @Override
   public boolean isTestOtpEnabled() {
     return testOtp != null && !testOtp.trim().isEmpty();
   }

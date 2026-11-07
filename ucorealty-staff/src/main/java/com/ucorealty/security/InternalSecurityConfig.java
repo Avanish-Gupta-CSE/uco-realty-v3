@@ -9,7 +9,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.access.AccessDeniedHandlerImpl;
-import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.session.DisableEncodeUrlFilter;
 import com.ucorealty.config.SecurityHeadersFilter;
 
@@ -44,7 +43,7 @@ public class InternalSecurityConfig {
       .headers(h -> h.disable())   // replaced by SecurityHeadersFilter (see config package)
       .addFilterBefore(new SecurityHeadersFilter(), DisableEncodeUrlFilter.class)
       .authorizeHttpRequests(auth -> auth
-        .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.ERROR).permitAll()
+        .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.ERROR, DispatcherType.INCLUDE).permitAll()   // INCLUDE: the shared header/footer of every JSP
         // Open pages: the catalog, the login steps, static files. Everything else needs a login.
         .requestMatchers("/", "/home", "/entry", "/projects", "/project/**", "/lead", "/files/**",
                          "/login", "/sso/generate-otp", "/otp", "/otp-verify", "/error-page", "/error",
@@ -55,7 +54,11 @@ public class InternalSecurityConfig {
         .requestMatchers("/admin/**", "/api/admin/**").authenticated()
         .anyRequest().authenticated()
       )
-      .exceptionHandling(ex -> ex.authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login")).accessDeniedHandler(logged))
+      .exceptionHandling(ex -> ex.authenticationEntryPoint((request, response, authException) -> {
+        // an old session cookie the server no longer knows = the 30 idle minutes ran out: tell the user on the login page
+        boolean expired = request.getRequestedSessionId() != null && !request.isRequestedSessionIdValid();
+        response.sendRedirect(request.getContextPath() + "/login" + (expired ? "?expired" : ""));
+      }).accessDeniedHandler(logged))
       .logout(logout -> logout
         .logoutUrl("/logout")
         .logoutSuccessHandler(logoutSuccessHandler)

@@ -20,7 +20,7 @@
         <div class="row g-3 small mb-3" id="review-facts">
             <div class="col-md-3" id="fact-project-id"><span class="text-muted">Project</span><br><span class="font-monospace"><c:out value="${staging.projectId}"/></span></div>
             <div class="col-md-3" id="fact-zone"><span class="text-muted">Zone</span><br><c:out value="${project.zoneName}"/></div>
-            <div class="col-md-3" id="fact-maker"><span class="text-muted">Raised by (maker)</span><br><c:out value="${staging.createdBy}"/></div>
+            <div class="col-md-3" id="fact-maker"><span class="text-muted">Raised by (maker)</span><br><c:out value="${not empty makerName ? makerName : staging.createdBy}"/> <small class="text-muted">(<c:out value="${staging.createdBy}"/>)</small></div>
             <div class="col-md-3" id="fact-submitted"><span class="text-muted">Sent for approval</span><br>${staging.submittedAt != null ? staging.submittedAt.toString().replace('T', ' ').substring(0, 16) : '-'}</div>
         </div>
 
@@ -139,7 +139,7 @@
                         </div>
                     </div>
                     <div class="d-flex gap-2 mt-3">
-                        <button type="submit" class="btn btn-primary" id="btn-change-decision-confirm" data-confirm="Record this decision?">Confirm Decision</button>
+                        <button type="submit" class="btn btn-primary" id="btn-change-decision-confirm" data-confirm-ok="Yes, record decision" data-confirm-style="primary" data-confirm-detail="#changeDecisionSelect" data-confirm="Record this decision?">Confirm Decision</button>
                         <a href="${pageContext.request.contextPath}/admin/projects" class="btn btn-outline-secondary" id="btn-change-decision-cancel">Cancel</a>
                     </div>
                 </form>
@@ -153,7 +153,7 @@
                         </c:choose>
                     </p>
                     <c:if test="${isOwner}">
-                        <form action="${pageContext.request.contextPath}/admin/projects/staging/<c:out value="${staging.id}"/>/withdraw" method="post" id="form-review-withdraw" data-confirm="Withdraw this request?">
+                        <form action="${pageContext.request.contextPath}/admin/projects/staging/<c:out value="${staging.id}"/>/withdraw" method="post" id="form-review-withdraw" data-confirm-ok="Yes, withdraw" data-confirm-style="danger" data-confirm="Withdraw this request?">
 <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
                             <button type="submit" class="btn btn-outline-secondary btn-sm" id="btn-review-withdraw">Withdraw request</button>
                         </form>

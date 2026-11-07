@@ -25,7 +25,9 @@ public class SessionInterceptor implements HandlerInterceptor {
       return true;
     }
     log.warn("[UCO SSO] No signed-in session for {}: sent to the login page", request.getRequestURI());
-    response.sendRedirect(request.getContextPath() + "/login");
+    // The browser still sends a session cookie that the server no longer knows: the 30 minutes ran out, so say so on the login page
+    boolean expired = request.getRequestedSessionId() != null && !request.isRequestedSessionIdValid();
+    response.sendRedirect(request.getContextPath() + "/login" + (expired ? "?expired" : ""));
     return false;
   }
 }

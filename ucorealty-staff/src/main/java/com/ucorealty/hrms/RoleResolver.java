@@ -38,7 +38,7 @@ public class RoleResolver {
   public RoleResolver(@Value("${uco.rbac.superadmin-sols:7115}") String superadmin,
                       @Value("${uco.rbac.marketing-sols:8028}") String marketing,
                       @Value("${uco.rbac.retail-sols:8001}") String retail,
-                      @Value("${uco.rbac.zonal-sol-regex:70(0[1-9]|[1-4]\\d)}") String zonalRegex,
+                      @Value("${uco.rbac.zonal-sol-regex:70(0[1-9]|[1-9]\\d)}") String zonalRegex,
                       MasterDataService masterData) {
     this.superadminSols = csv(superadmin);
     this.marketingSols = csv(marketing);

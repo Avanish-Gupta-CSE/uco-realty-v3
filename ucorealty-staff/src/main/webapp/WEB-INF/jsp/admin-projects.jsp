@@ -182,7 +182,7 @@
                                             </div>
                                         </c:if>
                                     </td>
-                                    <td data-label="Created by" class="col-th-creator"><span class="creator-tag" id="row-creator-${p.id}" title="<c:out value="${p.createdBy}"/>"><c:out value="${p.createdBy != null ? p.createdBy : '-'}"/></span></td>
+                                    <td data-label="Created by" class="col-th-creator"><span class="creator-tag" id="row-creator-${p.id}" title="EMP ID <c:out value="${p.createdBy}"/>"><c:out value="${not empty empNames[p.createdBy] ? empNames[p.createdBy] : (p.createdBy != null ? p.createdBy : '-')}"/></span></td>
                                     <td class="text-end pe-3 col-th-actions">
                                         <div class="d-inline-flex justify-content-end align-items-center gap-1" id="actions-wrap-${p.id}">
                                             <!-- Preview: a live project as customers see it; an unapproved one as it would look -->
@@ -194,13 +194,13 @@
                                                 <c:if test="${!p.master && mine}">
                                                     <c:if test="${workable}">
                                                         <a href="${pageContext.request.contextPath}/admin/projects/staging/${p.stagingId}/edit" class="btn btn-outline-secondary btn-sm" id="link-edit-project-${p.id}">Edit</a>
-                                                        <form action="${pageContext.request.contextPath}/admin/projects/staging/${p.stagingId}/submit" method="post" class="d-inline m-0" id="form-submit-project-${p.id}" data-confirm="Submit this project for Checker approval?">
+                                                        <form action="${pageContext.request.contextPath}/admin/projects/staging/${p.stagingId}/submit" method="post" class="d-inline m-0" id="form-submit-project-${p.id}" data-confirm-ok="Yes, submit" data-confirm-style="success" data-confirm="Submit this project for Checker approval?">
 <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
                                                             <button type="submit" class="btn btn-success btn-sm" id="btn-submit-project-${p.id}">Submit</button>
                                                         </form>
                                                     </c:if>
                                                     <c:if test="${workable || p.stagingStatus == 'PENDING_APPROVAL'}">
-                                                        <form action="${pageContext.request.contextPath}/admin/projects/staging/${p.stagingId}/withdraw" method="post" class="d-inline m-0" id="form-withdraw-new-${p.id}" data-confirm="${workable ? 'Discard this project draft?' : 'Withdraw this project from approval?'}">
+                                                        <form action="${pageContext.request.contextPath}/admin/projects/staging/${p.stagingId}/withdraw" method="post" class="d-inline m-0" id="form-withdraw-new-${p.id}" data-confirm-ok="Yes, ${workable ? 'discard' : 'withdraw'}" data-confirm-style="danger" data-confirm="${workable ? 'Discard this project draft?' : 'Withdraw this project from approval?'}">
 <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
                                                             <button type="submit" class="btn btn-outline-secondary btn-sm" id="btn-withdraw-new-${p.id}">${workable ? 'Discard' : 'Withdraw'}</button>
                                                         </form>
@@ -226,13 +226,13 @@
                                                         </c:when>
                                                         <c:when test="${mine && p.requestType == 'UPDATE' && workable}">
                                                             <a href="${pageContext.request.contextPath}/admin/projects/staging/${p.stagingId}/edit" class="btn btn-warning btn-sm" id="link-continue-change-${p.id}">Continue change</a>
-                                                            <form action="${pageContext.request.contextPath}/admin/projects/staging/${p.stagingId}/withdraw" method="post" class="d-inline m-0" id="form-withdraw-change-${p.id}" data-confirm="Withdraw this change? The approved project stays as it is.">
+                                                            <form action="${pageContext.request.contextPath}/admin/projects/staging/${p.stagingId}/withdraw" method="post" class="d-inline m-0" id="form-withdraw-change-${p.id}" data-confirm-ok="Yes, withdraw" data-confirm-style="danger" data-confirm="Withdraw this change? The approved project stays as it is.">
 <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
                                                                 <button type="submit" class="btn btn-outline-secondary btn-sm" id="btn-withdraw-change-${p.id}">Withdraw</button>
                                                             </form>
                                                         </c:when>
                                                         <c:when test="${mine && p.stagingStatus == 'PENDING_APPROVAL'}">
-                                                            <form action="${pageContext.request.contextPath}/admin/projects/staging/${p.stagingId}/withdraw" method="post" class="d-inline m-0" id="form-withdraw-pending-${p.id}" data-confirm="Withdraw this request? The approved project stays as it is.">
+                                                            <form action="${pageContext.request.contextPath}/admin/projects/staging/${p.stagingId}/withdraw" method="post" class="d-inline m-0" id="form-withdraw-pending-${p.id}" data-confirm-ok="Yes, withdraw" data-confirm-style="danger" data-confirm="Withdraw this request? The approved project stays as it is.">
 <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
                                                                 <button type="submit" class="btn btn-outline-secondary btn-sm" id="btn-withdraw-pending-${p.id}">Withdraw request</button>
                                                             </form>

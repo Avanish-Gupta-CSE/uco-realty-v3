@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+ #!/usr/bin/env bash
 # Builds a clean hand-over bundle for the bank: both WARs + DBA scripts + deployment guide + SHA-256 checksums.
 # It deliberately leaves out .brain/, .git/ and all sample/demo data. No tests are run (the project has none).
 # Usage: scripts/package-release.sh [uat|prod]      (default: prod)
@@ -19,12 +19,12 @@ if [ -d "/opt/homebrew/opt/openjdk@25/libexec/openjdk.jdk/Contents/Home" ]; then
   export PATH="$JAVA_HOME/bin:$PATH"
 fi
 
-# application.properties decides the profile, so a production bundle must really say prod
+# Single application.properties layout: in production, dev login and test OTP should not be enabled
 if [ "$MODE" = "prod" ]; then
-  for m in ucorealty-customer ucorealty-staff; do
-    grep -q '^spring.profiles.active=prod$' "$ROOT/$m/src/main/resources/application.properties" \
-      || { echo "!! $m: set spring.profiles.active=prod in application.properties first"; exit 1; }
-  done
+  if grep -q '^uco.sso.dev-login-enabled=.*true' "$ROOT/ucorealty-staff/src/main/resources/application.properties"; then
+    echo "!! ucorealty-staff: set uco.sso.dev-login-enabled=false in application.properties before building a prod bundle"
+    exit 1
+  fi
 fi
 
 echo "==> Building both WARs"

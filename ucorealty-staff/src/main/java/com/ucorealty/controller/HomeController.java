@@ -246,6 +246,7 @@ public class HomeController {
   /** The SSO gives us only the employee number and SOL; role and zone come from HRMS and travel in the principal. */
   private void populateBankSessionAttributes(HttpSession session, HrmsUserProfile profile) {
     session.setAttribute("emp_id", profile.getEmpNo());
+    session.setAttribute("emp_name", profile.getName());   // shown in the header
     session.setAttribute("sol_id", profile.getPostingSolId());
   }
 

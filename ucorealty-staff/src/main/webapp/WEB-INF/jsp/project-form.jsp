@@ -33,6 +33,8 @@
             </div>
         </c:if>
 
+        <div id="formClientNotice" class="alert alert-danger py-2 small d-none" role="alert"></div>
+
         <c:if test="${not empty error}">
             <div id="formErrorAlert" class="form-error-alert d-flex align-items-center gap-2">
                                 <div id="form-error-text"><strong>Please check:</strong> <c:out value="${error}"/></div>
@@ -433,7 +435,7 @@
                 <button type="submit" name="action" value="draft" formnovalidate class="btn btn-secondary px-4" id="btn-save-draft">
                     Save as Draft
                 </button>
-                <button type="submit" name="action" value="submit" class="btn btn-success px-4" id="btn-save-submit" data-confirm="${changeMode ? 'Send this change to the checker? The approved project stays live until it is approved.' : 'Submit this project for Checker approval?'}">
+                <button type="submit" name="action" value="submit" class="btn btn-success px-4" id="btn-save-submit" data-confirm-ok="Yes, send for approval" data-confirm-style="success" data-confirm="${changeMode ? 'Send this change to the checker? The approved project stays live until it is approved.' : 'Submit this project for Checker approval?'}">
                     Send for Approval
                 </button>
                 <a href="${pageContext.request.contextPath}/admin/projects" class="btn btn-outline-secondary ms-auto" id="btn-cancel-form">

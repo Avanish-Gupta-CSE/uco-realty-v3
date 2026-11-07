@@ -39,6 +39,12 @@
         </div>
     </c:if>
 
+    <c:if test="${param.expired != null}">
+        <div class="alert alert-warning py-2 small mb-3" id="login-expired-alert">
+            Your session has expired. Please sign in again.
+        </div>
+    </c:if>
+
     <c:if test="${!devLogin}">
         <div class="alert alert-info py-3 small" id="alert-sso-portal-only">
             <strong>Single Sign-On required.</strong> Please open the Realty portal from the UCO Bank intranet

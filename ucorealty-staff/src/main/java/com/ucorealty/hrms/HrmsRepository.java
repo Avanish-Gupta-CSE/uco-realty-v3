@@ -31,7 +31,7 @@ public class HrmsRepository {
   private static final Pattern SAFE_PREFIX = Pattern.compile("[A-Za-z0-9_]*\\.?");
 
   private static final String CONTACT_SQL =
-      "SELECT EMPNO, NAME, POSTING_SOL_ID, POSTING_SOL_DESC, SCALE_CODE, CADRE_CODE, POSTING_REGION_NAME, DESIG, MOBILE_NO, E_MAIL FROM %semployee_contact_details WHERE EMPNO = ?";
+      "SELECT EMPNO, NAME, POSTING_SOL_ID, POSTING_SOL_DESC, SCALE_CODE, CADRE_CODE, POSTING_REGION_NAME, DESIG, MOBILE_NO, E_MAIL, RETIRE_FLAG FROM %semployee_contact_details WHERE EMPNO = ?";
   private static final String TENURE_SQL =
       "SELECT POSTING_SOL, SCALE_CODE, TENURE_AS FROM %semployee_tenure WHERE EMPNO = ? AND SYSDATE BETWEEN EFF_FROM_DATE AND EFF_TO_DATE AND STATUS_FLAG = 'V'";
   private static final String JOB_PROFILE_SQL =
@@ -51,6 +51,25 @@ public class HrmsRepository {
     }
   }
 
+  /** empNo -> name for several employees in one query (used to show names instead of numbers). Unknown numbers are simply missing. */
+  public java.util.Map<String, String> findNames(java.util.Collection<String> empNos) {
+    java.util.Map<String, String> names = new java.util.HashMap<>();
+    java.util.List<String> wanted = new ArrayList<>();
+    for (String e : empNos) if (e != null && !e.isBlank()) wanted.add(e);
+    if (wanted.isEmpty()) return names;
+    String in = String.join(",", java.util.Collections.nCopies(wanted.size(), "?"));
+    for (String prefix : prefixes) {
+      try {
+        jdbc.query("SELECT EMPNO, NAME FROM " + prefix + "employee_contact_details WHERE EMPNO IN (" + in + ")",
+            rs -> { names.put(rs.getString("EMPNO"), rs.getString("NAME")); }, wanted.toArray());
+        if (!names.isEmpty()) break;
+      } catch (DataAccessException e) {
+        logger.debug("[UCO HRMS] Name lookup on '{}employee_contact_details' failed: {}", prefix, e.getMessage());
+      }
+    }
+    return names;
+  }
+
   /** The employee with this number, or empty when HRMS does not know them (or the tables cannot be read). */
   public Optional<HrmsUserProfile> findByEmpNo(String empNo) {
     for (String prefix : prefixes) {
@@ -67,11 +86,20 @@ public class HrmsRepository {
           p.setTenureAs(rs.getString("DESIG"));
           p.setMobile(rs.getString("MOBILE_NO"));
           p.setEmail(rs.getString("E_MAIL"));
-          p.setActive(true);
+          try {
+            String retireFlag = rs.getString("RETIRE_FLAG");
+            p.setActive(!"RT".equalsIgnoreCase(retireFlag));
+          } catch (Exception ignored) {
+            p.setActive(true);
+          }
           return p;
         }, empNo);
         if (!rows.isEmpty()) {
           HrmsUserProfile p = rows.get(0);
+          if (!p.isActive()) {
+            logger.warn("[UCO ACCESS] Employee {} is retired (RETIRE_FLAG=RT): access denied", p.getEmpNo());
+            return Optional.empty();
+          }
           addTenure(p);
           addJobProfile(p);
           return Optional.of(p);

@@ -48,9 +48,12 @@ public class ProjectWorkflowController {
   private final ProjectService projectService;
   private final ProjectImageRepository imageRepo;
   private final MasterDataService masterData;
+  private final com.ucorealty.hrms.HrmsService hrms;
 
   public ProjectWorkflowController(ProjectWorkflowService workflow, ProjectService projectService,
-                                   ProjectImageRepository imageRepo, MasterDataService masterData) {
+                                   ProjectImageRepository imageRepo, MasterDataService masterData,
+                                   com.ucorealty.hrms.HrmsService hrms) {
+    this.hrms = hrms;
     this.workflow = workflow;
     this.projectService = projectService;
     this.imageRepo = imageRepo;
@@ -112,6 +115,7 @@ public class ProjectWorkflowController {
 
     model.addAttribute("projectPage", projectPage);
     model.addAttribute("projects", projectPage.getContent());
+    model.addAttribute("empNames", hrms.namesOf(projectPage.getContent().stream().map(r -> r.createdBy).distinct().collect(Collectors.toList())));
     model.addAttribute("currentStatus", (status != null && !"ALL".equalsIgnoreCase(status.trim())) ? status.trim() : "");
     model.addAttribute("currentSearch", search != null ? search.trim() : "");
     model.addAttribute("currentZone", (zone != null && !"ALL".equalsIgnoreCase(zone.trim())) ? zone.trim() : "");
@@ -313,6 +317,7 @@ public class ProjectWorkflowController {
     model.addAttribute("project", live != null ? live : workflow.previewOf(s));
     model.addAttribute("isCreate", create);
     model.addAttribute("isDelete", delete);
+    model.addAttribute("makerName", hrms.namesOf(java.util.Collections.singletonList(s.createdBy)).get(s.createdBy));
     model.addAttribute("diff", ProjectStaging.UPDATE.equals(s.requestType) ? workflow.diff(live, s) : Collections.emptyList());
     model.addAttribute("contents", create ? workflow.contents(s) : Collections.emptyList());
     model.addAttribute("removedImages", workflow.removedImages(s));

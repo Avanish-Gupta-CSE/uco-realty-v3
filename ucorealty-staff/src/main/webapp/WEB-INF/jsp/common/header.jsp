@@ -12,7 +12,7 @@
     <link rel="stylesheet" id="bootstrap-css" href="${pageContext.request.contextPath}/assets/css/bootstrap.min.css">
     <!-- UCO Bank Theme Stylesheet -->
     <%-- bump assetVersion whenever CSS/JS change, so browsers do not keep showing the old design --%>
-    <c:set var="assetVersion" value="20261106a" scope="request" />
+    <c:set var="assetVersion" value="20261107a" scope="request" />
     <link rel="stylesheet" id="uco-theme-css" href="${pageContext.request.contextPath}/assets/css/style.css?v=${assetVersion}">
 </head>
 <body>
@@ -37,6 +37,7 @@
                     </a>
                 </sec:authorize>
                 <sec:authorize access="isAuthenticated()">
+                    <span class="user-pill" id="user-name"><strong><c:out value="${sessionScope.emp_name}"/></strong></span>
                     <span class="user-pill" id="user-info-text">EMP ID <strong id="user-username"><sec:authentication property="name"/></strong></span>
                     <span class="user-pill" id="user-sol">SOL ID <strong><c:out value="${sessionScope.sol_id}"/></strong></span>
                     <span class="user-pill user-pill-role" id="badge-user-role">
