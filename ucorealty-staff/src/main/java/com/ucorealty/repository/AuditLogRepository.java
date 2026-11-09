@@ -9,5 +9,6 @@ import java.util.List;
 
 @Repository
 public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
+  // SQL: select * from audit_log order by created_at desc   (one page at a time)
   Page<AuditLog> findAllByOrderByCreatedAtDesc(Pageable pageable);
 }

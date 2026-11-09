@@ -5,5 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface ProjectRepository extends JpaRepository<Project, String> {
+  // SQL: select * from projects where status = ? and is_active = ? and is_published = ?   (the live projects customers may see)
   List<Project> findByStatusAndIsActiveAndIsPublished(String status, Integer active, Integer published);
 }

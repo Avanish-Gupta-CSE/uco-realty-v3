@@ -6,12 +6,11 @@ import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
-import java.util.Base64;
 
 /**
  * Reads the token the bank SSO portal sends to /entry?Value=... (same method as the bank's other projects):
  * Base64 of [12-byte IV][AES/GCM ciphertext + 128-bit tag]; the key is the plain text of the setting, used as raw bytes.
- * After decrypting, the text is: emp_id=61801&sol_id=7115
+ * After decrypting, the text is either emp_id=61801&sol_id=7115 or the other bank form xx~61801&yy~7115.
  */
 public final class SsoCryptoUtil {
 
@@ -29,7 +28,7 @@ public final class SsoCryptoUtil {
 
   public static String decrypt(String value, String key) throws GeneralSecurityException {
     // A "+" in a URL arrives as a space when the portal has not encoded it
-    byte[] decoded = Base64.getDecoder().decode(value.trim().replaceAll("\\s+", "+"));
+    byte[] decoded = Base64.decode(value.trim().replaceAll("\\s+", "+"));
     if (decoded.length <= IV_SIZE) {
       throw new GeneralSecurityException("Token is too short");
     }
@@ -39,17 +38,18 @@ public final class SsoCryptoUtil {
     return new String(cipher.doFinal(decoded, IV_SIZE, decoded.length - IV_SIZE), StandardCharsets.UTF_8);
   }
 
-  /** The employee number in the decrypted text (emp_id=...&sol_id=...), or null when it is not in that form. */
+  /** The employee number in the decrypted text (emp_id=...&sol_id=... or xx~...&yy~...), or null when it is in neither form. */
   public static String employeeNumber(String text) {
-    int eq = text.indexOf('=');
+    int start = text.indexOf('~') >= 0 ? text.indexOf('~') : text.indexOf('=');
     int amp = text.indexOf('&');
-    if (eq < 0 || amp <= eq) return null;
-    String empNo = text.substring(eq + 1, amp).trim();
+    if (start < 0 || amp <= start) return null;
+    String empNo = text.substring(start + 1, amp).trim();
     return empNo.matches("[A-Za-z0-9]{1,10}") ? empNo : null;
   }
 
-  /** The SOL in the decrypted text, or an empty string. */
+  /** The SOL in the decrypted text (after the last "~" or "="), or an empty string. */
   public static String solId(String text) {
-    return text.substring(text.lastIndexOf('=') + 1).trim();
+    int at = Math.max(text.lastIndexOf('~'), text.lastIndexOf('='));
+    return text.substring(at + 1).trim();
   }
 }

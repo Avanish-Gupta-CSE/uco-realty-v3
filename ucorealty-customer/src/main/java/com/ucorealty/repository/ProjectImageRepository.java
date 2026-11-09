@@ -8,8 +8,10 @@ import java.util.Collection;
 import java.util.List;
 
 public interface ProjectImageRepository extends JpaRepository<ProjectImage, Long> {
+  // SQL: select * from project_images where project_id = ?
   List<ProjectImage> findByProjectId(String projectId);
   // Only ids: the photo bytes are not loaded just to build a list of pictures
+  // Written query (JPQL, uses entity names): the first photo id of each project in the list
   @Query("select min(i.id), i.projectId from ProjectImage i where i.projectId in :ids group by i.projectId")
   List<Object[]> findFirstImageIds(@Param("ids") Collection<String> ids);
 

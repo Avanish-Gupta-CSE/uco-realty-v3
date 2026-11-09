@@ -66,7 +66,10 @@ public class HomeController {
 
   /** Where the bank SSO portal sends the employee: /entry?Value=<encrypted emp_id and sol_id>. */
   @GetMapping("/entry")
-  public String entry(@RequestParam(value = "Value", required = false) String value, HttpServletRequest request) {
+  public String entry(@RequestParam(value = "Value", required = false) String valueCapital,
+                      @RequestParam(value = "value", required = false) String valueSmall, HttpServletRequest request) {
+    // the portal may send the parameter as Value or as value
+    String value = valueCapital != null ? valueCapital : valueSmall;
     if (value == null || value.trim().isEmpty()) {
       return "redirect:/home";
     }

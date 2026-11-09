@@ -63,8 +63,8 @@ add the Java option `-Dspring.profiles.active=h2` to the Tomcat service (Tomcat 
 Remove the option to go back to Oracle.
 
 ## E. Before production (nothing to delete in Java)
-1. Staff `application.properties` line 48: `uco.sso.dev-login-enabled=false`; delete line 49 (`uco.sso.test-otp`).
-2. Put the real SSO key on line 45.
+1. Staff `application.properties`: set `uco.sso.dev-login-enabled=false` and delete the `uco.sso.test-otp` line (search for TODO).
+2. Put the real SSO key in `sso.encryption.key` (search for TODO).
 3. Run `UAT_TEST_USERS.sql`'s DELETE if you used it.
 4. Rebuild with `scripts/package-release.sh prod`. After that only the portal link `/entry?Value=...` signs people in.
 
