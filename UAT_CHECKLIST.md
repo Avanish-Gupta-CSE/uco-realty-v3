@@ -48,7 +48,7 @@ Then: `scripts/package-release.sh uat` gives both WARs in `release/ucorealty-uat
    SELECT DISTINCT posting_sol_id, posting_sol_desc FROM employee_contact_details
    WHERE posting_sol_id BETWEEN '7001' AND '7099' ORDER BY 1;
    ```
-9. Only if you get no real testers and the senior agrees: run `db_migrations/UAT_TEST_USERS.sql` (employees 990001 to 990004). Remove them after testing (script has the DELETE).
+9. **Senior said NO to adding test employees to the UAT HRMS** (9 Nov). So do not run `db_migrations/UAT_TEST_USERS.sql`. Use real UAT employees found with the queries in step 6: the test login accepts ANY employee that exists in HRMS, and the role comes from their posting.
    Do NOT run `03_CREATE_HRMS_MOCK_TABLES.sql` or `05_LOCAL_TEST_EMPLOYEES.sql` here: the real HRMS tables already exist.
 
 ## C. Deploy
@@ -70,5 +70,5 @@ Remove the option to go back to Oracle.
 
 ## F. Ask the senior (only these)
 1. The `HRMS_DBA` password for UAT.
-2. Four UAT employee numbers (DIT, HO Marketing, zonal maker, zonal checker of the same zone), or OK to run `UAT_TEST_USERS.sql`.
+2. Tell the senior which 4 real UAT employees you will test with (found by the step B6 queries: DIT 7115, HO Marketing 8028, a zonal maker and a zonal checker of one zone) and that testers sign in with them using the test OTP.
 3. The intranet portal link (the SSO): who adds "UCO Realty" to the bank's intranet portal and gives us the key? When a person clicks our link there, the portal sends them to `http://<server>:<port>/ucorealty-staff/entry?Value=<encrypted>`. The portal team must be told that address, and they tell us the secret key their portal encrypts with. Only needed when you want the real portal link to work, not for the first UAT run.
