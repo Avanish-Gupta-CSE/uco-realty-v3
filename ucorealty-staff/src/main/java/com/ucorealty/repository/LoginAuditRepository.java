@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface LoginAuditRepository extends JpaRepository<LoginAudit, Long> {
-  // SQL: select * from login_audit order by login_time desc   (one page at a time)
+  // SQL: select * from realty_login_audit order by login_time desc   (one page at a time)
   Page<LoginAudit> findAllByOrderByLoginTimeDesc(Pageable pageable);
 }
 

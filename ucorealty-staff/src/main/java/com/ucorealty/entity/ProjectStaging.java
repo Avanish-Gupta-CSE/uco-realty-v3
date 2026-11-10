@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
  * Approved, rejected and withdrawn rows stay as the history of who asked for what.
  */
 @Entity
-@Table(name = "project_staging")
+@Table(name = "realty_project_staging")
 public class ProjectStaging extends ProjectData {
   public static final String CREATE = "CREATE";
   public static final String UPDATE = "UPDATE";

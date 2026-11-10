@@ -18,16 +18,16 @@ import sys
 root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sql = open(os.path.join(root, "db_migrations", "01_CREATE_TABLES.sql"), encoding="utf-8").read()
 
-# 1. Oracle-only storage clause after the closing parenthesis of CREATE TABLE project_images
+# 1. Oracle-only storage clause after the closing parenthesis of CREATE TABLE realty_project_images
 sql, n1 = re.subn(r"\nLOB \(file_data\) STORE AS SECUREFILE \(.*?\)\s*;", ";", sql, flags=re.S)
 
 # 2. function-based unique index (one open request per project): H2 cannot index an expression, and a workaround with a
 #    generated column breaks H2 (the column keeps using the session that created it: "database has been closed").
 #    So H2 runs WITHOUT this database backstop; the application still checks the rule. Oracle (Docker, UAT, prod) enforces it.
-pattern = re.compile(r"CREATE UNIQUE INDEX ux_staging_one_open ON project_staging \(.*?\);", re.S)
-sql, n2 = pattern.subn("-- ux_staging_one_open is Oracle-only (H2 cannot index an expression); the application enforces the rule on H2", sql)
+pattern = re.compile(r"CREATE UNIQUE INDEX ux_realty_staging_one_open ON realty_project_staging \(.*?\);", re.S)
+sql, n2 = pattern.subn("-- ux_realty_staging_one_open is Oracle-only (H2 cannot index an expression); the application enforces the rule on H2", sql)
 if not (n1 == 1 and n2 == 1):
-    sys.exit("h2_schema.py: 01_CREATE_TABLES.sql changed shape (SECUREFILE clause or ux_staging_one_open not found); update this script")
+    sys.exit("h2_schema.py: 01_CREATE_TABLES.sql changed shape (SECUREFILE clause or ux_realty_staging_one_open not found); update this script")
 
 # 3. laptop HRMS tables + test employees (plain SQL that H2 in Oracle mode understands)
 hrms = open(os.path.join(root, "db_migrations", "03_CREATE_HRMS_MOCK_TABLES.sql"), encoding="utf-8").read()

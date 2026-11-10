@@ -8,7 +8,7 @@ import java.util.Collection;
 import java.util.List;
 
 public interface ProjectImageRepository extends JpaRepository<ProjectImage, Long> {
-  // SQL: select * from project_images where project_id = ?
+  // SQL: select * from realty_project_images where project_id = ?
   List<ProjectImage> findByProjectId(String projectId);
   // Only ids: the photo bytes are not loaded just to build a list of pictures
   // Written query (JPQL, uses entity names): the first photo id of each project in the list

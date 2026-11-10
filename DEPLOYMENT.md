@@ -24,7 +24,7 @@ export CATALINA_OPTS="-Dspring.profiles.active=uat \
 (`-D...` JVM properties and OS environment variables both work.) `server.port` and `server.servlet.context-path` in the application files are ignored on an external Tomcat; the connector port and the WAR name decide.
 
 ## 1. Database (DBA)
-Follow `db/README_DBA_DEPLOYMENT.md`. Order: `01_CREATE_TABLES.sql`; for an existing older database also `06_STAGING_MODEL.sql` and `07_DROP_UNUSED_TABLES.sql` (maker's working-copy table `project_staging`). There is no seed data and no application accounts. With the `uat` profile also run `03_` and `05_` (test employees, in our own schema). Production uses the bank's **real HRMS data** and never `03_`/`05_`.
+Follow `db/README_DBA_DEPLOYMENT.md`. Order: `01_CREATE_TABLES.sql`; for an existing older database also `06_STAGING_MODEL.sql` and `07_DROP_UNUSED_TABLES.sql` (maker's working-copy table `realty_project_staging`). There is no seed data and no application accounts. With the `uat` profile also run `03_` and `05_` (test employees, in our own schema). Production uses the bank's **real HRMS data** and never `03_`/`05_`.
 The application schema user needs `SELECT` on the bank HRMS tables (`employee_contact_details`, and optionally `employee_tenure`, `employee_job_profile`). Columns read from `employee_contact_details`: `EMPNO, NAME, POSTING_SOL_ID, POSTING_SOL_DESC, SCALE_CODE, CADRE_CODE, POSTING_REGION_NAME, DESIG, MOBILE_NO, E_MAIL` (the table prefixes tried, in order, are the setting `uco.hrms.table-prefixes` / env `HRMS_TABLE_PREFIXES`; default `,hrms_dba.` = first no prefix, then `hrms_dba.`). Please verify these names against the real HRMS schema.
 
 ## 2. Configuration
@@ -64,7 +64,7 @@ Every WAR holds all the profile files and the H2 driver; only the active profile
 ### Logs
 Every line the application writes about its own work starts with a tag: `[UCO SSO]` sign-ins and sign-outs, `[UCO HRMS]` employee lookups, `[UCO WORKFLOW]` what a maker or checker did to which project, `[UCO LEAD]` lead saved or exported (never names or phone numbers), `[UCO ACCESS]` / `[UCO SECURITY]` / `[UCO HTTP 4xx]` refused actions (wrong role or zone, missing CSRF token, unknown URL), `[UCO ERROR]` unexpected failures with the full stack trace. On Tomcat they go to `catalina.out`; with `java -jar` to the terminal. Filter with `grep '\[UCO'`.
 * More detail: set `LOGGING_LEVEL_COM_UCOREALTY=DEBUG` (environment). To also write a file: `-Dlogging.file.name=/var/log/ucorealty/ucorealty-staff.log`.
-* The permanent record of who did what is the database (`audit_log`, `login_audit`; DIT Logs page); the log is for the server team.
+* The permanent record of who did what is the database (`realty_audit_log`, `realty_login_audit`; DIT Logs page); the log is for the server team.
 
 ## 3. Bank SSO integration
 Register this URL with the SSO team: `https://<host>/ucorealty-staff/entry` . The portal opens it as `/entry?Value=<token>`.

@@ -6,8 +6,8 @@ import java.util.List;
 
 // Repository = DB helper. No SQL needed for basic CRUD (like a typed fetch wrapper).
 public interface ProjectRepository extends JpaRepository<Project, String> {
-  // SQL: select * from projects where status = ? and is_active = ? and is_published = ?
+  // SQL: select * from realty_projects where status = ? and is_active = ? and is_published = ?
   List<Project> findByStatusAndIsActiveAndIsPublished(String status, Integer active, Integer published);
-  // SQL: select * from projects where upper(zone_name) = upper(?)
+  // SQL: select * from realty_projects where upper(zone_name) = upper(?)
   List<Project> findByZoneNameIgnoreCase(String zoneName);
 }

@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
  * (see ProjectStaging and ProjectWorkflowService). Status is APPROVED, or DELETED (kept for the logs, shown nowhere).
  */
 @Entity
-@Table(name = "projects")
+@Table(name = "realty_projects")
 public class Project extends ProjectData {
   public static final String APPROVED = "APPROVED";
   public static final String DELETED = "DELETED";

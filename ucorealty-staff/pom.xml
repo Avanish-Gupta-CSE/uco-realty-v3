@@ -123,6 +123,19 @@
   <build>
     <!-- WAR file name = URL path on an external Tomcat, so no version number: /ucorealty-staff -->
     <finalName>${project.artifactId}</finalName>
+    <resources>
+      <resource><directory>src/main/resources</directory></resource>
+      <!-- A copy of the DBA's Oracle script travels inside this WAR (WEB-INF/classes/db_migrations/) so the SQL is never separated from the build.
+           Only the table script and its guide: the test-employee scripts must not ship in a production WAR. -->
+      <resource>
+        <directory>../db_migrations</directory>
+        <targetPath>db_migrations</targetPath>
+        <includes>
+          <include>01_CREATE_TABLES.sql</include>
+          <include>README_DBA_DEPLOYMENT.md</include>
+        </includes>
+      </resource>
+    </resources>
     <plugins>
       <plugin>
         <groupId>org.springframework.boot</groupId>

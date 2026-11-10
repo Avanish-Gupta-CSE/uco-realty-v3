@@ -17,7 +17,7 @@ Then: `scripts/package-release.sh uat` gives both WARs in `release/ucorealty-uat
 2. Check our table names are free (must return NO rows; if it returns rows, stop and ask the senior):
    ```sql
    SELECT table_name FROM user_tables
-   WHERE table_name IN ('PROJECTS','PROJECT_STAGING','PROJECT_IMAGES','LEADS','AUDIT_LOG','LOGIN_AUDIT');
+   WHERE table_name IN ('REALTY_PROJECTS','REALTY_PROJECT_STAGING','REALTY_PROJECT_IMAGES','REALTY_LEADS','REALTY_AUDIT_LOG','REALTY_LOGIN_AUDIT');
    ```
 3. Check the HRMS table has the retired flag (must return 1 row):
    ```sql
@@ -27,7 +27,7 @@ Then: `scripts/package-release.sh uat` gives both WARs in `release/ucorealty-uat
 5. Check they exist (must say 6):
    ```sql
    SELECT COUNT(*) FROM user_tables
-   WHERE table_name IN ('PROJECTS','PROJECT_STAGING','PROJECT_IMAGES','LEADS','AUDIT_LOG','LOGIN_AUDIT');
+   WHERE table_name IN ('REALTY_PROJECTS','REALTY_PROJECT_STAGING','REALTY_PROJECT_IMAGES','REALTY_LEADS','REALTY_AUDIT_LOG','REALTY_LOGIN_AUDIT');
    ```
 6. Find real testers (or ask the senior for numbers), one query per role:
    ```sql

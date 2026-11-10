@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 
 // Every workflow change lands here: who did what to which record, when.
 @Entity
-@Table(name = "audit_log")
+@Table(name = "realty_audit_log")
 public class AuditLog {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)

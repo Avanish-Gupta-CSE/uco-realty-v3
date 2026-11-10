@@ -46,7 +46,7 @@ if [ "$ORACLE" = 1 ]; then
   done
   docker cp "$ROOT/db_migrations" uco-oracle:/tmp/ >/dev/null
   [ "$RESET" = 1 ] && run_file 00_DROP_ALL_TABLES.sql
-  [ "$(sql "select count(*) from user_tables where table_name='PROJECTS';")" = "0" ] && run_file 01_CREATE_TABLES.sql
+  [ "$(sql "select count(*) from user_tables where table_name='REALTY_PROJECTS';")" = "0" ] && run_file 01_CREATE_TABLES.sql
   if [ "$(sql "select count(*) from user_tables where table_name='EMPLOYEE_CONTACT_DETAILS';")" = "0" ]; then
     run_file 03_CREATE_HRMS_MOCK_TABLES.sql
     run_file 05_LOCAL_TEST_EMPLOYEES.sql

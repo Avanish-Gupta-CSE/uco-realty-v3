@@ -9,10 +9,10 @@ DB_USER="${DB_USER:-uco_realty}"; DB_PASS="${DB_PASS:-uco_realty_pwd}"
 H2_JAR="$HOME/.m2/repository/com/h2database/h2/2.4.240/h2-2.4.240.jar"
 
 STATEMENTS=(
-"delete from leads where customer_name like 'Demo Customer %';"
-"delete from audit_log where entity_type = 'PROJECT' and (entity_id in (select id from projects where project_name like '%(Demo)' or builder_name = 'ZZ Workflow Builder') or entity_id in (select project_id from project_staging where project_name like '%(Demo)' or builder_name = 'ZZ Workflow Builder'));"
-"delete from project_staging where project_name like '%(Demo)' or builder_name = 'ZZ Workflow Builder';"
-"delete from projects where project_name like '%(Demo)' or builder_name = 'ZZ Workflow Builder';"
+"delete from realty_leads where customer_name like 'Demo Customer %';"
+"delete from realty_audit_log where entity_type = 'PROJECT' and (entity_id in (select id from realty_projects where project_name like '%(Demo)' or builder_name = 'ZZ Workflow Builder') or entity_id in (select project_id from realty_project_staging where project_name like '%(Demo)' or builder_name = 'ZZ Workflow Builder'));"
+"delete from realty_project_staging where project_name like '%(Demo)' or builder_name = 'ZZ Workflow Builder';"
+"delete from realty_projects where project_name like '%(Demo)' or builder_name = 'ZZ Workflow Builder';"
 "commit;"
 )
 

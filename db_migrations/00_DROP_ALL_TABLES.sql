@@ -11,15 +11,12 @@ BEGIN
     SELECT table_name 
     FROM user_tables 
     WHERE table_name IN (
-      'LEAD_TRANSFER_LOG',      -- legacy (removed from the design), dropped if an old database still has it
-      'PROJECT_CHANGE_REQUESTS',-- legacy, same
-      'AUDIT_LOG', 
-      'LOGIN_AUDIT', 
-      'LEADS', 
-      'PROJECT_IMAGES', 
-      'PROJECT_STAGING', 
-      'PROJECTS', 
-      'USERS'                   -- legacy, same
+      'REALTY_AUDIT_LOG', 
+      'REALTY_LOGIN_AUDIT', 
+      'REALTY_LEADS', 
+      'REALTY_PROJECT_IMAGES', 
+      'REALTY_PROJECT_STAGING', 
+      'REALTY_PROJECTS'
     )
   ) LOOP
     BEGIN

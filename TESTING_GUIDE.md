@@ -57,7 +57,7 @@ Checks the customer-site lockdown, headers, bad SSO tokens, CSRF, roles (DIT/mak
 15. Sign out with the button: you land on the login page; Back must not reopen admin pages.
 
 ## 3b. Changing an APPROVED project (maker → checker) — about 15 minutes
-**How it works (two tables):** `projects` holds approved projects only; the maker's edits live in his own row in `project_staging` and reach `projects` only when a checker approves. So while he edits, customers and checkers keep seeing the approved record unchanged. Use an approved Patna project (or approve one from section 3).
+**How it works (two tables):** `realty_projects` holds approved projects only; the maker's edits live in his own row in `realty_project_staging` and reach `realty_projects` only when a checker approves. So while he edits, customers and checkers keep seeing the approved record unchanged. Use an approved Patna project (or approve one from section 3).
 
 **Edit and save as draft**
 1. Sign in as maker `700001`. On the approved project press **Edit**. A blue banner says the project stays live while you work.
@@ -90,11 +90,11 @@ set linesize 200 pagesize 100
 col project_name format a28
 col status format a18
 select id, project_name, status, row_version from projects order by created_at;
-select id, project_id, request_type, status, created_by, base_version, row_version from project_staging order by id;
-select id, project_id, staging_id, file_name from project_images order by id;
+select id, project_id, request_type, status, created_by, base_version, row_version from realty_project_staging order by id;
+select id, project_id, staging_id, file_name from realty_project_images order by id;
 SQL
 ```
-Watch it between the steps: *Save as Draft* changes only `project_staging`; *Send for Approval* flips its status to `PENDING_APPROVAL`; *Approve* copies the values into `projects` (`row_version` +1) and marks the staging row `APPROVED`; a deletion sets `projects.status = 'DELETED'`.
+Watch it between the steps: *Save as Draft* changes only `realty_project_staging`; *Send for Approval* flips its status to `PENDING_APPROVAL`; *Approve* copies the values into `realty_projects` (`row_version` +1) and marks the staging row `APPROVED`; a deletion sets `realty_projects.status = 'DELETED'`.
 
 ## 3d. Regression checklist (run before every release)
 | # | Area | How | Pass when |
