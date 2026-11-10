@@ -7,6 +7,7 @@ import com.ucorealty.repository.ProjectImageRepository;
 import com.ucorealty.service.LeadService;
 import com.ucorealty.service.MasterDataService;
 import com.ucorealty.service.ProjectService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -28,8 +29,14 @@ public class PublicWebController {
   private final ProjectImageRepository imageRepo;
   private final LeadService leadService;
 
+  /** Where "Apply for Home Loan" sends the customer: bank site (uco.homeloan.base-url, differs per environment) + this fixed path. */
+  private static final String HOME_LOAN_PATH = "/Lead_App/lead_web.jsp?utm=REALTY";
+  private final String homeLoanUrl;
+
   public PublicWebController(ProjectService projectService, MasterDataService masterDataService,
-                             ProjectImageRepository imageRepo, LeadService leadService) {
+                             ProjectImageRepository imageRepo, LeadService leadService,
+                             @Value("${uco.homeloan.base-url}") String homeLoanBaseUrl) {
+    this.homeLoanUrl = homeLoanBaseUrl.replaceAll("/+$", "") + HOME_LOAN_PATH;
     this.projectService = projectService;
     this.masterDataService = masterDataService;
     this.imageRepo = imageRepo;
@@ -86,6 +93,7 @@ public class PublicWebController {
     List<Long> imgs = imageRepo.findIdsByProjectId(id);
     model.addAttribute("project", p);
     model.addAttribute("images", imgs);
+    model.addAttribute("homeLoanUrl", homeLoanUrl);
     return "public-detail";
   }
 

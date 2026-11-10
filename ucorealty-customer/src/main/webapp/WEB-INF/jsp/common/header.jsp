@@ -27,12 +27,8 @@
                 </div>
             </div>
 
-            <!-- Customer Portal Contact Pill -->
-            <div class="user-menu" id="customer-support-pill">
-                <a href="https://www.uco.bank.in/home-loan" class="btn btn-outline-primary btn-sm" id="btn-header-apply-loan">
-                    Apply for UCO Home Loan
-                </a>
-            </div>
+            <%-- The top-right "Apply for UCO Home Loan" button was removed on purpose: customers apply from a project page
+                 (button goes straight to the bank's Home Loan application, see public-detail.jsp). --%>
         </div>
     </div>
 
@@ -46,5 +42,6 @@
         </div>
     </nav>
 </header>
-<jsp:include page="gate-modal.jsp"/>
+<%-- The lead pop-up (gate-modal.jsp) is switched off for now: the bank's Home Loan page captures the customer's details itself.
+     To bring it back, restore the line  <jsp:include page="gate-modal.jsp"/>  here. --%>
 

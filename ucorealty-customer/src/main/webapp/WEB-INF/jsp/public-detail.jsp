@@ -243,11 +243,11 @@
                                     Fast-track loan processing with preferential interest rates for this approved
                                     project.
                                 </p>
-                                <button type="button" class="btn btn-primary w-100 py-2 fw-bold"
-                                    id="btn-apply-loan-sidebar" data-action="apply-loan"
-                                    data-project-id="${project.id}">
+                                <%-- Goes straight to the bank's Home Loan application; ?utm=REALTY tells the bank the customer came from UCO Realty. --%>
+                                <a href="<c:out value='${homeLoanUrl}'/>" class="btn btn-primary w-100 py-2 fw-bold"
+                                    id="btn-apply-loan-sidebar" rel="noopener">
                                     Apply for Home Loan &rarr;
-                                </button>
+                                </a>
                             </div>
 
                             <!-- UCO Bank Branch Assistance -->
