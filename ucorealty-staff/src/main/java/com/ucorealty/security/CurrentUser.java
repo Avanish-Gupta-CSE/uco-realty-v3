@@ -11,13 +11,13 @@ public final class CurrentUser {
   /** The employee for this request, only if it is the one named (null otherwise). */
   public static AppUser find(String username) {
     Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-    if (auth != null && auth.getPrincipal() instanceof StaffPrincipal p && p.getUsername().equals(username)) {
-      return p.getAppUser();
+    if (auth != null && auth.getPrincipal() instanceof AppUser user && user.getUsername().equals(username)) {
+      return user;
     }
     return null;
   }
 
   public static AppUser of(Authentication auth) {
-    return auth != null && auth.getPrincipal() instanceof StaffPrincipal p ? p.getAppUser() : null;
+    return auth != null && auth.getPrincipal() instanceof AppUser user ? user : null;
   }
 }

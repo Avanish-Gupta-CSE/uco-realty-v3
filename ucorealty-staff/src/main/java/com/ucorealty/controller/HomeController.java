@@ -1,7 +1,6 @@
 package com.ucorealty.controller;
 
 import com.ucorealty.entity.AppUser;
-import com.ucorealty.security.StaffPrincipal;
 import com.ucorealty.hrms.HrmsService;
 import com.ucorealty.hrms.HrmsUserProfile;
 import com.ucorealty.service.AuditService;
@@ -13,7 +12,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -122,8 +120,7 @@ public class HomeController {
     AppUser appUser = hrmsService.toAppUser(profile);
     HttpSession session = freshSession(request);
 
-    UserDetails userDetails = new StaffPrincipal(appUser);
-    Authentication auth = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+    Authentication auth = new UsernamePasswordAuthenticationToken(appUser, null, appUser.getAuthorities());
     SecurityContext context = SecurityContextHolder.createEmptyContext();
     context.setAuthentication(auth);
     SecurityContextHolder.setContext(context);
