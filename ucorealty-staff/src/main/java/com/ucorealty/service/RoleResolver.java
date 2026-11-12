@@ -1,6 +1,7 @@
-package com.ucorealty.hrms;
+package com.ucorealty.service;
 
-import com.ucorealty.service.MasterDataService;
+import com.ucorealty.dto.HrmsUserProfile;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;

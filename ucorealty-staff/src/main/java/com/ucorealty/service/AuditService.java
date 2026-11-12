@@ -1,7 +1,7 @@
 package com.ucorealty.service;
 
-import com.ucorealty.entity.AuditLog;
-import com.ucorealty.entity.LoginAudit;
+import com.ucorealty.model.AuditLog;
+import com.ucorealty.model.LoginAudit;
 import com.ucorealty.repository.AuditLogRepository;
 import com.ucorealty.repository.LoginAuditRepository;
 import org.slf4j.Logger;

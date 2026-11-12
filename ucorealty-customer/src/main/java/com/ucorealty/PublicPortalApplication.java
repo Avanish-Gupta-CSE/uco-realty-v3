@@ -10,7 +10,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 // No local users exist: skip the default in-memory user Spring Boot would otherwise generate.
 @SpringBootApplication(exclude = UserDetailsServiceAutoConfiguration.class)
-@EntityScan(basePackages = "com.ucorealty.entity")
+@EntityScan(basePackages = "com.ucorealty.model")
 @EnableJpaRepositories(basePackages = "com.ucorealty.repository")
 public class PublicPortalApplication extends SpringBootServletInitializer {
 

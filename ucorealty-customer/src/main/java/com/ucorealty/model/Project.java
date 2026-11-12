@@ -1,4 +1,4 @@
-package com.ucorealty.entity;
+package com.ucorealty.model;
 
 import jakarta.persistence.*;
 import org.springframework.format.annotation.DateTimeFormat;

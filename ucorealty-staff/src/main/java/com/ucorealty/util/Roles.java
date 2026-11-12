@@ -1,4 +1,4 @@
-package com.ucorealty.security;
+package com.ucorealty.util;
 
 /** Role groups used by RoleCheck. A role is derived at login from the employee's HRMS posting (see RoleResolver). */
 public final class Roles {

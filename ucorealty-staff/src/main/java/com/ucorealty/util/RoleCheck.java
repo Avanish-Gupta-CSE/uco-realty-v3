@@ -1,4 +1,4 @@
-package com.ucorealty.security;
+package com.ucorealty.util;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;

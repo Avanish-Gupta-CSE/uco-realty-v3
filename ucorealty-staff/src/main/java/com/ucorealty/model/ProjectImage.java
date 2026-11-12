@@ -1,4 +1,4 @@
-package com.ucorealty.entity;
+package com.ucorealty.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -59,7 +59,6 @@ public class ProjectImage {
 
   @Column(name = "uploaded_at")
   public LocalDateTime uploadedAt;
-
 
   @PrePersist
   void onCreate() {

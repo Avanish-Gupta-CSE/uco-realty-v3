@@ -1,21 +1,21 @@
 package com.ucorealty.controller;
 
-import com.ucorealty.entity.AppUser;
-import com.ucorealty.entity.Project;
-import com.ucorealty.entity.ProjectData;
-import com.ucorealty.entity.ProjectForm;
-import com.ucorealty.entity.ProjectImage;
-import com.ucorealty.entity.ProjectStaging;
+import com.ucorealty.dto.ProjectRow;
+import com.ucorealty.model.AppUser;
+import com.ucorealty.model.Project;
+import com.ucorealty.model.ProjectData;
+import com.ucorealty.model.ProjectForm;
+import com.ucorealty.model.ProjectImage;
+import com.ucorealty.model.ProjectStaging;
 import com.ucorealty.repository.ProjectImageRepository;
-import com.ucorealty.security.CurrentUser;
-import com.ucorealty.security.RoleCheck;
-import com.ucorealty.security.Roles;
 import com.ucorealty.service.MasterDataService;
-import com.ucorealty.service.ProjectRow;
 import com.ucorealty.service.ProjectService;
 import com.ucorealty.service.ProjectWorkflowService;
 import com.ucorealty.util.Amenities;
+import com.ucorealty.util.CurrentUser;
 import com.ucorealty.util.PhotoFiles;
+import com.ucorealty.util.RoleCheck;
+import com.ucorealty.util.Roles;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,11 +50,11 @@ public class ProjectWorkflowController {
   private final ProjectService projectService;
   private final ProjectImageRepository imageRepo;
   private final MasterDataService masterData;
-  private final com.ucorealty.hrms.HrmsService hrms;
+  private final com.ucorealty.service.HrmsService hrms;
 
   public ProjectWorkflowController(ProjectWorkflowService workflow, ProjectService projectService,
                                    ProjectImageRepository imageRepo, MasterDataService masterData,
-                                   com.ucorealty.hrms.HrmsService hrms) {
+                                   com.ucorealty.service.HrmsService hrms) {
     this.hrms = hrms;
     this.workflow = workflow;
     this.projectService = projectService;

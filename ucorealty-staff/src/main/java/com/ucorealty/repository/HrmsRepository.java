@@ -1,4 +1,6 @@
-package com.ucorealty.hrms;
+package com.ucorealty.repository;
+
+import com.ucorealty.dto.HrmsUserProfile;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

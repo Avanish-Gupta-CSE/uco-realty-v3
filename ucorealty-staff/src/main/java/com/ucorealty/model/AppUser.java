@@ -1,4 +1,4 @@
-package com.ucorealty.entity;
+package com.ucorealty.model;
 
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;

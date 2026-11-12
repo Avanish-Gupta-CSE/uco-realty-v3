@@ -1,7 +1,7 @@
 package com.ucorealty.controller;
 
-import com.ucorealty.security.RoleCheck;
 import com.ucorealty.service.MasterDataService;
+import com.ucorealty.util.RoleCheck;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

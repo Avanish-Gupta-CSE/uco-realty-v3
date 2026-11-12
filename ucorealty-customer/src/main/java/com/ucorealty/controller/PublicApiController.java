@@ -1,6 +1,6 @@
 package com.ucorealty.controller;
 
-import com.ucorealty.entity.Project;
+import com.ucorealty.model.Project;
 import com.ucorealty.repository.ProjectImageRepository;
 import com.ucorealty.service.ProjectService;
 import org.springframework.web.bind.annotation.*;

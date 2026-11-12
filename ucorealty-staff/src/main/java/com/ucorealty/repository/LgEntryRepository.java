@@ -1,4 +1,4 @@
-package com.ucorealty.hrms;
+package com.ucorealty.repository;
 
 import com.ucorealty.dto.LeadRow;
 import org.slf4j.Logger;

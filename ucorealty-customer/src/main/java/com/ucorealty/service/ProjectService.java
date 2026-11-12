@@ -1,6 +1,6 @@
 package com.ucorealty.service;
 
-import com.ucorealty.entity.Project;
+import com.ucorealty.model.Project;
 import com.ucorealty.repository.ProjectRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;

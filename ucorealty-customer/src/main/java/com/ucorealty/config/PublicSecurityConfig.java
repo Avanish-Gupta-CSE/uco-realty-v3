@@ -1,4 +1,4 @@
-package com.ucorealty.security;
+package com.ucorealty.config;
 
 import jakarta.servlet.DispatcherType;
 import org.slf4j.Logger;
@@ -11,7 +11,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.access.AccessDeniedHandlerImpl;
 import org.springframework.security.web.session.DisableEncodeUrlFilter;
-import com.ucorealty.config.SecurityHeadersFilter;
 
 @Configuration
 public class PublicSecurityConfig {

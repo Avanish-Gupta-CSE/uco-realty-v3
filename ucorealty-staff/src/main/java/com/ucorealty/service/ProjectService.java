@@ -1,10 +1,10 @@
 package com.ucorealty.service;
 
-import com.ucorealty.entity.AppUser;
-import com.ucorealty.entity.Project;
-import com.ucorealty.entity.ProjectData;
+import com.ucorealty.model.AppUser;
+import com.ucorealty.model.Project;
+import com.ucorealty.model.ProjectData;
 import com.ucorealty.repository.ProjectRepository;
-import com.ucorealty.security.CurrentUser;
+import com.ucorealty.util.CurrentUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;

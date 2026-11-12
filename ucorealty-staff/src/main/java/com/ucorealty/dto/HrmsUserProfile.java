@@ -1,4 +1,4 @@
-package com.ucorealty.hrms;
+package com.ucorealty.dto;
 
 import java.io.Serializable;
 
@@ -47,7 +47,6 @@ public class HrmsUserProfile implements Serializable {
 
   public String getTenureAs() { return tenureAs; }
   public void setTenureAs(String tenureAs) { this.tenureAs = tenureAs; }
-
 
   public String getMobile() { return mobile; }
   public void setMobile(String mobile) { this.mobile = mobile; }

@@ -1,7 +1,7 @@
 package com.ucorealty.controller;
 
-import com.ucorealty.entity.Project;
-import com.ucorealty.entity.ProjectImage;
+import com.ucorealty.model.Project;
+import com.ucorealty.model.ProjectImage;
 import com.ucorealty.repository.ProjectImageRepository;
 import com.ucorealty.service.MasterDataService;
 import com.ucorealty.service.ProjectService;

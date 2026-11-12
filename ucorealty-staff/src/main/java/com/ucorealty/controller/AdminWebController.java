@@ -1,13 +1,13 @@
 package com.ucorealty.controller;
 
-import com.ucorealty.entity.AuditLog;
 import com.ucorealty.dto.LeadRow;
-import com.ucorealty.hrms.LgEntryRepository;
-import com.ucorealty.entity.LoginAudit;
-import com.ucorealty.entity.Project;
-import com.ucorealty.security.RoleCheck;
-import com.ucorealty.security.Roles;
+import com.ucorealty.model.AuditLog;
+import com.ucorealty.model.LoginAudit;
+import com.ucorealty.model.Project;
+import com.ucorealty.repository.LgEntryRepository;
 import com.ucorealty.service.AuditService;
+import com.ucorealty.util.RoleCheck;
+import com.ucorealty.util.Roles;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.Authentication;

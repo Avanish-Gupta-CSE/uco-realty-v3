@@ -1,6 +1,8 @@
-package com.ucorealty.hrms;
+package com.ucorealty.service;
 
-import com.ucorealty.entity.AppUser;
+import com.ucorealty.dto.HrmsUserProfile;
+import com.ucorealty.model.AppUser;
+import com.ucorealty.repository.HrmsRepository;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

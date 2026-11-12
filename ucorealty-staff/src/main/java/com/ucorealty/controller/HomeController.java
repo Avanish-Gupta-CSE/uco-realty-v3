@@ -1,9 +1,9 @@
 package com.ucorealty.controller;
 
-import com.ucorealty.entity.AppUser;
-import com.ucorealty.hrms.HrmsService;
-import com.ucorealty.hrms.HrmsUserProfile;
+import com.ucorealty.dto.HrmsUserProfile;
+import com.ucorealty.model.AppUser;
 import com.ucorealty.service.AuditService;
+import com.ucorealty.service.HrmsService;
 import com.ucorealty.util.SsoCryptoUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,11 +1,12 @@
 package com.ucorealty.service;
 
-import com.ucorealty.entity.AppUser;
-import com.ucorealty.entity.Project;
-import com.ucorealty.entity.ProjectData;
-import com.ucorealty.entity.ProjectForm;
-import com.ucorealty.entity.ProjectImage;
-import com.ucorealty.entity.ProjectStaging;
+import com.ucorealty.dto.ProjectRow;
+import com.ucorealty.model.AppUser;
+import com.ucorealty.model.Project;
+import com.ucorealty.model.ProjectData;
+import com.ucorealty.model.ProjectForm;
+import com.ucorealty.model.ProjectImage;
+import com.ucorealty.model.ProjectStaging;
 import com.ucorealty.repository.ProjectImageRepository;
 import com.ucorealty.repository.ProjectRepository;
 import com.ucorealty.repository.ProjectStagingRepository;

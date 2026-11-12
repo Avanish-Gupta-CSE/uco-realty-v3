@@ -1,7 +1,7 @@
-package com.ucorealty.service;
+package com.ucorealty.dto;
 
-import com.ucorealty.entity.Project;
-import com.ucorealty.entity.ProjectStaging;
+import com.ucorealty.model.Project;
+import com.ucorealty.model.ProjectStaging;
 
 import java.time.LocalDateTime;
 
@@ -25,7 +25,7 @@ public class ProjectRow {
   public String stagingOwner;      // the maker
   public String stagingComment;    // the checker's remark on that request
 
-  static ProjectRow ofMaster(Project p, ProjectStaging s) {
+  public static ProjectRow ofMaster(Project p, ProjectStaging s) {
     ProjectRow r = new ProjectRow();
     r.id = p.id;
     r.projectName = p.projectName; r.zoneName = p.zoneName; r.cityName = p.cityName; r.stateName = p.stateName;
@@ -37,7 +37,7 @@ public class ProjectRow {
     return r;
   }
 
-  static ProjectRow ofStaging(ProjectStaging s) {
+  public static ProjectRow ofStaging(ProjectStaging s) {
     ProjectRow r = new ProjectRow();
     r.id = s.projectId;
     r.projectName = s.projectName; r.zoneName = s.zoneName; r.cityName = s.cityName; r.stateName = s.stateName;

@@ -1,6 +1,6 @@
 package com.ucorealty.service;
 
-import com.ucorealty.entity.ProjectData;
+import com.ucorealty.model.ProjectData;
 
 import java.math.BigDecimal;
 import java.net.URI;

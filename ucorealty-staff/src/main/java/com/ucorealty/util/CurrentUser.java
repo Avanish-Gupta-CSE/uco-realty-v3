@@ -1,6 +1,6 @@
-package com.ucorealty.security;
+package com.ucorealty.util;
 
-import com.ucorealty.entity.AppUser;
+import com.ucorealty.model.AppUser;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 

@@ -1,6 +1,6 @@
 package com.ucorealty.repository;
 
-import com.ucorealty.entity.Project;
+import com.ucorealty.model.Project;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 

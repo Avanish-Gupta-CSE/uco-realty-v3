@@ -1,6 +1,6 @@
 package com.ucorealty.repository;
 
-import com.ucorealty.entity.ProjectImage;
+import com.ucorealty.model.ProjectImage;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

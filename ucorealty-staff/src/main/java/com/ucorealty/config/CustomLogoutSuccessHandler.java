@@ -1,4 +1,4 @@
-package com.ucorealty.security;
+package com.ucorealty.config;
 
 import com.ucorealty.service.AuditService;
 import org.slf4j.Logger;
