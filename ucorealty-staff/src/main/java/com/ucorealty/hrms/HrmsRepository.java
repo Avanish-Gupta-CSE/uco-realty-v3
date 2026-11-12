@@ -51,6 +51,9 @@ public class HrmsRepository {
     }
   }
 
+  /** The schema prefixes to try for bank tables (setting uco.hrms.table-prefixes); LgEntryRepository reuses them. */
+  public List<String> tablePrefixes() { return java.util.Collections.unmodifiableList(prefixes); }
+
   /** empNo -> name for several employees in one query (used to show names instead of numbers). Unknown numbers are simply missing. */
   public java.util.Map<String, String> findNames(java.util.Collection<String> empNos) {
     java.util.Map<String, String> names = new java.util.HashMap<>();

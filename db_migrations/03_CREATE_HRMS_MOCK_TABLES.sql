@@ -41,3 +41,22 @@ CREATE TABLE employee_job_profile (
   EFF_TO_DATE   DATE,
   STATUS_FLAG   CHAR(1) DEFAULT 'V'
 );
+
+-- The bank's lead table (our Home Loan button sends customers to the bank's page, which stores each lead here with CHANNEL = 'REALTY').
+-- Only the columns the Leads page reads. The real table has about 60 columns; types follow the bank's "desc LG_ENTRY_REVAMP".
+CREATE TABLE LG_ENTRY_REVAMP (
+  LEAD_ID       VARCHAR2(20) NOT NULL PRIMARY KEY,
+  CRE_DT        DATE,
+  REF_NAME      VARCHAR2(250),
+  STATE         VARCHAR2(50),
+  DISTRICT      VARCHAR2(100),
+  MOBILE_NO     VARCHAR2(12),
+  EMAIL         VARCHAR2(50),
+  FACILITY_INT  VARCHAR2(50),
+  LEAD_STATUS   VARCHAR2(2),            -- empty in the bank's data
+  STATUS        VARCHAR2(20),           -- the real status (the bank's values such as OTP_VERIFIED, SB, CC)
+  TENT_LOAN_AMT NUMBER(20,2),
+  SUBMIT_DATE   DATE,
+  CHANNEL       VARCHAR2(50),
+  LOANAMOUNT    VARCHAR2(200)
+);

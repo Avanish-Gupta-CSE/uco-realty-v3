@@ -1,11 +1,10 @@
 package com.ucorealty.controller;
 
 import com.ucorealty.entity.AuditLog;
-import com.ucorealty.entity.Lead;
+import com.ucorealty.dto.LeadRow;
+import com.ucorealty.hrms.LgEntryRepository;
 import com.ucorealty.entity.LoginAudit;
 import com.ucorealty.entity.Project;
-import com.ucorealty.repository.LeadRepository;
-import com.ucorealty.repository.ProjectRepository;
 import com.ucorealty.security.RoleCheck;
 import com.ucorealty.security.Roles;
 import com.ucorealty.service.AuditService;
@@ -27,15 +26,13 @@ import java.util.stream.Collectors;
 public class AdminWebController {
   private static final int LEADS_PER_PAGE = 20;
   private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(AdminWebController.class);
-  private final ProjectRepository projectRepo;
-  private final LeadRepository leadRepo;
+  private final LgEntryRepository leadSource;
   private final LeadExportController leadExportController;
   private final AuditService auditService;
 
-  public AdminWebController(ProjectRepository projectRepo, LeadRepository leadRepo,
+  public AdminWebController(LgEntryRepository leadSource,
                             LeadExportController leadExportController, AuditService auditService) {
-    this.projectRepo = projectRepo;
-    this.leadRepo = leadRepo;
+    this.leadSource = leadSource;
     this.leadExportController = leadExportController;
     this.auditService = auditService;
   }
@@ -52,7 +49,7 @@ public class AdminWebController {
                           Model model) {
     // The nav link is hidden for other roles, but hiding is not protection: customer phone numbers need a real check
     RoleCheck.require(auth, Roles.LEAD_ROLES);
-    List<Lead> leads = leadExportController.filterLeads(from, to, status, search);
+    List<LeadRow> leads = leadExportController.filterLeads(from, to, status, search);
 
     int total = leads.size();
     int pages = Math.max(1, (total + LEADS_PER_PAGE - 1) / LEADS_PER_PAGE);
@@ -62,14 +59,8 @@ public class AdminWebController {
     model.addAttribute("pageCount", pages);
     model.addAttribute("pageNo", current);
 
-    // Map project IDs to project names for friendly display
-    Map<String, String> projectNames = new HashMap<>();
-    for (Project p : projectRepo.findAll()) {
-      projectNames.put(p.id, p.projectName);
-    }
-
     model.addAttribute("leads", leads);
-    model.addAttribute("projectNames", projectNames);
+    model.addAttribute("statuses", leadSource.statuses());   // status codes for the filter drop-down
     return "leads";
   }
 

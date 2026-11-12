@@ -9,9 +9,9 @@
 <main class="container-xxl py-4" id="main-customer-leads">
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2" id="leads-header-row">
         <div>
-            <h2 class="h4 text-primary fw-bold mb-1" id="leads-title">Customer Leads &amp; Home Loan Inquiries</h2>
+            <h2 class="h4 text-primary fw-bold mb-1" id="leads-title">Home Loan Leads from UCO Realty</h2>
             <p class="text-muted small mb-0" id="leads-subtitle">
-                Customer loan applications and interest captured through the realty portal.
+                Customers who clicked Apply for Home Loan on the realty portal and filled the bank's Home Loan application (read from the bank's lead table).
             </p>
         </div>
 
@@ -39,14 +39,15 @@
                 <label for="status" class="form-label fw-semibold small">Lead Status</label>
                 <select id="status" name="status" class="form-select form-select-sm">
                     <option value="">-- All Statuses --</option>
-                    <option value="Visitor" ${param.status == 'Visitor' || param.status == 'VISITOR' ? 'selected' : ''}>Visitor</option>
-                    <option value="Showed interest in Home Loan" ${param.status == 'Showed interest in Home Loan' || param.status == 'SUCCESSFUL_APPLIED' ? 'selected' : ''}>Showed interest in Home Loan</option>
+                    <c:forEach var="st" items="${statuses}">
+                        <option value="${fn:escapeXml(st)}" ${param.status == st ? 'selected' : ''}><c:out value="${st}"/></option>
+                    </c:forEach>
                 </select>
             </div>
 
             <div class="col-md-3">
-                <label for="search" class="form-label fw-semibold small">Search Customer / Phone</label>
-                <input type="text" id="search" name="search" class="form-control form-control-sm" value="${fn:escapeXml(param.search)}" placeholder="Customer name or mobile">
+                <label for="search" class="form-label fw-semibold small">Search Name / Mobile / Lead ID</label>
+                <input type="text" id="search" name="search" class="form-control form-control-sm" value="${fn:escapeXml(param.search)}" placeholder="Name, mobile or lead ID">
             </div>
 
             <div class="col-md-2 d-flex gap-2">
@@ -67,53 +68,36 @@
                     <tr>
                         <th class="ps-3">Lead ID</th>
                         <th>Customer Name</th>
-                        <th>Mobile Number</th>
-                        <th>Associated Project</th>
-                        <th>Lead Status</th>
-                        <th class="pe-3">Captured Date</th>
+                        <th>Mobile</th>
+                        <th>Email</th>
+                        <th>Location</th>
+                        <th>Facility</th>
+                        <th>Loan Amount</th>
+                        <th>Status</th>
+                        <th class="pe-3">Submitted On</th>
                     </tr>
                 </thead>
                 <tbody id="leads-table-body">
                     <c:choose>
                         <c:when test="${empty leads}">
                             <tr id="row-no-leads">
-                                <td colspan="6" class="text-center py-4 text-muted">
+                                <td colspan="9" class="text-center py-4 text-muted">
                                     No customer leads found matching your criteria.
                                 </td>
                             </tr>
                         </c:when>
                         <c:otherwise>
-                            <c:forEach var="l" items="${leads}">
-                                <tr id="row-lead-${l.id}">
-                                    <td class="ps-3" data-label="Lead"><span class="badge bg-light text-secondary border" id="lead-badge-id-${l.id}">#<c:out value="${l.id}"/></span></td>
-                                    <td data-label="Customer"><strong id="lead-name-${l.id}"><c:out value="${l.customerName}"/></strong></td>
-                                    <td data-label="Mobile"><a href="tel:<c:out value="${l.phone}"/>" class="fw-semibold text-primary" id="lead-phone-${l.id}"><c:out value="${l.phone}"/></a></td>
-                                    <td data-label="Project">
-                                        <c:choose>
-                                            <c:when test="${projectNames[l.projectId] != null}">
-                                                <a href="${pageContext.request.contextPath}/project/<c:out value="${l.projectId}"/>" class="text-primary fw-semibold" id="lead-project-link-${l.id}">
-                                                    <c:out value="${projectNames[l.projectId]}"/>
-                                                </a>
-                                            </c:when>
-                                            <c:when test="${l.projectId != null}">
-                                                <span class="font-monospace small" id="lead-project-id-${l.id}"><c:out value="${l.projectId}"/></span>
-                                            </c:when>
-                                            <c:otherwise>
-                                                <span class="text-muted small" id="lead-general-inquiry-${l.id}">General Inquiry</span>
-                                            </c:otherwise>
-                                        </c:choose>
-                                    </td>
-                                    <td data-label="Status">
-                                        <c:choose>
-                                            <c:when test="${l.status == 'Showed interest in Home Loan' || l.status == 'SUCCESSFUL_APPLIED'}">
-                                                <span class="badge badge-approved" id="lead-status-badge-${l.id}">Showed interest in Home Loan</span>
-                                            </c:when>
-                                            <c:otherwise>
-                                                <span class="badge badge-draft" id="lead-status-badge-${l.id}">Visitor</span>
-                                            </c:otherwise>
-                                        </c:choose>
-                                    </td>
-                                    <td class="pe-3 text-nowrap" data-label="Date"><small class="text-muted" id="lead-date-${l.id}">${l.formattedDate}</small></td>
+                            <c:forEach var="l" items="${leads}" varStatus="vs">
+                                <tr id="row-lead-${vs.index}">
+                                    <td class="ps-3" data-label="Lead"><span class="badge bg-light text-secondary border" id="lead-badge-id-${vs.index}"><c:out value="${l.leadId}"/></span></td>
+                                    <td data-label="Customer"><strong id="lead-name-${vs.index}"><c:out value="${l.name}"/></strong></td>
+                                    <td data-label="Mobile"><a href="tel:<c:out value="${l.mobile}"/>" class="fw-semibold text-primary" id="lead-phone-${vs.index}"><c:out value="${l.mobile}"/></a></td>
+                                    <td data-label="Email"><small id="lead-email-${vs.index}"><c:out value="${l.email}"/></small></td>
+                                    <td data-label="Location"><c:out value="${l.location}"/></td>
+                                    <td data-label="Facility"><c:out value="${l.facility}"/></td>
+                                    <td data-label="Loan Amount" class="text-nowrap"><c:out value="${l.loanAmount}"/></td>
+                                    <td data-label="Status"><span class="badge badge-approved" id="lead-status-badge-${vs.index}"><c:out value="${l.status}"/></span></td>
+                                    <td class="pe-3 text-nowrap" data-label="Date"><small class="text-muted" id="lead-date-${vs.index}"><c:out value="${l.formattedDate}"/></small></td>
                                 </tr>
                             </c:forEach>
                         </c:otherwise>

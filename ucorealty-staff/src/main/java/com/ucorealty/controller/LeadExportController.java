@@ -1,7 +1,7 @@
 package com.ucorealty.controller;
 
-import com.ucorealty.entity.Lead;
-import com.ucorealty.repository.LeadRepository;
+import com.ucorealty.dto.LeadRow;
+import com.ucorealty.hrms.LgEntryRepository;
 import com.ucorealty.security.RoleCheck;
 import com.ucorealty.security.Roles;
 import jakarta.servlet.http.HttpServletResponse;
@@ -15,19 +15,20 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
- * Lead Management & Export for Head Office Marketing, Retail Banking, Head Office Admin and DIT.
+ * Lead list + Excel export for Head Office Marketing, Retail Banking and DIT.
+ * The leads are NOT stored by us: the bank's Home Loan page keeps them in HRMS table LG_ENTRY_REVAMP (CHANNEL = 'REALTY'),
+ * and LgEntryRepository reads them from there.
  */
 @RestController
 @RequestMapping("/api/admin/leads")
 public class LeadExportController {
   private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(LeadExportController.class);
-  private final LeadRepository leads;
+  private final LgEntryRepository leads;
 
 
-  public LeadExportController(LeadRepository leads) {
+  public LeadExportController(LgEntryRepository leads) {
     this.leads = leads;
   }
 
@@ -35,7 +36,7 @@ public class LeadExportController {
    * Filter leads with optional date range, lead status, and keyword search.
    */
   @GetMapping
-  public List<Lead> list(@RequestParam(required = false) String from,
+  public List<LeadRow> list(@RequestParam(required = false) String from,
                          @RequestParam(required = false) String to,
                          @RequestParam(required = false) String status,
                          @RequestParam(required = false) String search,
@@ -56,7 +57,7 @@ public class LeadExportController {
                      Authentication auth) throws IOException {
     String exporter = RoleCheck.require(auth, Roles.LEAD_ROLES);
 
-    List<Lead> filtered = filterLeads(from, to, status, search);
+    List<LeadRow> filtered = filterLeads(from, to, status, search);
     log.info("[UCO LEAD] {} exports {} leads to Excel (from={}, to={}, status={})", exporter, filtered.size(), from, to, status);
 
     // Build dynamic date-based filename
@@ -138,7 +139,7 @@ public class LeadExportController {
       // Row 0: Sheet Title
       Row titleRow = sh.createRow(0);
       Cell titleCell = titleRow.createCell(0);
-      titleCell.setCellValue("UCO BANK - UCO REALTY CUSTOMER LEADS & HOME LOAN ENQUIRIES");
+      titleCell.setCellValue("UCO BANK - UCO REALTY HOME LOAN LEADS (from the bank Home Loan application page)");
       titleCell.setCellStyle(titleStyle);
 
       // Row 1: Subtitle / Filter Metadata
@@ -157,14 +158,15 @@ public class LeadExportController {
       Row h = sh.createRow(3);
       h.setHeightInPoints(24);
       String[] cols = {
-        "Lead ID", "Customer Name", "Phone Number", "Project ID",
-        "Lead Status", "Date", "Notes"
+        "Lead ID", "Customer Name", "Mobile", "Email", "State", "District",
+        "Facility", "Loan Amount", "Lead Status", "Submitted On", "Notes"
       };
+      final int notesCol = cols.length - 1;
 
       for (int i = 0; i < cols.length; i++) {
         Cell c = h.createCell(i);
         c.setCellValue(cols[i]);
-        if (i == 6) {
+        if (i == notesCol) {
           c.setCellStyle(actionHeaderStyle);
         } else {
           c.setCellStyle(headerStyle);
@@ -173,51 +175,18 @@ public class LeadExportController {
 
       // Data Rows
       int rowIdx = 4;
-      for (Lead l : filtered) {
+      for (LeadRow l : filtered) {
         Row r = sh.createRow(rowIdx);
         CellStyle rowStyle = (rowIdx % 2 == 0) ? altDataStyle : dataStyle;
-
-        // 0: ID
-        Cell c0 = r.createCell(0);
-        c0.setCellValue(l.id != null ? l.id : 0);
-        c0.setCellStyle(rowStyle);
-
-        // 1: Name
-        Cell c1 = r.createCell(1);
-        c1.setCellValue(l.customerName != null ? l.customerName : "");
-        c1.setCellStyle(rowStyle);
-
-        // 2: Phone
-        Cell c2 = r.createCell(2);
-        c2.setCellValue(l.phone != null ? l.phone : "");
-        c2.setCellStyle(rowStyle);
-
-        // 3: Project
-        Cell c3 = r.createCell(3);
-        c3.setCellValue(l.projectId != null ? l.projectId : "-");
-        c3.setCellStyle(rowStyle);
-
-        // 4: Status
-        String displayStatus = "Visitor";
-        if ("Showed interest in Home Loan".equalsIgnoreCase(l.status) || "SUCCESSFUL_APPLIED".equalsIgnoreCase(l.status)) {
-          displayStatus = "Showed interest in Home Loan";
-        } else if (l.status != null && !l.status.trim().isEmpty()) {
-          displayStatus = l.status;
+        String[] values = {
+          l.leadId, l.name, l.mobile, l.email, l.state, l.district,
+          l.facility, l.getLoanAmount(), l.status, l.getFormattedDate(), ""
+        };
+        for (int i = 0; i < values.length; i++) {
+          Cell c = r.createCell(i);
+          c.setCellValue(values[i] != null ? values[i] : "");
+          c.setCellStyle(i == 8 ? badgeStyle : rowStyle);   // column 8 = Lead Status
         }
-        Cell c4 = r.createCell(4);
-        c4.setCellValue(displayStatus);
-        c4.setCellStyle(badgeStyle);
-
-        // 5: Date
-        Cell c5 = r.createCell(5);
-        c5.setCellValue(l.getFormattedDate());
-        c5.setCellStyle(rowStyle);
-
-        // 6: Notes (blank action column)
-        Cell c6 = r.createCell(6);
-        c6.setCellValue("");
-        c6.setCellStyle(rowStyle);
-
         rowIdx++;
       }
 
@@ -231,7 +200,7 @@ public class LeadExportController {
     }
   }
 
-  List<Lead> filterLeads(String from, String to, String status, String search) {
+  List<LeadRow> filterLeads(String from, String to, String status, String search) {
     LocalDate fromDate = null;
     LocalDate toDate = null;
     try {
@@ -241,37 +210,6 @@ public class LeadExportController {
       throw new org.springframework.web.server.ResponseStatusException(
         org.springframework.http.HttpStatus.BAD_REQUEST, "Dates must be in yyyy-MM-dd format");
     }
-
-    final LocalDate fFrom = fromDate;
-    final LocalDate fTo = toDate;
-
-    return leads.findAll().stream()
-      .filter(l -> {
-        if (l.createdAt == null) return true;
-        LocalDate leadDate = l.createdAt.toLocalDate();
-        if (fFrom != null && leadDate.isBefore(fFrom)) return false;
-        if (fTo != null && leadDate.isAfter(fTo)) return false;
-        return true;
-      })
-      .filter(l -> {
-        if (status == null || status.trim().isEmpty() || "ALL".equalsIgnoreCase(status)) return true;
-        if (status.equalsIgnoreCase(l.status)) return true;
-        if ("Visitor".equalsIgnoreCase(status) && "VISITOR".equalsIgnoreCase(l.status)) return true;
-        if ("Showed interest in Home Loan".equalsIgnoreCase(status) && "SUCCESSFUL_APPLIED".equalsIgnoreCase(l.status)) return true;
-        return false;
-      })
-      .filter(l -> {
-        if (search == null || search.trim().isEmpty()) return true;
-        String q = search.toLowerCase();
-        return (l.customerName != null && l.customerName.toLowerCase().contains(q))
-            || (l.phone != null && l.phone.contains(q))
-            || (l.projectId != null && l.projectId.toLowerCase().contains(q))
-            || (l.branchSelected != null && l.branchSelected.toLowerCase().contains(q));
-      })
-      .sorted((a, b) -> {
-        if (a.createdAt == null || b.createdAt == null) return 0;
-        return b.createdAt.compareTo(a.createdAt); // Newest first
-      })
-      .collect(Collectors.toList());
+    return leads.find(fromDate, toDate, status, search);   // the database does the filtering, newest first
   }
 }
