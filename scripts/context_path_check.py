@@ -106,7 +106,7 @@ if items:
 audit_assets(PUBLIC, "customer")
 
 # ---- staff site, several roles
-for emp, label in (("200001", "maker"), ("200002", "checker"), ("400001", "retail"), ("100001", "dit")):
+for emp, label in (("68696", "maker"), ("45321", "checker"), ("58382", "retail"), ("55012", "dit")):
     c = Client(INTERNAL)
     if not c.dev_login(emp):
         problems.append(f"[{label}] could not sign in as {emp} (h2 or uat profile only)")

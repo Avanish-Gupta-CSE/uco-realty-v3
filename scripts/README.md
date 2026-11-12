@@ -21,7 +21,7 @@ java -jar ucorealty-customer/target/ucorealty-customer.war    # terminal 2
 ```
 That is all with the `h2` profile set in `application.properties`: H2 starts inside the app and the staff app runs all the SQL. For Oracle put `SPRING_PROFILES_ACTIVE=uat DB_URL=... DB_USER=... DB_PASS=...` in front of each `java`. Stop with Ctrl+C.
 
-Customer: http://localhost:8080/ucorealty-customer/projects. Staff: http://localhost:8081/ucorealty-staff/ (employee `200001`, OTP `123456`). H2 console: http://localhost:8082 (`jdbc:h2:tcp://localhost:9092/mem:ucorealty`, user `sa`, no password).
+Customer: http://localhost:8080/ucorealty-customer/projects. Staff: http://localhost:8081/ucorealty-staff/ (employee `52260`, OTP `123456`). H2 console: http://localhost:8082 (`jdbc:h2:tcp://localhost:9092/mem:ucorealty`, user `sa`, no password).
 
 ## `dev-start.sh`
 It stops old runs, builds both apps, starts staff then customer, and waits until each log says "Started". `--oracle` also starts the Docker Oracle, creates the tables once (01, 03, 05; `--reset` drops them first) and runs with the `uat` profile. It prints each command in grey.

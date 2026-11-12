@@ -4,7 +4,7 @@
 #   scripts/dev-start.sh                    profile from application.properties (h2): no Docker; the staff app creates all tables and test employees in memory
 #   scripts/dev-start.sh --oracle           Oracle in Docker with the uat profile; creates the tables once (db_migrations 01, 03, 05)
 #   scripts/dev-start.sh --oracle --reset   the same, wiping the Oracle tables first
-# Sign in: employee 100001 to 600002, OTP 123456.
+# Sign in: employees 55012, 54534, 58382, 52260, 68696 ... see TESTING_GUIDE.md, OTP 123456.
 set -euo pipefail
 
 if [ -d "/opt/homebrew/opt/openjdk@25/libexec/openjdk.jdk/Contents/Home" ]; then
@@ -80,7 +80,7 @@ fi
 printf '\n\033[1mReady.\033[0m\n'
 cat <<'MSG'
   Customer : http://localhost:8080/ucorealty-customer/projects
-  Staff    : http://localhost:8081/ucorealty-staff/   (employee 100001 to 600002, OTP 123456)
+  Staff    : http://localhost:8081/ucorealty-staff/   (employees 55012, 54534, 58382, 52260, 68696 ... see TESTING_GUIDE.md, OTP 123456)
   Logs     : .run/public.log, .run/internal.log
   Stop     : scripts/dev-stop.sh
 MSG

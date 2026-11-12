@@ -78,16 +78,16 @@ def decide(c, staging_id, decision, comment=""):
 
 
 def new_project(c, name, action="draft", photo=True, units_=60):
-    fl = demo.form(1, name, "ZZ Workflow Builder", "Bihar", "Patna", "800001", 100)
-    fl.update({"branchName": "Patna Main Branch", "unsoldInventory": str(units_), "amenities": "Original amenities"})
+    fl = demo.form(1, name, "ZZ Workflow Builder", "West Bengal", "Durgapur", "713201", 100)
+    fl.update({"branchName": "Durgapur Main Branch", "unsoldInventory": str(units_), "amenities": "Original amenities"})
     files = [("photo1", PHOTO[0].name, PHOTO[0].read_bytes(), "image/jpeg")] if photo else []
     s, h, _ = save(c, fl, action=action, files=files)
     return s, h
 
 
-maker, checker = login("700001"), login("700002")
-other_maker, other_checker = login("200001"), login("200002")
-retail, dit, marketing = login("400001"), login("100001"), login("400002")
+maker, checker = login("52260"), login("45195")
+other_maker, other_checker = login("68696"), login("45321")
+retail, dit, marketing = login("58382"), login("55012"), login("54534")
 
 print("== 1. A NEW project lives in the maker's staging copy, not in the live table")
 check("maker saves a new project as a draft", new_project(maker, "ZZ Workflow Test")[0] == 302)
@@ -232,21 +232,21 @@ check("HO marketing (national maker) can open the new-project form", marketing.g
 check("checker and retail cannot (403)", all(c.get("/admin/projects/new")[0] == 403 for c in (checker, retail)))
 
 print("\n== 11. A Head Office maker creates a project for another zone; only that zone's checker decides")
-fl = demo.form(2, "ZZ Workflow National", "ZZ Workflow Builder", "Rajasthan", "Ajmer", "305001", 40)
-fl.update({"zoneName": "Ajmer", "branchName": "Ajmer Main Branch", "unsoldInventory": "30"})
+fl = demo.form(2, "ZZ Workflow National", "ZZ Workflow Builder", "Chhattisgarh", "Raipur", "492001", 40)
+fl.update({"zoneName": "Raipur", "branchName": "Raipur Main Branch", "unsoldInventory": "30"})
 fl["_csrf"] = marketing.csrf("/admin/projects"); fl["action"] = "submit"
-check("HO marketing submits a project for the Ajmer zone", marketing.multipart_post("/admin/projects/staging/save", fl, [])[0] == 302)
+check("HO marketing submits a project for the Raipur zone", marketing.multipart_post("/admin/projects/staging/save", fl, [])[0] == 302)
 pid4 = demo.newest_project_id(marketing, "ZZ Workflow National"); s4 = sid(marketing, pid4)
-check("the Patna checker does not see it, the Ajmer checker does", row(checker, pid4) is None and "link-review-" in (row(other_checker, pid4) or ""))
+check("the Durgapur checker does not see it, the Raipur checker does", row(checker, pid4) is None and "link-review-" in (row(other_checker, pid4) or ""))
 decide(checker, s4, "approve", "")
-check("the Patna checker cannot approve an Ajmer project", public(pid4)[0] == 404)
+check("the Durgapur checker cannot approve an Raipur project", public(pid4)[0] == 404)
 decide(other_checker, s4, "approve", "ok")
-check("the Ajmer checker approves: it is live", public(pid4)[0] == 200)
-check("a Patna maker does not see an Ajmer project", row(maker, pid4) is None)
+check("the Raipur checker approves: it is live", public(pid4)[0] == 200)
+check("a Durgapur maker does not see an Raipur project", row(maker, pid4) is None)
 
 print("\n== 12. Input safety (markup is refused, other special characters are shown escaped)")
-fl = demo.form(3, "ZZ Workflow <b>Bold</b>", "ZZ Workflow Builder", "Bihar", "Patna", "800001", 20)
-fl.update({"branchName": "Patna Main Branch", "_csrf": maker.csrf("/admin/projects"), "action": "draft"})
+fl = demo.form(3, "ZZ Workflow <b>Bold</b>", "ZZ Workflow Builder", "West Bengal", "Durgapur", "713201", 20)
+fl.update({"branchName": "Durgapur Main Branch", "_csrf": maker.csrf("/admin/projects"), "action": "draft"})
 s_, _, body = maker.multipart_post("/admin/projects/staging/save", fl, [])
 check("a project name with < > is refused (form shown again with the message)", s_ == 200 and "must not contain" in body.decode() and demo.newest_project_id(maker, "ZZ Workflow Bold") is None)
 check("the old anonymous lead form (POST /lead) is gone", Client(PUBLIC).post("/lead", {"name": "x", "phone": "9876543210"})[0] in (403, 404, 405))
@@ -266,8 +266,8 @@ def save_packed(c, fields, action="draft", files=()):
     return c.multipart_post("/admin/projects/staging/save", parts, files)
 
 
-fl = demo.form(5, "ZZ Workflow Packed & Co", "ZZ Workflow Builder", "Bihar", "Patna", "800001", 40)
-fl.update({"branchName": "Patna Main Branch", "amenities": "Park & Gym + Pool\nSecond line \u00e9"})
+fl = demo.form(5, "ZZ Workflow Packed & Co", "ZZ Workflow Builder", "West Bengal", "Durgapur", "713201", 40)
+fl.update({"branchName": "Durgapur Main Branch", "amenities": "Park & Gym + Pool\nSecond line \u00e9"})
 for extra in ("promoter1", "promoter2", "promoter3", "promoter4", "promoter5", "salesExecName", "salesMobile", "salesEmail", "website",
               "builderRating", "branchHeadName", "branchHeadNumber", "relExecName", "relExecNumber", "approvalSought", "renewalPending"):
     fl.setdefault(extra, "")

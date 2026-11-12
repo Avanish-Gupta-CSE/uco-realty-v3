@@ -2,7 +2,7 @@
 """OPTIONAL demo data so you can see how the screens look. NOT part of the product. LOCAL DEV PROFILE ONLY.
 
 Creates 9 fictional projects (names end with "(Demo)") through the normal web forms (staging copy -> checker approval), signing in as the local-profile
-test employees: makers 200001 (Ajmer) and 300001 (Bhopal) create and submit, checkers 200002 / 300002 decide.
+test employees: makers 52260 (Durgapur) and 68696 (Raipur) create and submit, checkers 45195 / 45321 decide.
 Result: 6 approved (with photos from .brain/07_REFERENCE/sample-uploads), 1 waiting for the checker, 1 returned for correction,
 1 draft.
 
@@ -24,21 +24,21 @@ BASE = os.environ.get("INTERNAL_URL", "http://localhost:8081/ucorealty-staff")
 PHOTOS = Path(__file__).resolve().parent.parent / ".brain" / "07_REFERENCE" / "sample-uploads" / "UCR-PROJ-0001"
 
 CREW = {  # zone -> (maker, checker)
-    "Ajmer": ("200001", "200002"),
-    "Bhopal": ("300001", "300002"),
+    "Durgapur": ("52260", "45195"),
+    "Raipur": ("68696", "45321"),
 }
 
 # (name, builder, zone, state, city, pincode, units, fate)
 PROJECTS = [
-    ("Green Heights (Demo)", "Shree Builders", "Ajmer", "Rajasthan", "Ajmer", "305001", 120, "approved"),
-    ("Aravali Residency (Demo)", "Marudhar Infra", "Ajmer", "Rajasthan", "Pushkar", "305022", 80, "approved"),
-    ("Lakeview Towers (Demo)", "Sunrise Realty", "Ajmer", "Rajasthan", "Beawar", "305901", 200, "approved"),
-    ("Sanchi Greens (Demo)", "Vindhya Developers", "Bhopal", "Madhya Pradesh", "Bhopal", "462001", 150, "approved"),
-    ("Kolar Meadows (Demo)", "Narmada Homes", "Bhopal", "Madhya Pradesh", "Bhopal", "462042", 96, "approved"),
-    ("Upper Lake Heights (Demo)", "Ganga Constructions", "Bhopal", "Madhya Pradesh", "Sehore", "466001", 60, "approved"),
-    ("Ana Sagar Court (Demo)", "Chauhan Estates", "Ajmer", "Rajasthan", "Ajmer", "305002", 48, "pending"),
-    ("Taragarh View (Demo)", "Pearl Builders", "Bhopal", "Madhya Pradesh", "Bhopal", "462016", 72, "correction"),
-    ("Dargah Plaza (Demo)", "Heritage Infra", "Ajmer", "Rajasthan", "Ajmer", "305003", 36, "draft"),
+    ("Green Heights (Demo)", "Shree Builders", "Durgapur", "West Bengal", "Durgapur", "713201", 120, "approved"),
+    ("Aravali Residency (Demo)", "Marudhar Infra", "Durgapur", "West Bengal", "Asansol", "713301", 80, "approved"),
+    ("Lakeview Towers (Demo)", "Sunrise Realty", "Durgapur", "West Bengal", "Bardhaman", "713101", 200, "approved"),
+    ("Sanchi Greens (Demo)", "Vindhya Developers", "Raipur", "Chhattisgarh", "Raipur", "492001", 150, "approved"),
+    ("Kolar Meadows (Demo)", "Narmada Homes", "Raipur", "Chhattisgarh", "Raipur", "492010", 96, "approved"),
+    ("Upper Lake Heights (Demo)", "Ganga Constructions", "Raipur", "Chhattisgarh", "Bhilai", "490006", 60, "approved"),
+    ("Ana Sagar Court (Demo)", "Chauhan Estates", "Durgapur", "West Bengal", "Durgapur", "713212", 48, "pending"),
+    ("Taragarh View (Demo)", "Pearl Builders", "Raipur", "Chhattisgarh", "Raipur", "492013", 72, "correction"),
+    ("Dargah Plaza (Demo)", "Heritage Infra", "Durgapur", "West Bengal", "Durgapur", "713216", 36, "draft"),
 ]
 
 

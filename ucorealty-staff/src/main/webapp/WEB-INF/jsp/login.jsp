@@ -70,7 +70,7 @@
 
 
             <div class="alert alert-info py-2 small mb-3" id="alert-sso-info">
-                <strong>Test login.</strong> DIT 100001, HO Marketing 400002, HO Retail 400001, Maker 200001, Checker 200002. OTP 123456.
+                <strong>Test login.</strong> DIT 55012, HO Marketing 54534, HO Retail 58382, Durgapur Maker 52260 / Checker 45195, Raipur Maker 68696 / Checker 45321. OTP 123456.
             </div>
 
             <button type="submit" class="btn btn-primary w-100 py-2 mt-2" id="btn-sso-otp">

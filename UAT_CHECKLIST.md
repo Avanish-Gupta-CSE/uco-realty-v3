@@ -58,7 +58,7 @@ Then: `scripts/package-release.sh uat` gives both WARs in `release/ucorealty-uat
 4. Logs: the `logs` folder in Tomcat's working folder: `ucorealty-staff.log`, `ucorealty-customer.log`.
 
 ## D. If you cannot reach the Oracle database
-Run on H2 instead (in memory, test employees 100001 to 600003, data lost when Tomcat stops):
+Run on H2 instead (in memory, test employees 55012 ... 600003, data lost when Tomcat stops):
 add the Java option `-Dspring.profiles.active=h2` to the Tomcat service (Tomcat configuration tool > Java > Java Options), restart.
 Remove the option to go back to Oracle.
 

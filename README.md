@@ -21,7 +21,7 @@ scripts/dev-stop.sh
 scripts/dev-start.sh --oracle   # the same on Oracle in Docker (uat profile); add --reset to wipe it
 ```
 - Customer portal: http://localhost:8080/ucorealty-customer/projects
-- Staff portal: http://localhost:8081/ucorealty-staff/ (test employee `100001` to `600002`, OTP `123456`)
+- Staff portal: http://localhost:8081/ucorealty-staff/ (real UAT tester numbers such as `55012`, `52260`, `68696`; list in TESTING_GUIDE.md, OTP `123456`)
 
 More: `TESTING_GUIDE.md`. Profiles: `DEPLOYMENT.md` section 2.
 

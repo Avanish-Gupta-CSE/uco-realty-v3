@@ -11,14 +11,16 @@ Staff sign in with an **employee id** and the OTP `123456` (`h2` and `uat`; prod
 
 | Employee id | Posting (SOL) | Role | Can do |
 |---|---|---|---|
-| `100001`, `61801` | 7115 DIT | **DIT superadmin** | everything in the app + the **Logs** page, leads |
-| `400002` | 8028 HO Marketing and Wealth Management | **HO marketing** | create/approve projects in any zone, leads |
-| `400001` | 8001 HO Retail Banking | **HO retail** | customer leads + Excel export, read-only view of projects (no reduce units) |
-| `700001` / `700002` | 7001 Patna Zonal Office | **Maker (Scale 2)** / **Checker (Scale 4)** | Patna zone only |
-| `200001` / `200002` | 7015 Ajmer Zonal Office | Maker / Checker | Ajmer zone only |
-| `300001` / `300002` | 7022 Bhopal Zonal Office | Maker (Scale 1) / Checker (Scale 5) | Bhopal zone only |
+| `55012` | 7103 DIT (7115 in production) | **DIT superadmin** | everything in the app + the **Logs** page, leads |
+| `54534` (Scale 3) / `53484` (Scale 4) | 8028 HO Marketing and Wealth Management | **HO marketing** | create/approve projects in any zone, leads |
+| `58382` (Scale 3) / `51373` (Scale 4) | 8001 HO Retail Banking | **HO retail** | customer leads + Excel export, read-only view of projects (no reduce units) |
+| `52260` / `45195` | 7010 Durgapur Zonal Office | **Maker (Scale 1)** / **Checker (Scale 4)** | Durgapur zone only |
+| `68696` / `45321` | 7014 Raipur Zonal Office | Maker (Scale 1) / Checker (Scale 4) | Raipur zone only |
+| `62100` (7010), `41459` (7014) | zonal office, Scale 0 | **no access** | refused |
 
-Anything else is refused. Only the ids above exist (`999999` is "not found"); the real bank rules for refusing branch staff and scale 0 are in section 5.
+These numbers are the real UAT testers (the same ones exist in the UAT HRMS table); names on the laptop are invented. `600001` (branch SOL) and `600003` (retired) are invented rows for the refusal tests.
+
+Anything else is refused. Only the ids above (and the two invented ones) exist (`999999` is "not found"); the real bank rules for refusing branch staff and scale 0 are in section 5.
 
 Sample photos for uploads: `.brain/07_REFERENCE/sample-uploads/UCR-PROJ-0001/`.
 
@@ -33,49 +35,49 @@ PUBLIC_URL=... INTERNAL_URL=... python3 scripts/smoke_test.py    # other ports/h
 Checks the customer-site lockdown, headers, bad SSO tokens, CSRF, roles (DIT/maker/checker/retail) and logout (35 checks). It creates nothing.
 
 ## 3. Manual run (about 20 minutes)
-**A. Maker in Patna (700001)**
-1. Open http://localhost:8081/ucorealty-staff/login, enter `700001`, press *Generate OTP*, enter `123456`. The header shows `ROLE_ZO_MAKER`; there is no Logs and no Customer Leads tab.
-2. **+ Add New Project**. The zone is fixed to **Patna** (it comes from the login, never typed). Pick State, then District (or **+ Other / Custom City**). Fill name, builder, branch name, a 6-digit pincode; available units must not exceed total.
+**A. Maker in Durgapur (700001)**
+1. Open http://localhost:8081/ucorealty-staff/login, enter `52260`, press *Generate OTP*, enter `123456`. The header shows `ROLE_ZO_MAKER`; there is no Logs and no Customer Leads tab.
+2. **+ Add New Project**. The zone is fixed to **Durgapur** (it comes from the login, never typed). Pick State, then District (or **+ Other / Custom City**). Fill name, builder, branch name, a 6-digit pincode; available units must not exceed total.
 3. Add photos (4 slots, **+ Add More Photos** up to 10, 1 MB each, JPG/PNG/WEBP). **Save Draft**, reopen it, edit it.
 4. **Save & Request Approval**. Leave the branch name empty first: it must be refused with the message on the same form.
 
-**B. Checker in Patna (700002) and zone isolation**
-5. Sign in as `700002`. The pending Patna project is in the queue. Open it, **Request Correction from Maker** with a remark (required). Sign in as `700001`, fix it, submit again.
-6. As `700002` **approve** it. It now appears on the customer site (http://localhost:8080/ucorealty-customer/projects).
-7. Sign in as the Ajmer checker `200002`: the Patna project is not theirs to approve.
-8. The maker `700001` cannot approve their own project (no button; the server also refuses).
+**B. Checker in Durgapur (700002) and zone isolation**
+5. Sign in as `45195`. The pending Durgapur project is in the queue. Open it, **Request Correction from Maker** with a remark (required). Sign in as `52260`, fix it, submit again.
+6. As `45195` **approve** it. It now appears on the customer site (http://localhost:8080/ucorealty-customer/projects).
+7. Sign in as the Raipur checker `45321`: the Durgapur project is not theirs to approve.
+8. The maker `52260` cannot approve their own project (no button; the server also refuses).
 
 **C. Customer (no login)**
 9. Open :8080/projects (no pop-up). Search by pincode. Open the project: photos, contacts. **Apply for Home Loan** (sidebar and bottom of the page) opens the bank's Home Loan page (`uco.homeloan.base-url` + `/Lead_App/lead_web.jsp?utm=REALTY`) in the same tab; nothing is saved by us.
 10. Unapproved or unknown project ids return 404.
 
 **D. Head Office roles**
-11. HO retail `400001`: tabs *Project Management* and *Customer Leads*. Leads: filter, **Export** to Excel. There are **no** Edit / Units / Delete buttons on any project, and `POST /admin/projects/{id}/reduce-units` returns 403.
-12. HO marketing `400002`: can create and approve projects for any zone.
+11. HO retail `58382`: tabs *Project Management* and *Customer Leads*. Leads: filter, **Export** to Excel. There are **no** Edit / Units / Delete buttons on any project, and `POST /admin/projects/{id}/reduce-units` returns 403.
+12. HO marketing `54534`: can create and approve projects for any zone.
 13. A maker or checker typing `/admin/leads` in the address bar gets *Access Denied* (customer phone numbers are protected).
-14. DIT `100001`: **Logs** shows project events and every login attempt (including refused ones). Everyone else gets 403 on `/admin/audit-logs`.
+14. DIT `55012`: **Logs** shows project events and every login attempt (including refused ones). Everyone else gets 403 on `/admin/audit-logs`.
 15. Sign out with the button: you land on the login page; Back must not reopen admin pages.
 
 ## 3b. Changing an APPROVED project (maker → checker) — about 15 minutes
-**How it works (two tables):** `realty_projects` holds approved projects only; the maker's edits live in his own row in `realty_project_staging` and reach `realty_projects` only when a checker approves. So while he edits, customers and checkers keep seeing the approved record unchanged. Use an approved Patna project (or approve one from section 3).
+**How it works (two tables):** `realty_projects` holds approved projects only; the maker's edits live in his own row in `realty_project_staging` and reach `realty_projects` only when a checker approves. So while he edits, customers and checkers keep seeing the approved record unchanged. Use an approved Durgapur project (or approve one from section 3).
 
 **Edit and save as draft**
-1. Sign in as maker `700001`. On the approved project press **Edit**. A blue banner says the project stays live while you work.
+1. Sign in as maker `52260`. On the approved project press **Edit**. A blue banner says the project stays live while you work.
 2. Change the amenities, the available units and the budget. Optionally add a photo (slot 1) and **Remove Photo** on an existing one.
 3. Press **Save as Draft**. Back on the dashboard the project still shows **Approved** with a small tag **Your change: draft**.
-4. Check what others see: open http://localhost:8080/ucorealty-customer/projects, open the project: **old** values and **old** photos. Sign in as checker `700002`: the project row has **no** pending tag and no review button (a draft is private).
+4. Check what others see: open http://localhost:8080/ucorealty-customer/projects, open the project: **old** values and **old** photos. Sign in as checker `45195`: the project row has **no** pending tag and no review button (a draft is private).
 
 **Submit for approval, then the checker decides**
-5. As `700001` press **Continue change**, then **Submit for Approval** (try it with nothing changed first: refused). The project now shows **Change pending approval**; the customer site is still unchanged.
-6. As `700002` press **Review change**. You see a table *Approved (live now) → Proposed*, plus new/removed photos. Try the wrong people first: the maker `700001` and the Ajmer checker `200002` cannot approve (the row has no button for the maker; a direct request is refused).
-7. **Return to maker** with a remark. As `700001` the row shows **Your change: returned** with the remark. Fix, **Submit for Approval** again.
-8. As `700002` **Approve and apply change**. Now the customer site shows the new values and the new photo; the removed photo is gone; no pending tag remains. Try **Reject** on another change: nothing changes on the approved project.
+5. As `52260` press **Continue change**, then **Submit for Approval** (try it with nothing changed first: refused). The project now shows **Change pending approval**; the customer site is still unchanged.
+6. As `45195` press **Review change**. You see a table *Approved (live now) → Proposed*, plus new/removed photos. Try the wrong people first: the maker `52260` and the Raipur checker `45321` cannot approve (the row has no button for the maker; a direct request is refused).
+7. **Return to maker** with a remark. As `52260` the row shows **Your change: returned** with the remark. Fix, **Submit for Approval** again.
+8. As `45195` **Approve and apply change**. Now the customer site shows the new values and the new photo; the removed photo is gone; no pending tag remains. Try **Reject** on another change: nothing changes on the approved project.
 
 **Reduce units** (maker only)
-9. As `700001` press **Reduce Units**, enter units and a reason, **Submit for Approval**. The unit count on the dashboard does not change yet. As `700002` review (old → new units, reason) and approve: the count drops. HO retail `400001` has no such button.
+9. As `52260` press **Reduce Units**, enter units and a reason, **Submit for Approval**. The unit count on the dashboard does not change yet. As `45195` review (old → new units, reason) and approve: the count drops. HO retail `58382` has no such button.
 
 **Delete**
-10. As `700001` press **Delete**, enter a reason. The project stays on the customer site and shows **Deletion pending approval**. As `700002` open **Review deletion** (reason shown; only *Approve* or *Reject* are possible). **Approve**: the project disappears from every dashboard (maker, checker, HO, DIT) and from the customer site; it is still in the database with status `DELETED` (see the **Logs** page for the whole history under `DELETE_REQUESTED` / `DELETE_APPROVED`).
+10. As `52260` press **Delete**, enter a reason. The project stays on the customer site and shows **Deletion pending approval**. As `45195` open **Review deletion** (reason shown; only *Approve* or *Reject* are possible). **Approve**: the project disappears from every dashboard (maker, checker, HO, DIT) and from the customer site; it is still in the database with status `DELETED` (see the **Logs** page for the whole history under `DELETE_REQUESTED` / `DELETE_APPROVED`).
 
 **Automatic version of all of this**
 ```bash
