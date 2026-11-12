@@ -1,6 +1,6 @@
 package com.ucorealty.controller;
 
-import com.ucorealty.dto.LeadRow;
+import com.ucorealty.model.LeadRow;
 import com.ucorealty.repository.LgEntryRepository;
 import com.ucorealty.util.RoleCheck;
 import com.ucorealty.util.Roles;

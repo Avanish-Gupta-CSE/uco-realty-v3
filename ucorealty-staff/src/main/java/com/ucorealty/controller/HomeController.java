@@ -1,6 +1,6 @@
 package com.ucorealty.controller;
 
-import com.ucorealty.dto.HrmsUserProfile;
+import com.ucorealty.model.HrmsUserProfile;
 import com.ucorealty.model.AppUser;
 import com.ucorealty.service.AuditService;
 import com.ucorealty.service.HrmsService;

@@ -25,7 +25,7 @@ export CATALINA_OPTS="-Dspring.profiles.active=uat \
 
 ## 1. Database (DBA)
 Follow `db/README_DBA_DEPLOYMENT.md`. Order: `01_CREATE_TABLES.sql`; for an existing older database also `06_STAGING_MODEL.sql` and `07_DROP_UNUSED_TABLES.sql` (maker's working-copy table `realty_project_staging`). There is no seed data and no application accounts. UAT and production use the bank's **real HRMS data** and never run `03_`/`05_` (laptop / H2 / Docker only; they are not in the release bundles).
-The application schema user needs `SELECT` on the bank HRMS tables (`employee_contact_details`, and `employee_tenure`). Columns read from `employee_contact_details`: `EMPNO, NAME, POSTING_SOL_ID, POSTING_SOL_DESC, SCALE_CODE, CADRE_CODE, POSTING_REGION_NAME, DESIG, MOBILE_NO, E_MAIL` (the table prefixes tried, in order, are the setting `uco.hrms.table-prefixes` / env `HRMS_TABLE_PREFIXES`; default `,hrms_dba.` = first no prefix, then `hrms_dba.`). Please verify these names against the real HRMS schema.
+The application schema user needs `SELECT` on the bank HRMS tables of the user `HRMS_DBA` (`employee_contact_details`, `employee_tenure`, `LG_ENTRY_REVAMP`). Columns read from `employee_contact_details`: `EMPNO, NAME, POSTING_SOL_ID, POSTING_SOL_DESC, SCALE_CODE, CADRE_CODE, POSTING_REGION_NAME, DESIG, MOBILE_NO, E_MAIL` (the tables are read as `HRMS_DBA.employee_contact_details`, `HRMS_DBA.employee_tenure` and `HRMS_DBA.LG_ENTRY_REVAMP`; the owner name is written once, in `util/DatabaseTables.java`). Please verify these names against the real HRMS schema.
 
 ## 2. Configuration
 **Single `application.properties` per module (aligned with the bank IndiaPost UAT pattern, Decision 133):**
@@ -54,7 +54,6 @@ Set `uco.sso.dev-login-enabled=false` in `ucorealty-staff/src/main/resources/app
 | `DB_URL` / `DB_USER` / `DB_PASS` | both | `uat`, `prod` | Oracle connection |
 | `DB_POOL_MAX` | both | no | connection pool size (default 10 in uat, 25 in prod) |
 | `SSO_ENCRYPTION_KEY` | staff | `prod` | the bank SSO key as plain text (16, 24 or 32 characters). The app refuses to start without a valid key in `prod`; `h2` and `uat` use a development key until set |
-| `HRMS_TABLE_PREFIXES` | staff | no | schema prefixes tried for the HRMS tables, default `,hrms_dba.` (first none, then `hrms_dba.`) |
 | `UCO_RBAC_RETAIL_SOLS` | staff | no (default 8001) | SOL(s) of HO Retail Banking. Others: `UCO_RBAC_SUPERADMIN_SOLS`=7115, `UCO_RBAC_MARKETING_SOLS`=8028, `UCO_RBAC_ZONAL_SOL_REGEX` |
 | `SESSION_COOKIE_SECURE` | both | no | `false` in `h2`/`uat`, `true` in `prod` |
 | `SERVER_PORT` | both | no | 8080 customer / 8081 staff (`java -jar` only) |

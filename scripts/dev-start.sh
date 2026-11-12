@@ -47,9 +47,17 @@ if [ "$ORACLE" = 1 ]; then
   docker cp "$ROOT/db_migrations" uco-oracle:/tmp/ >/dev/null
   [ "$RESET" = 1 ] && run_file 00_DROP_ALL_TABLES.sql
   [ "$(sql "select count(*) from user_tables where table_name='REALTY_PROJECTS';")" = "0" ] && run_file 01_CREATE_TABLES.sql
-  if [ "$(sql "select count(*) from user_tables where table_name='EMPLOYEE_CONTACT_DETAILS';")" = "0" ]; then
-    run_file 03_CREATE_HRMS_MOCK_TABLES.sql
-    run_file 05_LOCAL_TEST_EMPLOYEES.sql
+  # The bank's HRMS tables belong to the database user HRMS_DBA (see util/DatabaseTables.java); our user only has SELECT on them.
+  # Locally we recreate that: a user HRMS_DBA owns the stand-in tables (03 + 05) and uco_realty may read them.
+  SYSQ="docker exec -i uco-oracle sqlplus -s system/uco_realty_pwd@//localhost/XEPDB1"
+  HRMSQ="docker exec -i uco-oracle sqlplus -s HRMS_DBA/hrms_dba_pwd@//localhost/XEPDB1"
+  if [ "$(printf 'set heading off feedback off pagesize 0\nselect count(*) from dba_tables where owner='"'"'HRMS_DBA'"'"' and table_name='"'"'EMPLOYEE_CONTACT_DETAILS'"'"';\nexit\n' | $SYSQ | tr -d ' \t\r\n')" = "0" ]; then
+    show "sqlplus system: create user HRMS_DBA (owner of the stand-in HRMS tables)"
+    printf 'CREATE USER HRMS_DBA IDENTIFIED BY hrms_dba_pwd QUOTA UNLIMITED ON USERS;\nGRANT CREATE SESSION, CREATE TABLE TO HRMS_DBA;\nexit\n' | $SYSQ >/dev/null 2>&1 || true
+    for f in 03_CREATE_HRMS_MOCK_TABLES.sql 05_LOCAL_TEST_EMPLOYEES.sql; do
+      show "sqlplus HRMS_DBA @$f"; echo exit | $HRMSQ "@/tmp/db_migrations/$f" 2>&1 | grep -i "ORA-" && die "$f failed" || true
+    done
+    printf 'GRANT SELECT ON HRMS_DBA.employee_contact_details TO uco_realty;\nGRANT SELECT ON HRMS_DBA.employee_tenure TO uco_realty;\nGRANT SELECT ON HRMS_DBA.LG_ENTRY_REVAMP TO uco_realty;\nexit\n' | $HRMSQ >/dev/null
   fi
   ENV_ARGS=(DB_URL=jdbc:oracle:thin:@localhost:1521/XEPDB1 DB_USER=uco_realty DB_PASS=uco_realty_pwd)
 else

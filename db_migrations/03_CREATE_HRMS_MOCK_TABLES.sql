@@ -1,14 +1,14 @@
 -- ============================================================================
--- MOCK HRMS TABLES: for a DEVELOPER LAPTOP only (Docker Oracle). UAT and production already have the bank's real HRMS tables
--- (employee_contact_details, hrms_dba.employee_tenure); NEVER run this there.
+-- MOCK HRMS TABLES: for a DEVELOPER LAPTOP only. UAT and production already have the bank's real HRMS tables
+-- (employee_contact_details, employee_tenure, LG_ENTRY_REVAMP, owned by the database user HRMS_DBA); NEVER run this there.
 --
--- Table and column names are exactly what HrmsRepository queries; column types and sizes follow the bank's own
+-- Run it AS the database user HRMS_DBA (on H2, scripts/h2_schema.py puts it into a schema of that name; on Docker Oracle,
+-- scripts/dev-start.sh --oracle creates the user). The application reads the tables as HRMS_DBA.<table> (util/DatabaseTables.java).
+-- Table and column names are exactly what the application queries; column types and sizes follow the bank's own
 -- "desc employee_contact_details" (EMPNO varchar2(6), POSTING_SOL_ID varchar2(4), SCALE_CODE varchar2(2),
 -- CADRE_CODE varchar2(4), POSTING_REGION_NAME varchar2(50)). Only the columns the application reads are created.
--- Created in the current schema; the application also tries the hrms_dba. prefix.
 -- Fill with 05_LOCAL_TEST_EMPLOYEES.sql.
--- WARNING: this also creates a fake LG_ENTRY_REVAMP (with fake REALTY leads in 05). The application tries the schema WITHOUT a prefix first,
--- so on a database that has the bank's real HRMS tables this stand-in would hide them. Never run 03/05 there.
+-- WARNING: this also creates a fake LG_ENTRY_REVAMP (with fake REALTY leads in 05). Never run 03/05 on a database that has the bank's real tables.
 -- ============================================================================
 
 CREATE TABLE employee_contact_details (

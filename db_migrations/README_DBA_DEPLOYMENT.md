@@ -9,7 +9,7 @@ Scripts for UCO Bank's Oracle database (UAT and Production). The application nee
   GRANT CREATE SESSION, CREATE TABLE, CREATE SEQUENCE TO uco_realty;
   ```
   and a tablespace quota of at least 10 GB (project photos are stored in the database as SecureFiles BLOBs; the browser shrinks them to about 0.3 MB each).
-* `SELECT` on the real HRMS tables (`employee_contact_details`, `hrms_dba.employee_tenure`) for the same schema user. Both portals use this single database connection.
+* `SELECT` on the real HRMS tables of the user `HRMS_DBA` (`HRMS_DBA.employee_contact_details`, `HRMS_DBA.employee_tenure`, `HRMS_DBA.LG_ENTRY_REVAMP`) for the same schema user. Both portals use this single database connection.
 
 ## 2. What the DBA runs
 **A new database (UAT, production): one script.**

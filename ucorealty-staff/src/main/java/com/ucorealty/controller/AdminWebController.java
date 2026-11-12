@@ -1,6 +1,6 @@
 package com.ucorealty.controller;
 
-import com.ucorealty.dto.LeadRow;
+import com.ucorealty.model.LeadRow;
 import com.ucorealty.model.AuditLog;
 import com.ucorealty.model.LoginAudit;
 import com.ucorealty.model.Project;

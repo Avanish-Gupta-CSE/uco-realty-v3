@@ -1,6 +1,6 @@
 package com.ucorealty.service;
 
-import com.ucorealty.dto.HrmsUserProfile;
+import com.ucorealty.model.HrmsUserProfile;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
