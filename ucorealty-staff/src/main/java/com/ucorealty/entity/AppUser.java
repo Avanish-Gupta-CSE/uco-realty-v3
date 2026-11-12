@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 /**
  * The signed-in employee as the application sees them. It is NOT a table: it is built once at login from the HRMS
- * posting (see HrmsServiceImpl.toAppUser) and travels inside the session (security/StaffPrincipal).
+ * posting (see HrmsService.toAppUser) and travels inside the session (security/StaffPrincipal).
  */
 public class AppUser implements Serializable {
   private static final long serialVersionUID = 1L;
