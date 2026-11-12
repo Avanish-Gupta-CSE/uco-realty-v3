@@ -49,12 +49,11 @@ public class AdminWebController {
                           Model model) {
     // The nav link is hidden for other roles, but hiding is not protection: customer phone numbers need a real check
     RoleCheck.require(auth, Roles.LEAD_ROLES);
-    List<LeadRow> leads = leadExportController.filterLeads(from, to, status, search);
-
-    int total = leads.size();
+    int total = leadExportController.countLeads(from, to, status, search);
     int pages = Math.max(1, (total + LEADS_PER_PAGE - 1) / LEADS_PER_PAGE);
     int current = Math.min(Math.max(1, pageNo), pages);
-    leads = leads.subList((current - 1) * LEADS_PER_PAGE, Math.min(current * LEADS_PER_PAGE, total));
+    // only the 20 rows of this page are fetched from the bank table
+    List<LeadRow> leads = leadExportController.leadsPage(from, to, status, search, (current - 1) * LEADS_PER_PAGE, LEADS_PER_PAGE);
     model.addAttribute("leadCount", total);
     model.addAttribute("pageCount", pages);
     model.addAttribute("pageNo", current);

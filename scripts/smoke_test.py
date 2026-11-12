@@ -34,10 +34,8 @@ check("security headers present", {"content-security-policy", "x-frame-options",
 for path in ("/login", "/admin/projects", "/entry", "/api/admin/geo"):
     check(f"{path} is refused", pub.get(path)[0] == 403, pub.get(path)[0])
 check("unknown project is 404", pub.get("/project/UCR-PROJ-NOPE")[0] == 404)
-check("customer name with markup is refused (400)", pub.post("/lead", {"name": "<b>x</b>", "phone": "9876543210"},
-      headers={"X-Requested-With": "XMLHttpRequest"})[0] == 400)
-check("bad phone in lead is 400", pub.post("/lead", {"name": "Smoke", "phone": "123"},
-      headers={"X-Requested-With": "XMLHttpRequest"})[0] == 400)
+check("the old anonymous lead form (POST /lead) is gone", pub.post("/lead", {"name": "Smoke", "phone": "9876543210"})[0] in (403, 404, 405))
+check("the old lead API (POST /api/public/leads) is gone", pub.post("/api/public/leads", {"name": "Smoke"})[0] in (403, 404, 405))
 
 print("\n== Internal portal (staff)")
 internal = Client(INTERNAL)

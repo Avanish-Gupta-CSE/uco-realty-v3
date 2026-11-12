@@ -47,14 +47,13 @@ public class InternalSecurityConfig {
       standard.handle(request, response, denied);
     };
     http
-      // CSRF is on for every staff form/logout. Only the anonymous customer lead capture is exempt.
-      .csrf(csrf -> csrf.ignoringRequestMatchers("/lead"))
+      // CSRF protection is on (Spring's default) for every staff form and the logout button.
       .headers(h -> h.disable())   // replaced by SecurityHeadersFilter (see config package)
       .addFilterBefore(new SecurityHeadersFilter(), DisableEncodeUrlFilter.class)
       .authorizeHttpRequests(auth -> auth
         .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.ERROR, DispatcherType.INCLUDE).permitAll()   // INCLUDE: the shared header/footer of every JSP
         // Open pages: the catalog, the login steps, static files. Everything else needs a login.
-        .requestMatchers("/", "/home", "/entry", "/projects", "/project/**", "/lead", "/files/**",
+        .requestMatchers("/", "/home", "/entry", "/projects", "/project/**", "/files/**",
                          "/login", "/sso/generate-otp", "/otp", "/otp-verify", "/error-page", "/error",
                          "/assets/**", "/css/**", "/images/**", "/js/**").permitAll()
         // Superadmin DIT audit logs strictly restricted:

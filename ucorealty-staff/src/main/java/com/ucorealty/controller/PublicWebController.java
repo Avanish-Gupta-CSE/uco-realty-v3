@@ -1,11 +1,9 @@
 package com.ucorealty.controller;
 
-import com.ucorealty.entity.Lead;
 import com.ucorealty.entity.Project;
 import com.ucorealty.entity.ProjectImage;
 import com.ucorealty.repository.ProjectImageRepository;
 import com.ucorealty.repository.ProjectRepository;
-import com.ucorealty.service.LeadService;
 import com.ucorealty.service.MasterDataService;
 import com.ucorealty.service.ProjectService;
 import org.springframework.http.HttpHeaders;
@@ -34,16 +32,13 @@ public class PublicWebController {
   private final MasterDataService masterDataService;
   private final ProjectImageRepository imageRepo;
   private final ProjectRepository projectRepo;
-  private final LeadService leadService;
 
   public PublicWebController(ProjectService projectService, MasterDataService masterDataService,
-                             ProjectImageRepository imageRepo, ProjectRepository projectRepo,
-                             LeadService leadService) {
+                             ProjectImageRepository imageRepo, ProjectRepository projectRepo) {
     this.projectService = projectService;
     this.masterDataService = masterDataService;
     this.imageRepo = imageRepo;
     this.projectRepo = projectRepo;
-    this.leadService = leadService;
   }
 
   @GetMapping("/projects")
@@ -130,41 +125,6 @@ public class PublicWebController {
     model.addAttribute("images", imgs);
     model.addAttribute("isStaffPreview", isStaff);
     return "public-detail";
-  }
-
-  @PostMapping("/lead")
-  public Object createLead(@RequestParam String name,
-                           @RequestParam String phone,
-                           @RequestParam(required = false) String projectId,
-                           @RequestParam(required = false) String branchSelected,
-                           @RequestParam(defaultValue = LeadService.STATUS_INTEREST) String status,
-                           @RequestHeader(value = "X-Requested-With", required = false) String requestedWith) {
-    boolean ajax = "XMLHttpRequest".equalsIgnoreCase(requestedWith);
-    Lead l;
-    try {
-      l = leadService.capture(name, phone, projectId, branchSelected, status);
-    } catch (ResponseStatusException e) {
-      if (ajax) {
-        return ResponseEntity.status(e.getStatusCode()).body(Collections.singletonMap("error", e.getReason()));
-      }
-      return "redirect:/projects?error=invalid_lead";
-    }
-
-    if (ajax) {
-      Map<String, Object> resp = new HashMap<>();
-      resp.put("success", true);
-      resp.put("leadId", l.id);
-      resp.put("status", l.status);
-      return ResponseEntity.ok(resp);
-    }
-
-    if (LeadService.STATUS_INTEREST.equals(l.status)) {
-      return "redirect:https://www.uco.bank.in/home-loan";
-    }
-    if (l.projectId != null) {
-      return "redirect:/project/" + l.projectId;
-    }
-    return "redirect:/projects";
   }
 
   @GetMapping("/files/{id}")

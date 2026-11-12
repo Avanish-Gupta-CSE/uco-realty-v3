@@ -1,17 +1,11 @@
 package com.ucorealty.controller;
 
-import com.ucorealty.dto.LeadRequest;
-import com.ucorealty.entity.Lead;
 import com.ucorealty.entity.Project;
 import com.ucorealty.repository.ProjectImageRepository;
-import com.ucorealty.service.LeadService;
 import com.ucorealty.service.ProjectService;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -20,12 +14,10 @@ import java.util.stream.Collectors;
 public class PublicApiController {
 
   private final ProjectService projects;
-  private final LeadService leadService;
   private final ProjectImageRepository imageRepo;
 
-  public PublicApiController(ProjectService projects, LeadService leadService, ProjectImageRepository imageRepo) {
+  public PublicApiController(ProjectService projects, ProjectImageRepository imageRepo) {
     this.projects = projects;
-    this.leadService = leadService;
     this.imageRepo = imageRepo;
   }
 
@@ -148,23 +140,5 @@ public class PublicApiController {
     m.put("cities", new ArrayList<>(allCities));
     m.put("stateCities", stateCitiesOut);
     return m;
-  }
-
-  @PostMapping("/leads")
-  public Map<String, Object> createLead(@Valid @RequestBody LeadRequest req) {
-    String status = LeadService.normalizeStatus(req.status == null || req.status.trim().isEmpty() ? LeadService.STATUS_VISITOR : req.status);
-    if (status == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid lead status");
-    String projectId = (req.projectId == null || req.projectId.trim().isEmpty()) ? null : req.projectId.trim();
-    if (LeadService.STATUS_INTEREST.equals(status)) {
-      if (projectId == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A project is required to apply");
-    } else {
-      projectId = null;
-    }
-    Lead l = leadService.capture(req.name, req.phone, projectId, req.branchSelected, status);
-
-    Map<String, Object> res = new LinkedHashMap<>();
-    res.put("leadId", l.id);
-    res.put("message", "Thank you! Your Home Loan interest has been recorded. UCO Bank representative will contact you shortly.");
-    return res;
   }
 }

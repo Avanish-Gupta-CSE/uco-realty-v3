@@ -42,6 +42,4 @@
         </div>
     </nav>
 </header>
-<%-- The lead pop-up (gate-modal.jsp) is switched off for now: the bank's Home Loan page captures the customer's details itself.
-     To bring it back, restore the line  <jsp:include page="gate-modal.jsp"/>  here. --%>
 

@@ -581,8 +581,9 @@ public class ProjectWorkflowService {
     List<String> parts = new ArrayList<>();
     for (FieldChange c : diff) parts.add(c.label + ": " + c.oldValue + " -> " + c.newValue);
     if (!removedImageIds(s).isEmpty()) parts.add(removedImageIds(s).size() + " photo(s) removed");
-    int addedPhotos = (int) images.findByStagingId(s.id).stream().filter(ProjectImage::isPhoto).count();
-    int addedDocs = images.findByStagingId(s.id).size() - addedPhotos;
+    List<ProjectImage> added = images.findByStagingId(s.id);
+    int addedPhotos = (int) added.stream().filter(ProjectImage::isPhoto).count();
+    int addedDocs = added.size() - addedPhotos;
     if (addedPhotos > 0) parts.add(addedPhotos + " photo(s) added");
     if (addedDocs > 0) parts.add(addedDocs + " document(s) added");
     return String.join("; ", parts);

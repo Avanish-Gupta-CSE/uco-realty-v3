@@ -46,7 +46,7 @@ Checks the customer-site lockdown, headers, bad SSO tokens, CSRF, roles (DIT/mak
 8. The maker `700001` cannot approve their own project (no button; the server also refuses).
 
 **C. Customer (no login)**
-9. Open :8080/projects, fill the gate (10-digit mobile) or skip. Search by pincode. Open the project: photos, contacts. **Apply for Home Loan** saves the lead and opens https://www.uco.bank.in/home-loan in the same tab.
+9. Open :8080/projects (no pop-up). Search by pincode. Open the project: photos, contacts. **Apply for Home Loan** (sidebar and bottom of the page) opens the bank's Home Loan page (`uco.homeloan.base-url` + `/Lead_App/lead_web.jsp?utm=REALTY`) in the same tab; nothing is saved by us.
 10. Unapproved or unknown project ids return 404.
 
 **D. Head Office roles**
@@ -106,7 +106,7 @@ Watch it between the steps: *Save as Draft* changes only `realty_project_staging
 | 5 | Clean | `scripts/remove_demo_data.sh` | "demo data removed" |
 | 6 | Manual 3A-3D | sections 3 and 3b with the personas | every expected result above |
 | 7 | Roles | try `/admin/leads`, `/admin/audit-logs`, a reduce-units POST as the wrong roles | 403 / Access Denied |
-| 8 | Public lockdown | `curl -i http://localhost:8080/ucorealty-customer/admin/projects` | 403; only catalog, project detail, lead, files |
+| 8 | Public lockdown | `curl -i http://localhost:8080/ucorealty-customer/admin/projects` | 403; only catalog, project detail, files |
 | 9 | UAT-like start | section 5 or 5b | login behaves as described |
 | 9b | Context path | `python3 scripts/context_path_check.py` | "OK: every URL carries the context path" (no root-relative link, form, script or JSON URL) |
 | 10 | Docs | `.brain/03_SYSTEM/Roles_And_Actions.md`, `Schema.md`, `API.md` match any change you made | yes |
@@ -114,7 +114,7 @@ Watch it between the steps: *Save as Draft* changes only `realty_project_staging
 ## 4. Optional demo data
 ```bash
 python3 scripts/load_demo_data.py     # needs the test login (h2 or uat profile); refuses to run elsewhere
-scripts/remove_demo_data.sh           # removes everything whose project name ends in "(Demo)" and the demo leads
+scripts/remove_demo_data.sh           # removes everything whose project name ends in "(Demo)"
 ```
 
 ## 5. Test employees

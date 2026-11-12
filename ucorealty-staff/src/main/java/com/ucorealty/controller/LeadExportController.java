@@ -201,15 +201,25 @@ public class LeadExportController {
   }
 
   List<LeadRow> filterLeads(String from, String to, String status, String search) {
-    LocalDate fromDate = null;
-    LocalDate toDate = null;
+    return leads.find(parseDate(from), parseDate(to), status, search);   // the database does the filtering, newest first
+  }
+
+  /** One page of leads (the database skips and limits the rows). */
+  List<LeadRow> leadsPage(String from, String to, String status, String search, int offset, int limit) {
+    return leads.find(parseDate(from), parseDate(to), status, search, offset, limit);
+  }
+
+  int countLeads(String from, String to, String status, String search) {
+    return leads.count(parseDate(from), parseDate(to), status, search);
+  }
+
+  private static LocalDate parseDate(String text) {
+    if (text == null || text.trim().isEmpty()) return null;
     try {
-      if (from != null && !from.trim().isEmpty()) fromDate = LocalDate.parse(from);
-      if (to != null && !to.trim().isEmpty()) toDate = LocalDate.parse(to);
+      return LocalDate.parse(text);
     } catch (java.time.format.DateTimeParseException e) {
       throw new org.springframework.web.server.ResponseStatusException(
         org.springframework.http.HttpStatus.BAD_REQUEST, "Dates must be in yyyy-MM-dd format");
     }
-    return leads.find(fromDate, toDate, status, search);   // the database does the filtering, newest first
   }
 }

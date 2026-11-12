@@ -73,4 +73,3 @@
         </div>
     </nav>
 </header>
-<%-- The customer lead pop-up (gate-modal.jsp) is switched off: the bank's Home Loan page captures leads. It must never show to bank staff. --%>

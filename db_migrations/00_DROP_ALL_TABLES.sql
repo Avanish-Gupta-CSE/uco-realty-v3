@@ -13,7 +13,6 @@ BEGIN
     WHERE table_name IN (
       'REALTY_AUDIT_LOG', 
       'REALTY_LOGIN_AUDIT', 
-      'REALTY_LEADS', 
       'REALTY_PROJECT_IMAGES', 
       'REALTY_PROJECT_STAGING', 
       'REALTY_PROJECTS'

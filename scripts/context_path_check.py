@@ -21,7 +21,7 @@ INTERNAL = os.environ.get("INTERNAL_URL", "http://localhost:8081/ucorealty-staff
 
 problems, pages = [], 0
 URL_ATTR = re.compile(r'(?:href|src|action|data-[a-z-]*url)\s*=\s*"(/[^"]*)"', re.I)
-JS_LITERAL = re.compile(r'''["'](/(?:api|admin|files|projects?|lead|login|logout|otp|sso|entry|assets)(?:[/?#][^"']*)?)["']''')
+JS_LITERAL = re.compile(r'''["'](/(?:api|admin|files|projects?|login|logout|otp|sso|entry|assets)(?:[/?#][^"']*)?)["']''')
 
 
 def ctx_of(base):

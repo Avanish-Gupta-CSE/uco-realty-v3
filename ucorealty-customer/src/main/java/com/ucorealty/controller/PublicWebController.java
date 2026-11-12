@@ -1,10 +1,8 @@
 package com.ucorealty.controller;
 
-import com.ucorealty.entity.Lead;
 import com.ucorealty.entity.Project;
 import com.ucorealty.entity.ProjectImage;
 import com.ucorealty.repository.ProjectImageRepository;
-import com.ucorealty.service.LeadService;
 import com.ucorealty.service.MasterDataService;
 import com.ucorealty.service.ProjectService;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,20 +25,18 @@ public class PublicWebController {
   private final ProjectService projectService;
   private final MasterDataService masterDataService;
   private final ProjectImageRepository imageRepo;
-  private final LeadService leadService;
 
   /** Where "Apply for Home Loan" sends the customer: bank site (uco.homeloan.base-url, differs per environment) + this fixed path. */
   private static final String HOME_LOAN_PATH = "/Lead_App/lead_web.jsp?utm=REALTY";
   private final String homeLoanUrl;
 
   public PublicWebController(ProjectService projectService, MasterDataService masterDataService,
-                             ProjectImageRepository imageRepo, LeadService leadService,
+                             ProjectImageRepository imageRepo,
                              @Value("${uco.homeloan.base-url}") String homeLoanBaseUrl) {
     this.homeLoanUrl = homeLoanBaseUrl.replaceAll("/+$", "") + HOME_LOAN_PATH;
     this.projectService = projectService;
     this.masterDataService = masterDataService;
     this.imageRepo = imageRepo;
-    this.leadService = leadService;
   }
 
   @GetMapping({"/", "/projects"})
@@ -99,41 +95,6 @@ public class PublicWebController {
     model.addAttribute("amenityRows", com.ucorealty.util.Amenities.parse(p.amenityFlags));
     model.addAttribute("homeLoanUrl", homeLoanUrl);
     return "public-detail";
-  }
-
-  @PostMapping("/lead")
-  public Object createLead(@RequestParam String name,
-                           @RequestParam String phone,
-                           @RequestParam(required = false) String projectId,
-                           @RequestParam(required = false) String branchSelected,
-                           @RequestParam(defaultValue = LeadService.STATUS_INTEREST) String status,
-                           @RequestHeader(value = "X-Requested-With", required = false) String requestedWith) {
-    boolean ajax = "XMLHttpRequest".equalsIgnoreCase(requestedWith);
-    Lead l;
-    try {
-      l = leadService.capture(name, phone, projectId, branchSelected, status);
-    } catch (ResponseStatusException e) {
-      if (ajax) {
-        return ResponseEntity.status(e.getStatusCode()).body(Collections.singletonMap("error", e.getReason()));
-      }
-      return "redirect:/projects?error=invalid_lead";
-    }
-
-    if (ajax) {
-      Map<String, Object> resp = new HashMap<>();
-      resp.put("success", true);
-      resp.put("leadId", l.id);
-      resp.put("status", l.status);
-      return ResponseEntity.ok(resp);
-    }
-
-    if (LeadService.STATUS_INTEREST.equals(l.status)) {
-      return "redirect:https://www.uco.bank.in/home-loan";
-    }
-    if (l.projectId != null) {
-      return "redirect:/project/" + l.projectId;
-    }
-    return "redirect:/projects";
   }
 
   @GetMapping("/files/{id}")

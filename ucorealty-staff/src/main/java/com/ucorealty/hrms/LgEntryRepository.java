@@ -38,38 +38,57 @@ public class LgEntryRepository {
     this.hrms = hrms;
   }
 
-  /**
-   * Leads of the REALTY channel, newest first. Every filter is optional.
-   * SQL (built below):  select ... from LG_ENTRY_REVAMP where CHANNEL = 'REALTY'
-   *                     [and date between from and to] [and STATUS = ?] [and name / mobile / lead id contains text]
-   *                     order by date desc
-   */
-  public List<LeadRow> find(LocalDate from, LocalDate to, String status, String search) {
-    StringBuilder where = new StringBuilder(" WHERE CHANNEL = ?");
-    List<Object> args = new ArrayList<>();
-    args.add(CHANNEL);
+  /** The filter part of the SQL ("WHERE CHANNEL = ? AND ...") and its values, shared by the list and the count. */
+  private static final class Filter {
+    final StringBuilder where = new StringBuilder(" WHERE CHANNEL = ?");
+    final List<Object> args = new ArrayList<>();
+  }
+
+  private static Filter filter(LocalDate from, LocalDate to, String status, String search) {
+    Filter f = new Filter();
+    f.args.add(CHANNEL);
     if (from != null) {
-      where.append(" AND ").append(LEAD_DATE).append(" >= ?");
-      args.add(Timestamp.valueOf(from.atStartOfDay()));
+      f.where.append(" AND ").append(LEAD_DATE).append(" >= ?");
+      f.args.add(Timestamp.valueOf(from.atStartOfDay()));
     }
     if (to != null) {
-      where.append(" AND ").append(LEAD_DATE).append(" < ?");           // up to the end of the "to" day
-      args.add(Timestamp.valueOf(to.plusDays(1).atStartOfDay()));
+      f.where.append(" AND ").append(LEAD_DATE).append(" < ?");           // up to the end of the "to" day
+      f.args.add(Timestamp.valueOf(to.plusDays(1).atStartOfDay()));
     }
     if (status != null && !status.isBlank()) {
-      where.append(" AND STATUS = ?");
-      args.add(status.trim());
+      f.where.append(" AND STATUS = ?");
+      f.args.add(status.trim());
     }
     if (search != null && !search.isBlank()) {
       String like = "%" + search.trim().toUpperCase() + "%";
-      where.append(" AND (UPPER(REF_NAME) LIKE ? OR MOBILE_NO LIKE ? OR UPPER(LEAD_ID) LIKE ?)");
-      args.add(like);
-      args.add("%" + search.trim() + "%");
-      args.add(like);
+      f.where.append(" AND (UPPER(REF_NAME) LIKE ? OR MOBILE_NO LIKE ? OR UPPER(LEAD_ID) LIKE ?)");
+      f.args.add(like);
+      f.args.add("%" + search.trim() + "%");
+      f.args.add(like);
     }
-    String sql = "SELECT LEAD_ID, REF_NAME, MOBILE_NO, EMAIL, STATE, DISTRICT, FACILITY_INT, LOANAMOUNT, TENT_LOAN_AMT, STATUS, "
-        + LEAD_DATE + " AS LEAD_DT FROM %sLG_ENTRY_REVAMP" + where + " ORDER BY " + LEAD_DATE + " DESC";
+    return f;
+  }
 
+  /** All matching leads, newest first (used by the Excel export). Every filter is optional. */
+  public List<LeadRow> find(LocalDate from, LocalDate to, String status, String search) {
+    return find(from, to, status, search, 0, 0);
+  }
+
+  /**
+   * One page of matching leads, newest first: the database skips `offset` rows and returns at most `limit` (limit 0 = no limit).
+   * SQL (built below):  select ... from LG_ENTRY_REVAMP where CHANNEL = 'REALTY'
+   *                     [and date between from and to] [and STATUS = ?] [and name / mobile / lead id contains text]
+   *                     order by date desc, lead id desc [offset ? rows fetch next ? rows only]
+   */
+  public List<LeadRow> find(LocalDate from, LocalDate to, String status, String search, int offset, int limit) {
+    Filter f = filter(from, to, status, search);
+    String sql = "SELECT LEAD_ID, REF_NAME, MOBILE_NO, EMAIL, STATE, DISTRICT, FACILITY_INT, LOANAMOUNT, TENT_LOAN_AMT, STATUS, "
+        + LEAD_DATE + " AS LEAD_DT FROM %sLG_ENTRY_REVAMP" + f.where + " ORDER BY " + LEAD_DATE + " DESC, LEAD_ID DESC";   // LEAD_ID breaks ties, so rows never repeat or vanish between pages
+    if (limit > 0) {
+      sql += " OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+      f.args.add(Math.max(0, offset));
+      f.args.add(limit);
+    }
     for (String prefix : hrms.tablePrefixes()) {
       try {
         return jdbc.query(String.format(sql, prefix), (rs, i) -> {
@@ -86,12 +105,26 @@ public class LgEntryRepository {
           r.status = rs.getString("STATUS");
           r.submittedAt = rs.getTimestamp("LEAD_DT");
           return r;
-        }, args.toArray());
+        }, f.args.toArray());
       } catch (DataAccessException e) {
         log.warn("[UCO LEAD] Could not read {}LG_ENTRY_REVAMP: {}", prefix, e.getMostSpecificCause().getMessage());
       }
     }
     return new ArrayList<>();   // table not readable (permission / wrong schema): the page shows "no leads"; the log says why
+  }
+
+  /** How many leads match the same filters (for the page numbers). */
+  public int count(LocalDate from, LocalDate to, String status, String search) {
+    Filter f = filter(from, to, status, search);
+    for (String prefix : hrms.tablePrefixes()) {
+      try {
+        Integer n = jdbc.queryForObject("SELECT COUNT(*) FROM " + prefix + "LG_ENTRY_REVAMP" + f.where, Integer.class, f.args.toArray());
+        return n == null ? 0 : n;
+      } catch (DataAccessException e) {
+        log.warn("[UCO LEAD] Could not count {}LG_ENTRY_REVAMP: {}", prefix, e.getMostSpecificCause().getMessage());
+      }
+    }
+    return 0;
   }
 
   /** The distinct lead status codes present for the REALTY channel (fills the status filter on the Leads page). */

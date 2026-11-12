@@ -4,7 +4,7 @@
 Creates 9 fictional projects (names end with "(Demo)") through the normal web forms (staging copy -> checker approval), signing in as the local-profile
 test employees: makers 200001 (Ajmer) and 300001 (Bhopal) create and submit, checkers 200002 / 300002 decide.
 Result: 6 approved (with photos from .brain/07_REFERENCE/sample-uploads), 1 waiting for the checker, 1 returned for correction,
-1 draft, plus 9 demo leads.
+1 draft.
 
     python3 scripts/load_demo_data.py
     INTERNAL_URL=http://localhost:8081/ucorealty-staff python3 scripts/load_demo_data.py
@@ -142,11 +142,7 @@ def main():
             approved += fate == "approved"
         print(f"  {fate:10} {name}  ({pid or '-'})")
 
-    anon = Client(BASE)
-    for n in range(1, 10):
-        anon.post("/lead", {"name": f"Demo Customer {n}", "phone": f"98000000{n:02d}", "status": "Visitor"},
-                  headers={"X-Requested-With": "XMLHttpRequest"})
-    print(f"\nDone: {approved} approved, 1 pending, 1 returned, 1 draft, 9 demo leads.")
+    print(f"\nDone: {approved} approved, 1 pending, 1 returned, 1 draft. (Customer leads now come from the bank's LG_ENTRY_REVAMP: 4 sample REALTY rows are in db_migrations/05.)")
     print("Remove with scripts/remove_demo_data.sh")
 
 

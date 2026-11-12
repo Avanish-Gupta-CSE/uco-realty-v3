@@ -35,7 +35,7 @@ It stops old runs, builds both apps, starts staff then customer, and waits until
 | `smoke_test.py` | 34 quick checks: lockdown of the customer site, headers, CSRF, bad tokens, role access, logout | no (run before a release, `h2` or `uat` profile) |
 | `workflow_test.py` | 83 checks of the whole maker-checker flow through the real screens; leaves two test projects behind | no (`h2` or `uat` profile) |
 | `context_path_check.py` | crawls both apps as several roles and fails if any URL lacks the context path | no (run before a release) |
-| `load_demo_data.py` / `remove_demo_data.sh` | create / delete nine demo projects, leads and photos (all names end in "(Demo)") | no |
+| `load_demo_data.py` / `remove_demo_data.sh` | create / delete nine demo projects and photos (all names end in "(Demo)") | no |
 | `uco_http.py` | tiny helper the Python scripts share (cookies, CSRF token, login) | no |
 | `build_geo_districts.py` | one-off tool that built `geo/districts.json` from a government CSV | no |
 

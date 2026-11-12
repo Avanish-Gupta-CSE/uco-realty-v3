@@ -27,14 +27,14 @@ public class PublicSecurityConfig {
       standard.handle(request, response, denied);
     };
     http
-      // No staff session or login exists in this module; the only POST is the anonymous customer lead form.
+      // No staff session or login exists in this module and it has no POST endpoint (customers apply on the bank's Home Loan page).
       .csrf(AbstractHttpConfigurer::disable)
       .logout(AbstractHttpConfigurer::disable)   // no sessions or staff login exist here
       .headers(h -> h.disable())   // replaced by SecurityHeadersFilter (see config package)
       .addFilterBefore(new SecurityHeadersFilter(), DisableEncodeUrlFilter.class)
       .authorizeHttpRequests(auth -> auth
         .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.ERROR).permitAll()
-        .requestMatchers("/", "/projects", "/project/**", "/lead", "/files/**",
+        .requestMatchers("/", "/projects", "/project/**", "/files/**",
                          "/assets/**", "/css/**", "/images/**", "/js/**",
                          "/api/public/**", "/error", "/WEB-INF/jsp/**").permitAll()
         .anyRequest().denyAll()

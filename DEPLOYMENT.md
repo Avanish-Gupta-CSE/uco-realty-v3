@@ -82,7 +82,7 @@ Open point for the SSO team: the token has no expiry, so a captured link can be 
 ## 4. Network rules (reverse proxy / firewall)
 | Path | Internet | Intranet |
 | :--- | :--- | :--- |
-| public WAR: `/`, `/projects`, `/project/*`, `/lead`, `/files/*`, `/assets/*`, `/api/public/*` | allow | allow |
+| public WAR: `/`, `/projects`, `/project/*`, `/files/*`, `/assets/*`, `/api/public/*` | allow | allow |
 | internal WAR (everything: `/entry`, `/login`, `/admin/**`, `/api/admin/**`) | **do not expose** | allow |
 
 Terminate HTTPS at the proxy, pass `X-Forwarded-For` (overwrite any client-supplied value) and `X-Forwarded-Proto`. The app itself sends CSP, `X-Frame-Options: DENY`, nosniff, `Referrer-Policy`, and HSTS on HTTPS.
@@ -90,7 +90,7 @@ Terminate HTTPS at the proxy, pass `X-Forwarded-For` (overwrite any client-suppl
 ## 5. Smoke test after deployment
 1. Customer site: catalog loads, only approved projects, `/login` and `/admin` return 403.
 2. Test login (`h2`, `uat`): sign in with employee `200001`, OTP `123456`. With the bank SSO: open the UAT SSO portal link with real UAT employees: one at SOL 7115 (DIT), one at 8028 (Marketing), one at 8001 (Retail), a Scale 1–3 officer and a Scale 4+ executive at the same zonal office (e.g. 7001 Patna), and an employee at an ordinary branch (must be refused).
-3. Maker creates a project with photos and submits; the checker of the same zone approves; it appears on the customer site; a customer lead is saved; leads export to Excel; DIT sees the Logs page and a maker does not.
+3. Maker creates a project with photos and submits; the checker of the same zone approves; it appears on the customer site; the leads page (read from the bank's LG_ENTRY_REVAMP) exports to Excel; DIT sees the Logs page and a maker does not.
 
 ## 6. Hand-over bundle
 `scripts/package-release.sh uat|prod` on the build machine → zip with both WARs DBA scripts (production bundles omit drop/mock/test scripts), this guide and SHA-256 checksums.

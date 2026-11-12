@@ -249,7 +249,7 @@ fl = demo.form(3, "ZZ Workflow <b>Bold</b>", "ZZ Workflow Builder", "Bihar", "Pa
 fl.update({"branchName": "Patna Main Branch", "_csrf": maker.csrf("/admin/projects"), "action": "draft"})
 s_, _, body = maker.multipart_post("/admin/projects/staging/save", fl, [])
 check("a project name with < > is refused (form shown again with the message)", s_ == 200 and "must not contain" in body.decode() and demo.newest_project_id(maker, "ZZ Workflow Bold") is None)
-check("a customer name with markup is refused (400)", Client(PUBLIC).post("/lead", {"name": "<b>x</b>", "phone": "9876543210", "status": "Visitor"}, headers={"X-Requested-With": "XMLHttpRequest"})[0] == 400)
+check("the old anonymous lead form (POST /lead) is gone", Client(PUBLIC).post("/lead", {"name": "x", "phone": "9876543210"})[0] in (403, 404, 405))
 fl["projectName"] = "ZZ Workflow Tom & Jerry"
 maker.multipart_post("/admin/projects/staging/save", fl, [])
 html = maker.get("/admin/projects?search=Jerry")[2].decode()
