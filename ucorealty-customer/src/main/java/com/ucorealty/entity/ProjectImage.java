@@ -25,7 +25,6 @@ public class ProjectImage {
 
   public boolean isPhoto() { return fileKind == null || PHOTO.equals(fileKind); }
   public String getFileKind() { return fileKind; }
-  public void setFileKind(String fileKind) { this.fileKind = fileKind; }
 
   @Column(name = "file_name", length = 255)
   public String fileName;
@@ -66,25 +65,15 @@ public class ProjectImage {
     }
   }
 
-  // --- JavaBean Getters & Setters for JSP EL support ---
+  // --- Getters (the pages read the values through these; the database layer fills the fields directly, so no setters) ---
   public Long getId() { return id; }
-  public void setId(Long id) { this.id = id; }
   public String getProjectId() { return projectId; }
-  public void setProjectId(String projectId) { this.projectId = projectId; }
   public String getFileName() { return fileName; }
-  public void setFileName(String fileName) { this.fileName = fileName; }
   public String getMimeType() { return mimeType; }
-  public void setMimeType(String mimeType) { this.mimeType = mimeType; }
   public Long getFileSize() { return fileSize; }
-  public void setFileSize(Long fileSize) { this.fileSize = fileSize; }
   public byte[] getFileData() { return fileData; }
-  public void setFileData(byte[] fileData) { this.fileData = fileData; }
   public String getFilePath() { return filePath; }
-  public void setFilePath(String filePath) { this.filePath = filePath; }
   public Integer getIsVerified() { return isVerified; }
-  public void setIsVerified(Integer isVerified) { this.isVerified = isVerified; }
   public String getUploadedBy() { return uploadedBy; }
-  public void setUploadedBy(String uploadedBy) { this.uploadedBy = uploadedBy; }
   public LocalDateTime getUploadedAt() { return uploadedAt; }
-  public void setUploadedAt(LocalDateTime uploadedAt) { this.uploadedAt = uploadedAt; }
 }

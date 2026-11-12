@@ -16,9 +16,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.time.LocalDate;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /** Customer leads page + Excel export, and the DIT-only Logs page. (Project screens: ProjectWorkflowController.) */
 @Controller

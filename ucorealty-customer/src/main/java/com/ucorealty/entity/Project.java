@@ -175,113 +175,60 @@ public class Project {
   @Column(name = "is_published")
   public Integer isPublished = 0;
 
-  // --- JavaBean Getters & Setters for JSP EL support ---
+  // --- Getters (the pages read the values through these; the database layer fills the fields directly, so no setters) ---
   public String getId() { return id; }
-  public void setId(String id) { this.id = id; }
   public String getZoneName() { return zoneName; }
-  public void setZoneName(String zoneName) { this.zoneName = zoneName; }
   public String getBranchName() { return branchName; }
-  public void setBranchName(String branchName) { this.branchName = branchName; }
   public String getStateName() { return stateName; }
-  public void setStateName(String stateName) { this.stateName = stateName; }
   public String getCityName() { return cityName; }
-  public void setCityName(String cityName) { this.cityName = cityName; }
   public String getProjectName() { return projectName; }
-  public void setProjectName(String projectName) { this.projectName = projectName; }
   public String getReraNo() { return reraNo; }
-  public void setReraNo(String reraNo) { this.reraNo = reraNo; }
   public String getPropertyId() { return propertyId; }
-  public void setPropertyId(String propertyId) { this.propertyId = propertyId; }
   public String getTypeOfUnit() { return typeOfUnit; }
-  public void setTypeOfUnit(String typeOfUnit) { this.typeOfUnit = typeOfUnit; }
   public LocalDate getApprovalDate() { return approvalDate; }
-  public void setApprovalDate(LocalDate approvalDate) { this.approvalDate = approvalDate; }
   public Integer getTotalInventory() { return totalInventory; }
-  public void setTotalInventory(Integer totalInventory) { this.totalInventory = totalInventory; }
   public Integer getUnsoldInventory() { return unsoldInventory; }
-  public void setUnsoldInventory(Integer unsoldInventory) { this.unsoldInventory = unsoldInventory; }
   public LocalDate getInventoryAsOnDate() { return inventoryAsOnDate; }
-  public void setInventoryAsOnDate(LocalDate inventoryAsOnDate) { this.inventoryAsOnDate = inventoryAsOnDate; }
   public String getAmenities() { return amenities; }
-  public void setAmenities(String amenities) { this.amenities = amenities; }
   public LocalDate getStartDate() { return startDate; }
-  public void setStartDate(LocalDate startDate) { this.startDate = startDate; }
   public LocalDate getCompletionDate() { return completionDate; }
-  public void setCompletionDate(LocalDate completionDate) { this.completionDate = completionDate; }
   public Integer getAptPerFloor() { return aptPerFloor; }
-  public void setAptPerFloor(Integer aptPerFloor) { this.aptPerFloor = aptPerFloor; }
   public Integer getNoOfTowers() { return noOfTowers; }
-  public void setNoOfTowers(Integer noOfTowers) { this.noOfTowers = noOfTowers; }
   public String getTotalProjectArea() { return totalProjectArea; }
-  public void setTotalProjectArea(String totalProjectArea) { this.totalProjectArea = totalProjectArea; }
   public String getCarpetMin() { return carpetMin; }
-  public void setCarpetMin(String carpetMin) { this.carpetMin = carpetMin; }
   public String getCarpetMax() { return carpetMax; }
-  public void setCarpetMax(String carpetMax) { this.carpetMax = carpetMax; }
   public String getBuildupMin() { return buildupMin; }
-  public void setBuildupMin(String buildupMin) { this.buildupMin = buildupMin; }
   public String getBuildupMax() { return buildupMax; }
-  public void setBuildupMax(String buildupMax) { this.buildupMax = buildupMax; }
   public String getDistRailway() { return distRailway; }
-  public void setDistRailway(String distRailway) { this.distRailway = distRailway; }
   public String getDistAirport() { return distAirport; }
-  public void setDistAirport(String distAirport) { this.distAirport = distAirport; }
   public String getAvgRate() { return avgRate; }
-  public void setAvgRate(String avgRate) { this.avgRate = avgRate; }
   public String getBudgetMin() { return budgetMin; }
-  public void setBudgetMin(String budgetMin) { this.budgetMin = budgetMin; }
   public String getBudgetMax() { return budgetMax; }
-  public void setBudgetMax(String budgetMax) { this.budgetMax = budgetMax; }
   public String getBuilderName() { return builderName; }
-  public void setBuilderName(String builderName) { this.builderName = builderName; }
   public String getProjectAddress() { return projectAddress; }
-  public void setProjectAddress(String projectAddress) { this.projectAddress = projectAddress; }
   public String getPinCode() { return pinCode; }
-  public void setPinCode(String pinCode) { this.pinCode = pinCode; }
   public String getPromoter1() { return promoter1; }
-  public void setPromoter1(String promoter1) { this.promoter1 = promoter1; }
   public String getPromoter2() { return promoter2; }
-  public void setPromoter2(String promoter2) { this.promoter2 = promoter2; }
   public String getPromoter3() { return promoter3; }
-  public void setPromoter3(String promoter3) { this.promoter3 = promoter3; }
   public String getPromoter4() { return promoter4; }
-  public void setPromoter4(String promoter4) { this.promoter4 = promoter4; }
   public String getPromoter5() { return promoter5; }
-  public void setPromoter5(String promoter5) { this.promoter5 = promoter5; }
   public String getSalesExecName() { return salesExecName; }
-  public void setSalesExecName(String salesExecName) { this.salesExecName = salesExecName; }
   public String getSalesMobile() { return salesMobile; }
-  public void setSalesMobile(String salesMobile) { this.salesMobile = salesMobile; }
   public String getSalesEmail() { return salesEmail; }
-  public void setSalesEmail(String salesEmail) { this.salesEmail = salesEmail; }
   public String getWebsite() { return website; }
-  public void setWebsite(String website) { this.website = website; }
   public String getBuilderRating() { return builderRating; }
-  public void setBuilderRating(String builderRating) { this.builderRating = builderRating; }
   public String getBuilderRatingOutOf() { return builderRatingOutOf; }
-  public void setBuilderRatingOutOf(String builderRatingOutOf) { this.builderRatingOutOf = builderRatingOutOf; }
   public String getVideoUrl() { return videoUrl; }
-  public void setVideoUrl(String videoUrl) { this.videoUrl = videoUrl; }
   public String getAmenityFlags() { return amenityFlags; }
-  public void setAmenityFlags(String amenityFlags) { this.amenityFlags = amenityFlags; }
   public String getBuilderBg() { return builderBg; }
-  public void setBuilderBg(String builderBg) { this.builderBg = builderBg; }
   public String getBranchHeadName() { return branchHeadName; }
-  public void setBranchHeadName(String branchHeadName) { this.branchHeadName = branchHeadName; }
   public String getBranchHeadNumber() { return branchHeadNumber; }
-  public void setBranchHeadNumber(String branchHeadNumber) { this.branchHeadNumber = branchHeadNumber; }
   public String getRelExecName() { return relExecName; }
-  public void setRelExecName(String relExecName) { this.relExecName = relExecName; }
   public String getRelExecNumber() { return relExecNumber; }
-  public void setRelExecNumber(String relExecNumber) { this.relExecNumber = relExecNumber; }
   public String getStatus() { return status; }
   public void setStatus(String status) { this.status = status; }
   public Integer getIsActive() { return isActive; }
-  public void setIsActive(Integer isActive) { this.isActive = isActive; }
   public Integer getActive() { return isActive; }
-  public void setActive(Integer active) { this.isActive = active; }
   public Integer getIsPublished() { return isPublished; }
-  public void setIsPublished(Integer isPublished) { this.isPublished = isPublished; }
   public Integer getPublished() { return isPublished; }
-  public void setPublished(Integer published) { this.isPublished = published; }
 }

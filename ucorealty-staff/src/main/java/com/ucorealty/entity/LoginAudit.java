@@ -50,23 +50,17 @@ public class LoginAudit {
     return loginTime.format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss"));
   }
 
-  // --- Getters and Setters ---
+  // --- Getters (the pages read the values; no setters needed) ---
   public Long getId() { return id; }
-  public void setId(Long id) { this.id = id; }
 
   public String getUsername() { return username; }
-  public void setUsername(String username) { this.username = username; }
 
   public String getIpAddress() { return ipAddress; }
-  public void setIpAddress(String ipAddress) { this.ipAddress = ipAddress; }
 
   public boolean isSuccess() { return success; }
-  public void setSuccess(boolean success) { this.success = success; }
 
   public String getRemarks() { return remarks; }
-  public void setRemarks(String remarks) { this.remarks = remarks; }
 
   public LocalDateTime getLoginTime() { return loginTime; }
-  public void setLoginTime(LocalDateTime loginTime) { this.loginTime = loginTime; }
 }
 
