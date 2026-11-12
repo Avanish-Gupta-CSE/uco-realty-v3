@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
  * The only place that reads the bank's HRMS tables (read only: this application never writes to them).
  *
  * Tables: employee_contact_details (who the employee is and where posted), employee_tenure (current posting, overrides the
- * contact row) and employee_job_profile (optional). They live in the same database as our own tables, either in our schema
+ * contact row). They live in the same database as our own tables, either in our schema
  * (or reached through a synonym) or in the HRMS schema "hrms_dba". Which of the two is a bank question, so the prefixes
  * to try, in order, are a setting: uco.hrms.table-prefixes (env HRMS_TABLE_PREFIXES), default ",hrms_dba." = first no prefix, then hrms_dba.
  *
@@ -34,8 +34,6 @@ public class HrmsRepository {
       "SELECT EMPNO, NAME, POSTING_SOL_ID, POSTING_SOL_DESC, SCALE_CODE, CADRE_CODE, POSTING_REGION_NAME, DESIG, MOBILE_NO, E_MAIL, RETIRE_FLAG FROM %semployee_contact_details WHERE EMPNO = ?";
   private static final String TENURE_SQL =
       "SELECT POSTING_SOL, SCALE_CODE, TENURE_AS FROM %semployee_tenure WHERE EMPNO = ? AND SYSDATE BETWEEN EFF_FROM_DATE AND EFF_TO_DATE AND STATUS_FLAG = 'V'";
-  private static final String JOB_PROFILE_SQL =
-      "SELECT JOB_PROFILE FROM %semployee_job_profile WHERE EMPNO = ? AND SYSDATE BETWEEN EFF_FROM_DATE AND EFF_TO_DATE AND STATUS_FLAG = 'V'";
 
   private final JdbcTemplate jdbc;
   private final List<String> prefixes = new ArrayList<>();
@@ -104,7 +102,6 @@ public class HrmsRepository {
             return Optional.empty();
           }
           addTenure(p);
-          addJobProfile(p);
           return Optional.of(p);
         }
       } catch (DataAccessException e) {
@@ -132,20 +129,6 @@ public class HrmsRepository {
         return;   // this prefix has the table: done, even when the employee has no current row
       } catch (DataAccessException e) {
         logger.debug("[UCO HRMS] Tenure lookup on '{}employee_tenure' failed: {}", prefix, e.getMessage());
-      }
-    }
-  }
-
-  private void addJobProfile(HrmsUserProfile p) {
-    for (String prefix : prefixes) {
-      try {
-        jdbc.query(String.format(JOB_PROFILE_SQL, prefix), (ResultSetExtractor<Void>) rs -> {
-          if (rs.next()) p.setJobProfile(rs.getString("JOB_PROFILE"));
-          return null;
-        }, p.getEmpNo());
-        return;
-      } catch (DataAccessException e) {
-        logger.debug("[UCO HRMS] Job-profile lookup on '{}employee_job_profile' failed: {}", prefix, e.getMessage());
       }
     }
   }

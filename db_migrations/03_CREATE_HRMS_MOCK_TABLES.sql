@@ -1,6 +1,6 @@
 -- ============================================================================
 -- MOCK HRMS TABLES: for a DEVELOPER LAPTOP only (Docker Oracle). UAT and production already have the bank's real HRMS tables
--- (employee_contact_details, hrms_dba.employee_tenure, hrms_dba.employee_job_profile); NEVER run this there.
+-- (employee_contact_details, hrms_dba.employee_tenure); NEVER run this there.
 --
 -- Table and column names are exactly what HrmsRepository queries; column types and sizes follow the bank's own
 -- "desc employee_contact_details" (EMPNO varchar2(6), POSTING_SOL_ID varchar2(4), SCALE_CODE varchar2(2),
@@ -31,14 +31,6 @@ CREATE TABLE employee_tenure (
   POSTING_SOL   VARCHAR2(4),
   SCALE_CODE    VARCHAR2(2),
   TENURE_AS     VARCHAR2(100),
-  EFF_FROM_DATE DATE,
-  EFF_TO_DATE   DATE,
-  STATUS_FLAG   CHAR(1) DEFAULT 'V'
-);
-
-CREATE TABLE employee_job_profile (
-  EMPNO         VARCHAR2(6) NOT NULL,
-  JOB_PROFILE   VARCHAR2(100),
   EFF_FROM_DATE DATE,
   EFF_TO_DATE   DATE,
   STATUS_FLAG   CHAR(1) DEFAULT 'V'

@@ -17,7 +17,6 @@ public class HrmsUserProfile implements Serializable {
   private String cadre;
   private String postingRegionName;
   private String tenureAs;
-  private String jobProfile;
   private String mobile;
   private String email;
   private boolean active = true;
@@ -49,8 +48,6 @@ public class HrmsUserProfile implements Serializable {
   public String getTenureAs() { return tenureAs; }
   public void setTenureAs(String tenureAs) { this.tenureAs = tenureAs; }
 
-  public String getJobProfile() { return jobProfile; }
-  public void setJobProfile(String jobProfile) { this.jobProfile = jobProfile; }
 
   public String getMobile() { return mobile; }
   public void setMobile(String mobile) { this.mobile = mobile; }

@@ -41,3 +41,7 @@ It stops old runs, builds both apps, starts staff then customer, and waits until
 
 ## Reading the logs
 `.run/internal.log` (staff) and `.run/public.log` (customer). On a Tomcat server the same output goes to `catalina.out`. A failed start shows "APPLICATION FAILED TO START" with the reason (wrong `DB_*`, missing `SSO_ENCRYPTION_KEY`, or in `uat` tables that do not match the code).
+
+## Page snapshot (proof that a clean-up changed nothing visible)
+`scripts/snapshot_fresh.sh .run/snap-before` (stop, rebuild, start on H2, load demo data, save every page for every role), make the change,
+`scripts/snapshot_fresh.sh .run/snap-after`, then `python3 scripts/snapshot_pages.py compare .run/snap-before .run/snap-after`. 410 pages; two clean runs on the same code are identical, so any difference is a real change.

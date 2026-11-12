@@ -25,7 +25,7 @@ export CATALINA_OPTS="-Dspring.profiles.active=uat \
 
 ## 1. Database (DBA)
 Follow `db/README_DBA_DEPLOYMENT.md`. Order: `01_CREATE_TABLES.sql`; for an existing older database also `06_STAGING_MODEL.sql` and `07_DROP_UNUSED_TABLES.sql` (maker's working-copy table `realty_project_staging`). There is no seed data and no application accounts. UAT and production use the bank's **real HRMS data** and never run `03_`/`05_` (laptop / H2 / Docker only; they are not in the release bundles).
-The application schema user needs `SELECT` on the bank HRMS tables (`employee_contact_details`, and optionally `employee_tenure`, `employee_job_profile`). Columns read from `employee_contact_details`: `EMPNO, NAME, POSTING_SOL_ID, POSTING_SOL_DESC, SCALE_CODE, CADRE_CODE, POSTING_REGION_NAME, DESIG, MOBILE_NO, E_MAIL` (the table prefixes tried, in order, are the setting `uco.hrms.table-prefixes` / env `HRMS_TABLE_PREFIXES`; default `,hrms_dba.` = first no prefix, then `hrms_dba.`). Please verify these names against the real HRMS schema.
+The application schema user needs `SELECT` on the bank HRMS tables (`employee_contact_details`, and `employee_tenure`). Columns read from `employee_contact_details`: `EMPNO, NAME, POSTING_SOL_ID, POSTING_SOL_DESC, SCALE_CODE, CADRE_CODE, POSTING_REGION_NAME, DESIG, MOBILE_NO, E_MAIL` (the table prefixes tried, in order, are the setting `uco.hrms.table-prefixes` / env `HRMS_TABLE_PREFIXES`; default `,hrms_dba.` = first no prefix, then `hrms_dba.`). Please verify these names against the real HRMS schema.
 
 ## 2. Configuration
 **Single `application.properties` per module (aligned with the bank IndiaPost UAT pattern, Decision 133):**
