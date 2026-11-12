@@ -183,7 +183,7 @@ public class LeadExportController {
         };
         for (int i = 0; i < values.length; i++) {
           Cell c = r.createCell(i);
-          c.setCellValue(values[i] != null ? values[i] : "");
+          c.setCellValue(safeText(values[i]));
           c.setCellStyle(i == 8 ? badgeStyle : rowStyle);   // column 8 = Lead Status
         }
         rowIdx++;
@@ -197,6 +197,20 @@ public class LeadExportController {
 
       wb.write(res.getOutputStream());
     }
+  }
+
+  /**
+   * Text for an Excel cell. A customer typed these values on a public page, so text that Excel could read as a formula
+   * (it starts with = or @, a tab or a line break, or with + or - followed by letters) gets a ' in front. Excel then
+   * shows it as plain text and never runs it. Phone numbers such as +91 98765 43210 are left as they are.
+   */
+  static String safeText(String text) {
+    if (text == null) return "";
+    if (text.isEmpty()) return text;
+    char first = text.charAt(0);
+    boolean formulaStart = first == '=' || first == '@' || first == '\t' || first == '\r' || first == '\n';
+    boolean signedText = (first == '+' || first == '-') && !text.matches("[-+0-9 ()./]*");
+    return (formulaStart || signedText) ? "'" + text : text;
   }
 
   List<LeadRow> filterLeads(String from, String to, String status, String search) {
