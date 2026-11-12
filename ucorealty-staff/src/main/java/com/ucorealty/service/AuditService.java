@@ -7,6 +7,7 @@ import com.ucorealty.repository.LoginAuditRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -69,12 +70,12 @@ public class AuditService {
   /** One page of the activity trail, newest first (Logs page). */
   @Transactional(readOnly = true)
   public Page<AuditLog> getActivityLogs(Pageable pageable) {
-    return auditLogRepository.findAllByOrderByCreatedAtDesc(pageable);
+    return new PageImpl<>(auditLogRepository.findNewestFirst(pageable.getOffset(), pageable.getPageSize()), pageable, auditLogRepository.countAll());
   }
 
   /** One page of the sign-in trail, newest first (Logs page). */
   @Transactional(readOnly = true)
   public Page<LoginAudit> getLoginAudits(Pageable pageable) {
-    return loginAuditRepository.findAllByOrderByLoginTimeDesc(pageable);
+    return new PageImpl<>(loginAuditRepository.findNewestFirst(pageable.getOffset(), pageable.getPageSize()), pageable, loginAuditRepository.countAll());
   }
 }

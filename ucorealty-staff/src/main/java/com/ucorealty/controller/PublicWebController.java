@@ -99,8 +99,8 @@ public class PublicWebController {
 
     Map<String, Long> thumbnails = new HashMap<>();
     if (!pageItems.isEmpty()) {
-      for (Object[] row : imageRepo.findFirstImageIds(pageItems.stream().map(p -> p.id).collect(Collectors.toList()))) {
-        thumbnails.put((String) row[1], (Long) row[0]);
+      for (ProjectImageRepository.FirstPhoto photo : imageRepo.findFirstImageIds(pageItems.stream().map(p -> p.id).collect(Collectors.toList()))) {
+        thumbnails.put(photo.getProjectId(), photo.getImageId());
       }
     }
     model.addAttribute("projectThumbnails", thumbnails);
