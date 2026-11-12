@@ -33,7 +33,7 @@ body {
   flex-direction: column;
 }
 
-main.container, main.container-fluid {
+main.container {
   flex: 1;
 }
 
@@ -48,19 +48,6 @@ a:hover {
 
 .text-primary {
   color: var(--uco-navy) !important;
-}
-
-.btn-outline-primary {
-  color: var(--uco-navy);
-  border-color: var(--uco-navy);
-}
-
-.btn-outline-primary:hover,
-.btn-outline-primary:focus,
-.btn-outline-primary:active {
-  background-color: var(--uco-navy) !important;
-  border-color: var(--uco-navy) !important;
-  color: #ffffff !important;
 }
 
 /* ==========================================================================
@@ -111,23 +98,6 @@ a:hover {
   font-size: 12px;
   color: var(--uco-gray-muted);
   margin: 0;
-}
-
-.user-menu {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 13px;
-  flex-wrap: wrap;
-}
-
-.user-badge {
-  background: var(--uco-light-blue);
-  color: var(--uco-navy);
-  padding: 4px 10px;
-  border-radius: 4px;
-  font-weight: 600;
-  font-size: 11px;
 }
 
 .navbar-custom {
@@ -237,40 +207,6 @@ a:hover {
   color: #ffffff;
 }
 
-.btn-success {
-  background-color: var(--uco-green);
-  border-color: var(--uco-green);
-  color: #ffffff;
-}
-.btn-success:hover, .btn-success:focus {
-  background-color: #1b5e20;
-  border-color: #1b5e20;
-  color: #ffffff;
-}
-
-.btn-warning {
-  background-color: var(--uco-gold);
-  border-color: var(--uco-gold);
-  color: #000000;
-  font-weight: 600;
-}
-.btn-warning:hover, .btn-warning:focus {
-  background-color: #e6a800;
-  border-color: #e6a800;
-  color: #000000;
-}
-
-.btn-danger {
-  background-color: var(--uco-red);
-  border-color: var(--uco-red);
-  color: #ffffff;
-}
-.btn-danger:hover, .btn-danger:focus {
-  background-color: #7f1d1d;
-  border-color: #7f1d1d;
-  color: #ffffff;
-}
-
 /* ==========================================================================
    Status Badges
    ========================================================================== */
@@ -289,49 +225,10 @@ a:hover {
   color: var(--uco-green);
   font-weight: 600;
 }
-.badge-rejected {
-  background-color: var(--uco-red-light);
-  color: var(--uco-red);
-  font-weight: 600;
-}
 .badge-correction {
   background-color: #ffedd5;
   color: #9a3412;
   font-weight: 600;
-}
-
-/* ==========================================================================
-   Banners & Alerts
-   ========================================================================== */
-.staff-preview-banner {
-  background: #fffbeb;
-  border: 1px solid #fef08a;
-  border-left: 5px solid #d97706;
-  color: #854d0e;
-  padding: 14px 20px;
-  border-radius: 6px;
-  margin-bottom: 24px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
-}
-
-.form-error-alert {
-  background-color: var(--uco-red-light);
-  border: 1px solid var(--uco-red-border);
-  color: var(--uco-red);
-  padding: 14px 18px;
-  border-radius: 6px;
-  margin-bottom: 24px;
-  font-weight: 500;
-  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.08);
-}
-
-.alert-success-custom {
-  background-color: var(--uco-green-light);
-  color: var(--uco-green);
-  border: 1px solid var(--uco-green-border);
-  border-radius: 6px;
-  padding: 14px 18px;
-  margin-bottom: 20px;
 }
 
 /* ==========================================================================
@@ -433,232 +330,6 @@ a:hover {
   margin-bottom: 24px;
 }
 
-.quick-apply-box {
-  background: #e6eef8;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  padding: 14px;
-  margin-bottom: 16px;
-  font-size: 13px;
-}
-
-/* ==========================================================================
-   Photo Slots Grid (Form Page - 10 Slots)
-   ========================================================================== */
-.photo-slots-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 16px;
-  margin-bottom: 16px;
-}
-
-.photo-slot-card {
-  border-radius: 8px;
-  background: #ffffff;
-  min-height: 230px;
-  transition: all 0.15s ease-in-out;
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-}
-
-.upload-slot {
-  border: 2px dashed #93c5fd;
-  background: #f8fafc;
-  cursor: pointer;
-}
-.upload-slot:hover {
-  border-color: #0284c7;
-  background: #f0f9ff;
-}
-
-.existing-slot {
-  border: 1px solid var(--uco-gray-border);
-  background: #ffffff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-.slot-upload-prompt {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  padding: 15px 5px;
-  text-align: center;
-}
-
-.slot-camera-icon-wrap {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  background: #e0f2fe;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 10px;
-  color: var(--uco-navy);
-}
-
-.slot-preview-wrap {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  height: 100%;
-  text-align: center;
-}
-
-.slot-preview-img {
-  width: 100%;
-  height: 130px;
-  object-fit: cover;
-  border-radius: 6px;
-  border: 1px solid var(--uco-gray-border);
-  display: block;
-}
-
-.slot-delete-btn {
-  background: var(--uco-red-light);
-  color: var(--uco-red);
-  padding: 5px 10px;
-  font-size: 12px;
-  border: 1px solid var(--uco-red-border);
-  border-radius: 4px;
-  width: 100%;
-  cursor: pointer;
-  font-weight: 600;
-}
-.slot-delete-btn:hover {
-  background: #fca5a5;
-  color: #7f1d1d;
-}
-
-.slot-clear-btn {
-  background: #f1f5f9;
-  color: #475569;
-  padding: 5px 10px;
-  font-size: 12px;
-  border: 1px solid #cbd5e1;
-  border-radius: 4px;
-  width: 100%;
-  cursor: pointer;
-  font-weight: 500;
-}
-.slot-clear-btn:hover {
-  background: #e2e8f0;
-}
-
-.slot-remove-extra-btn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  background: #f1f5f9;
-  border: 1px solid #cbd5e1;
-  border-radius: 50%;
-  width: 22px;
-  height: 22px;
-  line-height: 20px;
-  text-align: center;
-  font-size: 12px;
-  color: #64748b;
-  cursor: pointer;
-  padding: 0;
-}
-.slot-remove-extra-btn:hover {
-  background: #fee2e2;
-  color: #991b1b;
-  border-color: #f87171;
-}
-
-.slot-counter-badge {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--uco-navy);
-  background: var(--uco-light-blue);
-  padding: 6px 16px;
-  border-radius: 20px;
-  border: 1px solid var(--uco-border-blue);
-}
-
-.add-photos-btn {
-  background: var(--uco-navy);
-  color: #ffffff;
-  padding: 8px 18px;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  border: none;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-.add-photos-btn:hover {
-  background: var(--uco-dark);
-  color: #ffffff;
-}
-
-.form-section-title {
-  color: var(--uco-navy);
-  font-size: 16px;
-  font-weight: 700;
-  margin: 24px 0 14px;
-  border-bottom: 2px solid var(--uco-gray-border);
-  padding-bottom: 8px;
-}
-
-/* ==========================================================================
-   Login Page Styling
-   ========================================================================== */
-.login-bg {
-  background: linear-gradient(135deg, #002244 0%, #003366 50%, #004d80 100%);
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-
-.login-card {
-  width: 100%;
-  max-width: 420px;
-  background: #ffffff;
-  border-radius: 8px;
-  padding: 35px 30px;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
-  border-top: 5px solid var(--uco-saffron);
-}
-
-.login-logo {
-  text-align: center;
-  margin-bottom: 20px;
-}
-.login-logo img {
-  height: 60px;
-}
-
-.login-card h2 {
-  font-size: 20px;
-  color: var(--uco-navy);
-  text-align: center;
-  margin-bottom: 6px;
-  font-weight: 700;
-}
-
-.login-card p {
-  font-size: 13px;
-  color: var(--uco-gray-muted);
-  text-align: center;
-  margin-bottom: 24px;
-}
-
-.login-back-link {
-  font-size: 13px;
-  color: var(--uco-navy);
-  font-weight: 500;
-}
-
 /* ==========================================================================
    Footer
    ========================================================================== */
@@ -672,148 +343,8 @@ a:hover {
 }
 
 /* ==========================================================================
-   Audit Logs Table Columns (CSP Compliant - No inline styles)
-   ========================================================================== */
-.table-col-time {
-  width: 16%;
-}
-.table-col-user {
-  width: 14%;
-}
-.table-col-module {
-  width: 10%;
-}
-.table-col-action {
-  width: 15%;
-}
-.table-col-ip {
-  width: 14%;
-}
-.table-col-status {
-  width: 12%;
-}
-.table-col-details {
-  width: auto;
-}
-.audit-details-code {
-  font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  font-size: 0.82rem;
-  background-color: #f8fafc;
-  padding: 2px 6px;
-  border-radius: 4px;
-  border: 1px solid #e2e8f0;
-  word-break: break-all;
-}
-
-/* ==========================================================================
-   UCO Bank SSO & OTP Module (Bank Compliant)
-   ========================================================================== */
-.login-card-wide {
-  width: 100%;
-  max-width: 500px;
-  background: #ffffff;
-  border-radius: 8px;
-  padding: 35px 30px;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
-  border-top: 5px solid var(--uco-saffron);
-}
-
-.otp-input-group {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 24px;
-}
-
-.otp-box {
-  width: 48px;
-  height: 54px;
-  text-align: center;
-  font-size: 24px;
-  font-weight: 700;
-  color: var(--uco-navy);
-  border-radius: 6px;
-  border: 2px solid #ced4da;
-  background: #fdfdfd;
-  transition: all 0.2s ease;
-}
-
-.otp-box:focus {
-  border-color: var(--uco-navy);
-  box-shadow: 0 0 0 0.2rem rgba(0, 51, 102, 0.25);
-  background: #ffffff;
-  outline: none;
-}
-
-.sso-badge {
-  display: inline-block;
-  padding: 3px 8px;
-  font-size: 11px;
-  font-weight: 600;
-  border-radius: 12px;
-  background: #e7f3ff;
-  color: #003366;
-  border: 1px solid #b6d4fe;
-}
-
-.role-pills-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 10px;
-}
-
-.role-pill-btn {
-  border: 1px solid #cbd5e1;
-  background: #f1f5f9;
-  border-radius: 14px;
-  padding: 3px 10px;
-  font-size: 11px;
-  font-weight: 500;
-  cursor: pointer;
-  color: #334155;
-  transition: all 0.15s ease;
-}
-
-.role-pill-btn:hover {
-  background: var(--uco-navy);
-  color: #ffffff;
-  border-color: var(--uco-navy);
-}
-
-/* ==========================================================================
    Error Page Layout (BranchRecordMaintainance standard)
    ========================================================================== */
-.error-layout {
-  background-color: var(--uco-bg, #f4f6f9);
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.error-card {
-  background: #ffffff;
-  border: 1px solid var(--uco-gray-border, #e2e8f0);
-  border-radius: 8px;
-  padding: 40px;
-  max-width: 540px;
-  width: 90%;
-  text-align: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-}
-
-.error-icon {
-  width: 64px;
-  height: 64px;
-  line-height: 64px;
-  border-radius: 50%;
-  background-color: #fee2e2;
-  color: #dc2626;
-  font-size: 28px;
-  font-weight: 700;
-  margin: 0 auto 20px auto;
-}
 
 .error-title {
   color: #1e293b;
@@ -822,111 +353,15 @@ a:hover {
   margin-bottom: 12px;
 }
 
-.error-desc {
-  color: #475569;
-  font-size: 14px;
-  line-height: 1.6;
-  margin-bottom: 24px;
-}
-
-.error-hint {
-  font-size: 12px;
-  color: #64748b;
-  margin-bottom: 20px;
-  border-top: 1px solid #f1f5f9;
-  padding-top: 15px;
-}
-
-.error-system-code {
-  color: #94a3b8;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-}
-
 /* ==========================================================================
    Project Management Table Layout & Columns (Responsive & Proportional)
    ========================================================================== */
-.table-admin-projects {
-  width: 100%;
-  min-width: 960px;
-}
-
-.table-admin-projects th {
-  font-weight: 600;
-  font-size: 0.85rem;
-  letter-spacing: 0.2px;
-  color: var(--uco-dark);
-  white-space: nowrap;
-}
-
-.table-admin-projects td {
-  vertical-align: middle;
-}
-
-.col-th-project {
-  width: 25%;
-  min-width: 210px;
-}
-
-.col-th-location {
-  width: 18%;
-  min-width: 140px;
-}
-
-.col-th-builder {
-  width: 15%;
-  min-width: 120px;
-}
-
-.col-th-inventory {
-  width: 11%;
-  min-width: 90px;
-}
-
-.col-th-status {
-  width: 13%;
-  min-width: 115px;
-}
-
-.col-th-creator {
-  width: 8%;
-  min-width: 85px;
-}
-
-.col-th-actions {
-  width: 10%;
-  min-width: 150px;
-}
 
 .project-title {
   color: var(--uco-navy);
   font-weight: 700;
   font-size: 0.95rem;
   line-height: 1.3;
-}
-
-.project-badge-id {
-  font-size: 0.72rem;
-  padding: 2px 6px;
-  background-color: #f1f5f9;
-  color: #475569;
-  border: 1px solid #cbd5e1;
-  border-radius: 4px;
-}
-
-.creator-tag {
-  font-size: 0.78rem;
-  color: #475569;
-  background-color: #f8fafc;
-  padding: 2px 8px;
-  border-radius: 4px;
-  border: 1px solid #e2e8f0;
-  display: inline-block;
-  max-width: 120px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 /* ==========================================================================
@@ -951,10 +386,6 @@ h1, h2, h3, h4 { letter-spacing: -.01em; }
 .logo-img { height: 46px; width: auto; border-radius: 4px; }
 .logo-text h1 { font-size: 1.15rem; margin-bottom: 0; }
 .logo-text p { font-size: .78rem; margin-bottom: 0; color: var(--ui-muted); }
-.user-menu { gap: .5rem; flex-wrap: wrap; align-items: center; }
-.user-pill { display: inline-flex; gap: .3rem; align-items: center; padding: .22rem .65rem; border: 1px solid var(--ui-border); border-radius: 999px; background: #f8fafc; font-size: .78rem; color: var(--ui-muted); white-space: nowrap; }
-.user-pill strong { color: var(--ui-text); font-weight: 600; }
-.user-pill-role { background: var(--uco-light-blue); border-color: var(--uco-border-blue); color: var(--uco-navy); font-weight: 600; }
 .navbar-custom .nav-link { font-size: .875rem; }
 
 /* surfaces */
@@ -964,9 +395,6 @@ h1, h2, h3, h4 { letter-spacing: -.01em; }
   box-shadow: var(--ui-shadow);
 }
 .card-title-custom { font-size: 1.05rem; }
-.page-head { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: .75rem; margin-bottom: 1.25rem; }
-.page-head h2 { font-size: 1.35rem; font-weight: 700; color: var(--uco-navy); margin-bottom: .15rem; }
-.page-head p { color: var(--ui-muted); margin-bottom: 0; font-size: .875rem; }
 
 /* buttons and inputs */
 .btn { border-radius: 8px; font-weight: 500; }
@@ -978,33 +406,20 @@ h1, h2, h3, h4 { letter-spacing: -.01em; }
 .form-control-sm, .form-select-sm { min-height: 36px; font-size: .875rem; }
 .form-control:focus, .form-select:focus { border-color: var(--uco-navy); box-shadow: 0 0 0 3px rgba(0, 51, 102, .12); }
 .form-label { color: #334155; margin-bottom: .3rem; }
-.form-section-title { margin-top: 1.75rem; padding-top: 1.25rem; border-top: 1px solid var(--ui-border); border-bottom: 0; font-size: 1rem; }
-.form-section-title:first-of-type { margin-top: .5rem; padding-top: 0; border-top: 0; }
 
 /* status tabs with counts */
-.status-tabs { display: flex; gap: .4rem; flex-wrap: wrap; }
-.status-tab { display: inline-flex; align-items: center; gap: .45rem; padding: .32rem .75rem; border: 1px solid var(--ui-border-strong); border-radius: 999px; background: #fff; color: #334155; font-size: .82rem; font-weight: 500; }
-.status-tab:hover { background: #f1f5f9; text-decoration: none; color: #1e293b; }
-.status-tab-count { background: #eef2f7; border-radius: 999px; padding: 0 .45rem; font-size: .74rem; font-weight: 600; color: #475569; }
-.status-tab.active { background: var(--uco-navy); border-color: var(--uco-navy); color: #fff; }
-.status-tab.active .status-tab-count { background: rgba(255, 255, 255, .2); color: #fff; }
-.review-callout { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .5rem; padding: .7rem 1rem; margin-bottom: 1rem; border: 1px solid #fde68a; border-left: 4px solid #f59e0b; border-radius: 10px; background: #fffbeb; color: #78350f; }
 
 /* tables */
 .table { --bs-table-hover-bg: #f8fafc; }
 .table > thead th { font-size: .76rem; text-transform: uppercase; letter-spacing: .03em; color: var(--ui-muted); font-weight: 600; background: #f8fafc; white-space: nowrap; }
 .table > tbody td { padding-top: .7rem; padding-bottom: .7rem; }
 .table > tbody tr:last-child td { border-bottom: 0; }
-.table-admin-projects td { font-size: .875rem; }
-.table-admin-projects .extra-small { max-width: 260px; }
 .project-title { font-weight: 600; }
-.project-badge-id { font-size: .72rem; }
 .badge { font-weight: 600; border-radius: 6px; }
 .pagination-custom .page-item.active .page-link { background: var(--uco-navy); border-color: var(--uco-navy); color: #fff; }
 .pagination-custom .page-link { color: var(--uco-navy); }
 
 /* sticky action bars: form save and checker decision stay in reach on long pages */
-.sticky-actions { position: sticky; bottom: 0; z-index: 5; margin: 1.5rem -1.5rem -1.5rem; padding: .85rem 1.5rem; background: rgba(255, 255, 255, .96); border-top: 1px solid var(--ui-border); border-radius: 0 0 12px 12px; }
 
 /* specification lists */
 .table-spec th { width: 38%; font-weight: 500; color: var(--ui-muted); background: #f8fafc; }
@@ -1016,8 +431,6 @@ h1, h2, h3, h4 { letter-spacing: -.01em; }
 .hero-banner { border-radius: 14px; }
 
 /* error page */
-.error-card { border-radius: 14px; box-shadow: var(--ui-shadow); border: 1px solid var(--ui-border); }
-.error-icon-info { background: var(--uco-light-blue); color: var(--uco-navy); }
 
 /* phone and small tablet */
 @media (max-width: 767.98px) {
@@ -1025,20 +438,9 @@ h1, h2, h3, h4 { letter-spacing: -.01em; }
   .logo-text h1 { font-size: .98rem; }
   .logo-text p { display: none; }
   .header-top { justify-content: space-between; }
-  .user-menu { width: 100%; }
   .navbar-custom .navbar-nav { overflow-x: auto; white-space: nowrap; }
-  .sticky-actions { margin: 1rem -1rem -1rem; padding: .7rem 1rem; }
   .table-spec th { width: 42%; }
 
   /* tables become stacked cards so nothing, especially the action buttons, is hidden off-screen */
-  .table-cards thead { display: none; }
-  .table-cards, .table-cards tbody, .table-cards tr, .table-cards td { display: block; width: 100%; }
-  .table-cards tr { padding: .75rem 1rem; border-bottom: 1px solid var(--ui-border); }
-  .table-cards tr:last-child { border-bottom: 0; }
-  .table-cards td { border: 0; padding: .2rem 0 !important; min-width: 0 !important; }
-  .table-cards td[data-label]::before { content: attr(data-label); display: block; font-size: .7rem; text-transform: uppercase; letter-spacing: .03em; color: var(--ui-muted); margin-top: .35rem; }
-  .table-cards .col-th-actions { text-align: left !important; padding-top: .6rem !important; white-space: normal; }
-  .table-cards .col-th-actions > div { display: flex !important; flex-wrap: wrap; justify-content: flex-start !important; }
   .table-responsive { overflow-x: visible; }
-  .table-admin-projects .extra-small { max-width: 100%; white-space: normal; }
 }
