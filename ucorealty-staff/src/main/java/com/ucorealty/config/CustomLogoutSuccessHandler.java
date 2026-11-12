@@ -12,6 +12,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+/**
+ * Runs after a staff member presses Logout: writes a LOGOUT line to the audit trail and sends the browser to the login page.
+ * Change this file when: something else must happen at logout (for example a redirect to the bank portal).
+ */
 @Component
 public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
 

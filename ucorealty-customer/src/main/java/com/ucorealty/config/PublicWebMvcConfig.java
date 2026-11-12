@@ -4,6 +4,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+/**
+ * Tells the customer app where its static files (css, js, images) are and lets browsers keep them for an hour.
+ * Change this file when: a new kind of static file is added.
+ */
 @Configuration
 public class PublicWebMvcConfig implements WebMvcConfigurer {
 

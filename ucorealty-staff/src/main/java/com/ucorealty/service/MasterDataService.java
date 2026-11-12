@@ -12,6 +12,11 @@ import java.io.InputStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * The fixed lists the forms need: the 49 zones and, for each state, its districts. Read once at start from
+ * src/main/resources/geo/zones.json and districts.json.
+ * Change this file when: the lists are read from somewhere else. To add a zone or district, edit the JSON files.
+ */
 @Service
 public class MasterDataService {
   private static final Logger log = LoggerFactory.getLogger(MasterDataService.class);

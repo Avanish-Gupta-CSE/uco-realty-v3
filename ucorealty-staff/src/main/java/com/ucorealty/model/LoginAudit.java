@@ -4,6 +4,10 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+/**
+ * One row of the sign-in trail (table realty_login_audit): who tried to sign in, from which address, when, and whether it worked.
+ * Written by AuditService; shown on the Logs page (DIT only). Change this file when: the sign-in trail needs another column.
+ */
 @Entity
 @Table(name = "realty_login_audit")
 public class LoginAudit {

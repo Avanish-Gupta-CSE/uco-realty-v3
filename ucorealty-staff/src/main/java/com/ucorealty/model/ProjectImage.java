@@ -4,6 +4,11 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+/**
+ * One uploaded file (table realty_project_images): a photo, or a PDF (brochure / floor plan), stored in the database as a BLOB.
+ * It belongs either to a live project (projectId) or to a maker's unapproved work (stagingId), never to both.
+ * Change this file when: a file needs another property.
+ */
 @Entity
 @Table(name = "realty_project_images")
 public class ProjectImage {

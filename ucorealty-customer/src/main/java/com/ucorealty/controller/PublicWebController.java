@@ -18,6 +18,10 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * The customer pages: the catalog (/projects), one project (/project/{id}) and the files (/files/{id}: photos and PDFs).
+ * Only approved, active and published projects are shown. Change this file when: a customer page needs other data.
+ */
 @Controller
 public class PublicWebController {
   private static final int PAGE_SIZE = 12;

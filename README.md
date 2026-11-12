@@ -23,7 +23,7 @@ scripts/dev-start.sh --oracle   # the same on Oracle in Docker (uat profile); ad
 - Customer portal: http://localhost:8080/ucorealty-customer/projects
 - Staff portal: http://localhost:8081/ucorealty-staff/ (real UAT tester numbers such as `55012`, `52260`, `68696`; list in TESTING_GUIDE.md, OTP `123456`)
 
-More: `TESTING_GUIDE.md`. Profiles: `DEPLOYMENT.md` section 2.
+More: `TESTING_GUIDE.md`. Profiles: `DEPLOYMENT.md` section 2. **Want to change something? `MAINTENANCE_GUIDE.md` says which file to open.** Code layout: `config, controller, dto, exception, interceptor, model, repository, service, util`; every SQL is a native `@Query` in `repository`.
 
 ### Raw commands (without the scripts)
 ```bash

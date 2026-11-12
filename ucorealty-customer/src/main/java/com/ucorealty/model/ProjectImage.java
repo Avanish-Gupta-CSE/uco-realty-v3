@@ -4,6 +4,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+/**
+ * One uploaded file of a live project (table realty_project_images): a photo or a PDF (brochure / floor plan). Read only here.
+ * Change this file when: the staff app's model/ProjectImage changes (the two classes describe the same table).
+ */
 @Entity
 @Table(name = "realty_project_images")
 public class ProjectImage {

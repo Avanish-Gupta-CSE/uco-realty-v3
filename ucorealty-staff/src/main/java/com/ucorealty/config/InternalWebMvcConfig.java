@@ -6,6 +6,11 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+/**
+ * Two web settings of the staff app: (1) every /admin and /api/admin page first goes through SessionInterceptor (the sign-in check),
+ * (2) where the static files (css, js, images) are found.
+ * Change this file when: a new URL area must require the sign-in check.
+ */
 @Configuration
 public class InternalWebMvcConfig implements WebMvcConfigurer {
 

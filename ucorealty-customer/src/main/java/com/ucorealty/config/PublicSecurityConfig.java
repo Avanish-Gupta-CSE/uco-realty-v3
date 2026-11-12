@@ -12,6 +12,10 @@ import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.access.AccessDeniedHandlerImpl;
 import org.springframework.security.web.session.DisableEncodeUrlFilter;
 
+/**
+ * Security rules of the customer app: only the public pages, files and JSON endpoints are open, everything else is refused (403) and logged.
+ * There is no login and no POST page here. Change this file when: a new public URL is added.
+ */
 @Configuration
 public class PublicSecurityConfig {
 

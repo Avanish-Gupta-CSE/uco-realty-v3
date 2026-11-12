@@ -9,6 +9,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * The JSON endpoints of the customer app (/api/public/...): the project list, one project, and the state/city lists for the filters.
+ * Only approved, active and published projects are ever returned. Change this file when: an outside system needs other project data.
+ */
 @RestController
 @RequestMapping("/api/public")
 public class PublicApiController {
