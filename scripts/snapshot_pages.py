@@ -22,17 +22,17 @@ import zipfile
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from uco_http import Client  # noqa: E402
 
-PUBLIC = os.environ.get("PUBLIC_URL", "http://localhost:8080/ucorealty-customer")
-INTERNAL = os.environ.get("INTERNAL_URL", "http://localhost:8081/ucorealty-staff")
+PUBLIC = os.environ.get("PUBLIC_URL", "http://localhost:8080/UcoRealty")
+INTERNAL = os.environ.get("INTERNAL_URL", "http://localhost:8081/UcoRealtyStaff")
 
 # every test employee, in a fixed order
 STAFF = [("dit", "55012"), ("marketing", "54534"), ("retail", "58382"), ("maker-durgapur", "52260"),
          ("checker-durgapur", "45195"), ("maker-raipur", "68696"), ("checker-raipur", "45321"), ("no-access", "62100")]
 
 # links worth opening (everything else on a page is a button that changes data, which this script never presses)
-STAFF_LINKS = re.compile(r'(?:href|src)="(/ucorealty-staff(/admin/projects/staging/\d+/(?:edit|review|preview)'
+STAFF_LINKS = re.compile(r'(?:href|src)="(/UcoRealtyStaff(/admin/projects/staging/\d+/(?:edit|review|preview)'
                          r'|/admin/projects/UCR-PROJ-[0-9A-F]{8}/change|/project/UCR-PROJ-[0-9A-F]{8}|/files/\d+))"')
-PUBLIC_LINKS = re.compile(r'(?:href|src)="(/ucorealty-customer(/project/UCR-PROJ-[0-9A-F]{8}|/files/\d+))"')
+PUBLIC_LINKS = re.compile(r'(?:href|src)="(/UcoRealty(/project/UCR-PROJ-[0-9A-F]{8}|/files/\d+))"')
 
 PROJECT_CODE = re.compile(r"UCR-PROJ-[0-9A-F]{8}")
 VOLATILE = [  # (pattern, replacement): things that differ on every run

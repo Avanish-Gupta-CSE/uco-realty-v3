@@ -22,9 +22,9 @@
     <poi.version>5.4.1</poi.version>
   </properties>
 
-  <artifactId>ucorealty-staff</artifactId>
+  <artifactId>UcoRealtyStaff</artifactId>
   <packaging>war</packaging>
-  <name>ucorealty-staff</name>
+  <name>UcoRealtyStaff</name>
   <description>UCO Realty Internal Bank Portal (Java 25 + Spring Boot 4.1 + Tomcat 11 with AES-GCM SSO &amp; Maker-Checker)</description>
 
   <dependencies>
@@ -121,7 +121,7 @@
   </dependencies>
 
   <build>
-    <!-- WAR file name = URL path on an external Tomcat, so no version number: /ucorealty-staff -->
+    <!-- WAR file name = URL path on an external Tomcat, so no version number: /UcoRealtyStaff -->
     <finalName>${project.artifactId}</finalName>
     <resources>
       <resource><directory>src/main/resources</directory></resource>

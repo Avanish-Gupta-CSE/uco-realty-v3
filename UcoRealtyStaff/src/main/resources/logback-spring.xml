@@ -8,15 +8,15 @@
     </appender>
 
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>E:/ucorealty-customer/logs/ucorealty-customer.log</file>
+        <file>E:/UcoRealtyStaff/logs/UcoRealtyStaff.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>E:/ucorealty-customer/logs/ucorealty-customer-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <fileNamePattern>E:/UcoRealtyStaff/logs/UcoRealtyStaff-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
             <maxFileSize>50MB</maxFileSize>
             <maxHistory>30</maxHistory>
             <totalSizeCap>3GB</totalSizeCap>
         </rollingPolicy>
         <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level [UCO-CUSTOMER] %logger{36} - %msg%n</pattern>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level [UCO-STAFF] %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
 

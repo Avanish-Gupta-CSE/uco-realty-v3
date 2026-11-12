@@ -1,8 +1,8 @@
 # Maintenance guide: "I want to change X, what do I do?"
 
 Written for someone new to Java. Each recipe says which file to open, what to change, and how to check it worked.
-Two applications share one database: `ucorealty-customer` (public site) and `ucorealty-staff` (staff site). Paths below are inside
-`ucorealty-staff/src/main/` or `ucorealty-customer/src/main/` unless they start with a folder at the top (`scripts/`, `db_migrations/`).
+Two applications share one database: `UcoRealty` (public site) and `UcoRealtyStaff` (staff site). Paths below are inside
+`UcoRealtyStaff/src/main/` or `UcoRealty/src/main/` unless they start with a folder at the top (`scripts/`, `db_migrations/`).
 
 ## The map (what lives where)
 | Folder (`java/com/ucorealty/...`) | What is inside |
@@ -32,7 +32,7 @@ Never put JavaScript or CSS inside a JSP (bank rule): put it in `webapp/assets/j
 ## Recipes
 
 ### Give a role to another posting (SOL), or take it away
-File: `ucorealty-staff/src/main/resources/application.properties`, the lines `uco.rbac.superadmin-sols`, `marketing-sols`, `retail-sols`
+File: `UcoRealtyStaff/src/main/resources/application.properties`, the lines `uco.rbac.superadmin-sols`, `marketing-sols`, `retail-sols`
 (comma separated numbers) and `uco.rbac.zonal-sol-regex`. Rebuild. The rules that turn a posting into a role are in `service/RoleResolver.java`
 (zonal office: scale 4 and above or cadre EXEC = checker, scale 1-3 = maker, scale 0 = no access).
 Before production: `superadmin-sols` must be only `7115` (7103 is there only because UAT's DIT staff sit at 7103).
@@ -56,11 +56,11 @@ Which roles may open a page: the `RoleCheck.require(auth, Roles.XYZ)` line at th
 ### Add a field to the project form (example: "Parking slots")
 1. Database: add the column to BOTH tables `realty_projects` and `realty_project_staging` in `db_migrations/01_CREATE_TABLES.sql`
    (a database that already exists needs an `ALTER TABLE ... ADD ...` run by the DBA on both tables), then run `python3 scripts/h2_schema.py`.
-2. `ucorealty-staff/.../model/ProjectData.java`: a field with `@Column(name = "parking_slots")` and its getter and setter. Staging and master tables share this class, and the
+2. `UcoRealtyStaff/.../model/ProjectData.java`: a field with `@Column(name = "parking_slots")` and its getter and setter. Staging and master tables share this class, and the
    "what changed" table, the staging-to-master copy and the text-field length check pick the new field up automatically.
-3. `ucorealty-staff/.../webapp/WEB-INF/jsp/project-form.jsp`: an input named exactly like the Java field (`name="parkingSlots"`).
-4. Customer site: the same field in `ucorealty-customer/.../model/Project.java` and a line in `webapp/WEB-INF/jsp/public-detail.jsp`
-   (and the staff preview copy `ucorealty-staff/.../public-detail.jsp`, because the two sites have separate copies of that page).
+3. `UcoRealtyStaff/.../webapp/WEB-INF/jsp/project-form.jsp`: an input named exactly like the Java field (`name="parkingSlots"`).
+4. Customer site: the same field in `UcoRealty/.../model/Project.java` and a line in `webapp/WEB-INF/jsp/public-detail.jsp`
+   (and the staff preview copy `UcoRealtyStaff/.../public-detail.jsp`, because the two sites have separate copies of that page).
 5. If it must be validated (required, length, number): `service/ProjectValidator.java`.
 
 ### Change a size limit
@@ -70,11 +70,11 @@ Which roles may open a page: the `RoleCheck.require(auth, Roles.XYZ)` line at th
 * Idle session time: `server.servlet.session.timeout` in `application.properties`.
 
 ### Change the Home Loan link
-Customer app: `ucorealty-customer/src/main/resources/application.properties`, line `uco.homeloan.base-url` (the host). The path and `?utm=REALTY`
+Customer app: `UcoRealty/src/main/resources/application.properties`, line `uco.homeloan.base-url` (the host). The path and `?utm=REALTY`
 are fixed in `controller/PublicWebController.java` (`HOME_LOAN_PATH`). Rebuild.
 
 ### Turn the test login off (production) / see the test users
-`ucorealty-staff/.../application.properties`: `uco.sso.dev-login-enabled=false` and delete the `uco.sso.test-otp` line; also remove the line `spring.profiles.active=h2`
+`UcoRealtyStaff/.../application.properties`: `uco.sso.dev-login-enabled=false` and delete the `uco.sso.test-otp` line; also remove the line `spring.profiles.active=h2`
 (in both apps) so Oracle is used. Test employees and what they may do: `TESTING_GUIDE.md`.
 
 ### Add a new page
@@ -89,7 +89,7 @@ In the matching file in `repository/`, copy an existing method and keep the form
 with the column names in quotes as `AS "name"` matching the getter). Never pass `null` or `''` as a value (Oracle treats an empty text as NULL): use a 0/1 flag like `LgEntryRepository` does.
 
 ### Where are the logs, and how do I read them?
-`E:/ucorealty-staff/logs/` and `E:/ucorealty-customer/logs/` on the bank server (set in `src/main/resources/logback-spring.xml`); on your laptop `.run/internal.log` and `.run/public.log`.
+`E:/UcoRealtyStaff/logs/` and `E:/UcoRealty/logs/` on the bank server (set in `src/main/resources/logback-spring.xml`); on your laptop `.run/internal.log` and `.run/public.log`.
 Lines start with a tag: `[UCO SECURITY]`, `[UCO ACCESS]` (someone was refused), `[UCO ERROR]` (a bug: always look at these), `[UCO LEAD]`, `[UCO HRMS]`.
 
 ### Build and hand over

@@ -7,7 +7,7 @@ Result: 6 approved (with photos from .brain/07_REFERENCE/sample-uploads), 1 wait
 1 draft.
 
     python3 scripts/load_demo_data.py
-    INTERNAL_URL=http://localhost:8081/ucorealty-staff python3 scripts/load_demo_data.py
+    INTERNAL_URL=http://localhost:8081/UcoRealtyStaff python3 scripts/load_demo_data.py
 
 Remove it again with scripts/remove_demo_data.sh. Everything here is invented (names, RERA numbers, phones).
 It refuses to run unless the internal portal offers the dev employee-id login, so it cannot touch UAT or production.
@@ -20,7 +20,7 @@ from pathlib import Path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from uco_http import Client, location  # noqa: E402
 
-BASE = os.environ.get("INTERNAL_URL", "http://localhost:8081/ucorealty-staff")
+BASE = os.environ.get("INTERNAL_URL", "http://localhost:8081/UcoRealtyStaff")
 PHOTOS = Path(__file__).resolve().parent.parent / ".brain" / "07_REFERENCE" / "sample-uploads" / "UCR-PROJ-0001"
 
 CREW = {  # zone -> (maker, checker)

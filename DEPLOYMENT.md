@@ -4,16 +4,16 @@ Two executable WARs (Java 25, Spring Boot 4.1, Tomcat 11 embedded, JSP inside) a
 
 | WAR | Default port | Deploy on |
 | :--- | :--- | :--- |
-| `ucorealty-customer.war` | 8080 | internet-facing zone |
-| `ucorealty-staff.war` | 8081 | **intranet only** |
+| `UcoRealty.war` | 8080 | internet-facing zone |
+| `UcoRealtyStaff.war` | 8081 | **intranet only** |
 
 Both WARs run two ways (same file): `java -jar <war>` (verified), or dropped into an **external Tomcat 11** `webapps/` folder (the normal bank way; the WARs are built for it: embedded Tomcat/Jasper/Servlet jars are "provided", so none are bundled; **not yet tested on a real Tomcat 11**).
 
 **Server requirements:** JDK 25 (the classes are compiled for Java 25) and Tomcat 11 (Jakarta Servlet 6.1). An older Tomcat 9/10 or JDK 8/11/17/21 cannot run these WARs; for a Tomcat 9 / Java 8 server use the `uco-realty-v2` code line instead.
 
-**URL path = WAR file name.** `ucorealty-staff.war` is served at `https://<host>/ucorealty-staff/`, `ucorealty-customer.war` at `/ucorealty-customer/` (use `ROOT.war` for the site root). All links in the application are relative to that path, so any name works. The bundle made by `scripts/package-release.sh` already uses these version-free names.
+**URL path = WAR file name.** `UcoRealtyStaff.war` is served at `https://<host>/UcoRealtyStaff/`, `UcoRealty.war` at `/UcoRealty/` (use `ROOT.war` for the site root). All links in the application are relative to that path, so any name works. The bundle made by `scripts/package-release.sh` already uses these version-free names.
 
-**Names and URLs.** Project `ucorealty` (Java package `com.ucorealty`), two WARs: `ucorealty-customer.war` (customers, internet zone) and `ucorealty-staff.war` (staff, intranet). Whatever the WAR is called, no URL in the code is hard-coded: JSPs use `${pageContext.request.contextPath}`, JavaScript reads `data-context-path`, Java redirects are context-relative and the public JSON API builds photo URLs from `request.getContextPath()`. So `/api/public/projects` becomes `/ucorealty-customer/api/public/projects` on Tomcat with no code change. `java -jar` runs under the same context paths (`application.properties`) and `python3 scripts/context_path_check.py` proves it before every hand-over.
+**Names and URLs.** Project `ucorealty` (Java package `com.ucorealty`), two WARs: `UcoRealty.war` (customers, internet zone) and `UcoRealtyStaff.war` (staff, intranet). Whatever the WAR is called, no URL in the code is hard-coded: JSPs use `${pageContext.request.contextPath}`, JavaScript reads `data-context-path`, Java redirects are context-relative and the public JSON API builds photo URLs from `request.getContextPath()`. So `/api/public/projects` becomes `/UcoRealty/api/public/projects` on Tomcat with no code change. `java -jar` runs under the same context paths (`application.properties`) and `python3 scripts/context_path_check.py` proves it before every hand-over.
 
 **External Tomcat setup (per server):** put the settings in `bin/setenv.sh` (Linux) / `bin/setenv.bat` (Windows), then copy the WAR to `webapps/` and start Tomcat:
 ```bash
@@ -46,7 +46,7 @@ Any setting can still be overridden using JVM `-D` flags or environment variable
 ```
 
 **Before production:**
-Set `uco.sso.dev-login-enabled=false` in `ucorealty-staff/src/main/resources/application.properties`, provide the production `SSO_ENCRYPTION_KEY`, and set `server.servlet.session.cookie.secure=true` on HTTPS. `scripts/package-release.sh prod` enforces that `dev-login-enabled` is false.
+Set `uco.sso.dev-login-enabled=false` in `UcoRealtyStaff/src/main/resources/application.properties`, provide the production `SSO_ENCRYPTION_KEY`, and set `server.servlet.session.cookie.secure=true` on HTTPS. `scripts/package-release.sh prod` enforces that `dev-login-enabled` is false.
 
 | Variable | Module | Required | Meaning |
 | :--- | :--- | :--- | :--- |
@@ -62,11 +62,11 @@ Every WAR holds all the profile files and the H2 driver; only the active profile
 
 ### Logs
 Every line the application writes about its own work starts with a tag: `[UCO SSO]` sign-ins and sign-outs, `[UCO HRMS]` employee lookups, `[UCO WORKFLOW]` what a maker or checker did to which project, `[UCO LEAD]` lead saved or exported (never names or phone numbers), `[UCO ACCESS]` / `[UCO SECURITY]` / `[UCO HTTP 4xx]` refused actions (wrong role or zone, missing CSRF token, unknown URL), `[UCO ERROR]` unexpected failures with the full stack trace. On Tomcat they go to `catalina.out`; with `java -jar` to the terminal. Filter with `grep '\[UCO'`.
-* More detail: set `LOGGING_LEVEL_COM_UCOREALTY=DEBUG` (environment). To also write a file: `-Dlogging.file.name=/var/log/ucorealty/ucorealty-staff.log`.
+* More detail: set `LOGGING_LEVEL_COM_UCOREALTY=DEBUG` (environment). To also write a file: `-Dlogging.file.name=/var/log/ucorealty/UcoRealtyStaff.log`.
 * The permanent record of who did what is the database (`realty_audit_log`, `realty_login_audit`; DIT Logs page); the log is for the server team.
 
 ## 3. Bank SSO integration
-Register this URL with the SSO team: `https://<host>/ucorealty-staff/entry` . The portal opens it as `/entry?Value=<token>`.
+Register this URL with the SSO team: `https://<host>/UcoRealtyStaff/entry` . The portal opens it as `/entry?Value=<token>`.
 
 The token is the bank's standard: Base64 of a 12-byte IV followed by AES/GCM data with a 128-bit tag, using `SSO_ENCRYPTION_KEY` as raw text. After decrypting it reads `emp_id=<empno>&sol_id=<sol>`.
 

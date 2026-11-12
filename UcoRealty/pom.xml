@@ -21,9 +21,9 @@
     <maven.compiler.release>25</maven.compiler.release>
   </properties>
 
-  <artifactId>ucorealty-customer</artifactId>
+  <artifactId>UcoRealty</artifactId>
   <packaging>war</packaging>
-  <name>ucorealty-customer</name>
+  <name>UcoRealty</name>
   <description>UCO Realty Customer Portal (Internet DMZ deployment - Java 25 + Spring Boot 4.1 + Tomcat 11)</description>
 
   <dependencies>
@@ -107,7 +107,7 @@
   </dependencies>
 
   <build>
-    <!-- WAR file name = URL path on an external Tomcat, so no version number: /ucorealty-customer -->
+    <!-- WAR file name = URL path on an external Tomcat, so no version number: /UcoRealty -->
     <finalName>${project.artifactId}</finalName>
     <plugins>
       <plugin>

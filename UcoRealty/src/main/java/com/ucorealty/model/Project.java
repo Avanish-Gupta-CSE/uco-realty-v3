@@ -5,7 +5,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import java.time.LocalDate;
 
 // Read-only view of a `projects` row for the customer portal: only the columns customers may see.
-// Authoring, approval and the internal workflow columns live in ucorealty-staff.
+// Authoring, approval and the internal workflow columns live in UcoRealtyStaff.
 @Entity
 @Table(name = "realty_projects")
 public class Project {

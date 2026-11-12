@@ -8,8 +8,8 @@ Project `ucorealty` (package `com.ucorealty`); the WAR file name is the URL path
 
 | Module / WAR | Port | Audience | What it does |
 | :--- | :--- | :--- | :--- |
-| `ucorealty-customer` | 8080 | Internet customers | Read-only catalog of **approved** projects, photos, an Apply for Home Loan link to the bank's page, JSON API `/api/public/**`. No login, no staff routes. |
-| `ucorealty-staff` | 8081 | Bank staff (intranet) | Everything above (staff see all statuses) plus bank SSO login, Maker–Checker `/admin/projects`, leads (read from the bank's LG_ENTRY_REVAMP) + Excel export, DIT-only **Logs** page. |
+| `UcoRealty` | 8080 | Internet customers | Read-only catalog of **approved** projects, photos, an Apply for Home Loan link to the bank's page, JSON API `/api/public/**`. No login, no staff routes. |
+| `UcoRealtyStaff` | 8081 | Bank staff (intranet) | Everything above (staff see all statuses) plus bank SSO login, Maker–Checker `/admin/projects`, leads (read from the bank's LG_ENTRY_REVAMP) + Excel export, DIT-only **Logs** page. |
 
 Both use the same Oracle schema. There are **no local user accounts**: staff sign in through the bank SSO (`/entry?Value=<encrypted token>`), the employee is looked up in the bank HRMS tables, and the role is derived at login (SOL ID + cadre/scale). Details: `DEPLOYMENT.md`.
 
@@ -20,27 +20,27 @@ scripts/dev-start.sh            # build and start both apps (h2)
 scripts/dev-stop.sh
 scripts/dev-start.sh --oracle   # the same on Oracle in Docker (uat profile); add --reset to wipe it
 ```
-- Customer portal: http://localhost:8080/ucorealty-customer/projects
-- Staff portal: http://localhost:8081/ucorealty-staff/ (real UAT tester numbers such as `55012`, `52260`, `68696`; list in TESTING_GUIDE.md, OTP `123456`)
+- Customer portal: http://localhost:8080/UcoRealty/projects
+- Staff portal: http://localhost:8081/UcoRealtyStaff/ (real UAT tester numbers such as `55012`, `52260`, `68696`; list in TESTING_GUIDE.md, OTP `123456`)
 
 More: `TESTING_GUIDE.md`. Profiles: `DEPLOYMENT.md` section 2. **Want to change something? `MAINTENANCE_GUIDE.md` says which file to open.** Code layout: `config, controller, dto, exception, interceptor, model, repository, service, util`; every SQL is a native `@Query` in `repository`.
 
 ### Raw commands (without the scripts)
 ```bash
 # each app is self-sufficient: it has its own pom.xml and is built on its own
-(cd ucorealty-customer && mvn clean package -DskipTests)
-(cd ucorealty-staff && mvn clean package -DskipTests)
-java -jar ucorealty-staff/target/ucorealty-staff.war
-java -jar ucorealty-customer/target/ucorealty-customer.war   # second shell
+(cd UcoRealty && mvn clean package -DskipTests)
+(cd UcoRealtyStaff && mvn clean package -DskipTests)
+java -jar UcoRealtyStaff/target/UcoRealtyStaff.war
+java -jar UcoRealty/target/UcoRealty.war   # second shell
 ```
 
 ### Eclipse / STS
-Import `ucorealty-customer` and `ucorealty-staff` as two separate *Existing Maven Projects* (each folder has its own `pom.xml`). Use a Java 25 JRE. Run `com.ucorealty.PublicPortalApplication` and/or `com.ucorealty.InternalPortalApplication` as a Java Application with VM argument `-Dspring.profiles.active=local` (add `-Dserver.port=8081` etc. only if you change ports).
+Import `UcoRealty` and `UcoRealtyStaff` as two separate *Existing Maven Projects* (each folder has its own `pom.xml`). Use a Java 25 JRE. Run `com.ucorealty.PublicPortalApplication` and/or `com.ucorealty.InternalPortalApplication` as a Java Application with VM argument `-Dspring.profiles.active=local` (add `-Dserver.port=8081` etc. only if you change ports).
 
 ## Layout
 ```
-ucorealty-customer/         customer portal
-ucorealty-staff/       staff portal
+UcoRealty/         customer portal
+UcoRealtyStaff/       staff portal
 db_migrations/             Oracle scripts + DBA guide
 scripts/                   dev-start/stop, smoke_test.py, workflow_test.py (maker-checker end to end), load_demo_data.py, package-release.sh
 .brain/                    project knowledge base (never ship it)

@@ -5,23 +5,23 @@
 | # | Step | Who | Command / action |
 | :-: | :--- | :--- | :--- |
 | 1 | Create the tables | DBA | run `db_migrations` 01, and for `uat` also 03 and 05, as the application schema user |
-| 2 | Build the two WARs | you | `cd ucorealty-customer && mvn clean package -DskipTests`, then the same in `ucorealty-staff` (JDK 25). Result: `target/ucorealty-customer.war`, `target/ucorealty-staff.war` |
+| 2 | Build the two WARs | you | `cd UcoRealty && mvn clean package -DskipTests`, then the same in `UcoRealtyStaff` (JDK 25). Result: `target/UcoRealty.war`, `target/UcoRealtyStaff.war` |
 | 3 | Set the settings on each server | server admin | `SPRING_PROFILES_ACTIVE=uat` (or set it in `application.properties`), `DB_URL`, `DB_USER`, `DB_PASS`; staff server also `SSO_ENCRYPTION_KEY` (e.g. in Tomcat's `bin/setenv.sh`) |
 | 4 | Copy the WAR into Tomcat's `webapps/` | server admin | customer WAR on the internet-zone server, staff WAR on the intranet server; Tomcat 11 + JDK 25 |
-| 5 | Open the URL | everyone | `https://<host>/ucorealty-customer/projects`, `https://<host>/ucorealty-staff/` |
+| 5 | Open the URL | everyone | `https://<host>/UcoRealty/projects`, `https://<host>/UcoRealtyStaff/` |
 
 `scripts/package-release.sh uat` does steps 2 plus "put the WARs, the SQL files and DEPLOYMENT.md in one zip with checksums" for the hand-over.
 
 ## Running it by hand, without `dev-start.sh`
 ```bash
-(cd ucorealty-customer && mvn clean package -DskipTests)
-(cd ucorealty-staff && mvn clean package -DskipTests)
-java -jar ucorealty-staff/target/ucorealty-staff.war          # terminal 1
-java -jar ucorealty-customer/target/ucorealty-customer.war    # terminal 2
+(cd UcoRealty && mvn clean package -DskipTests)
+(cd UcoRealtyStaff && mvn clean package -DskipTests)
+java -jar UcoRealtyStaff/target/UcoRealtyStaff.war          # terminal 1
+java -jar UcoRealty/target/UcoRealty.war    # terminal 2
 ```
 That is all with the `h2` profile set in `application.properties`: H2 starts inside the app and the staff app runs all the SQL. For Oracle put `SPRING_PROFILES_ACTIVE=uat DB_URL=... DB_USER=... DB_PASS=...` in front of each `java`. Stop with Ctrl+C.
 
-Customer: http://localhost:8080/ucorealty-customer/projects. Staff: http://localhost:8081/ucorealty-staff/ (employee `52260`, OTP `123456`). H2 console: http://localhost:8082 (`jdbc:h2:tcp://localhost:9092/mem:ucorealty`, user `sa`, no password).
+Customer: http://localhost:8080/UcoRealty/projects. Staff: http://localhost:8081/UcoRealtyStaff/ (employee `52260`, OTP `123456`). H2 console: http://localhost:8082 (`jdbc:h2:tcp://localhost:9092/mem:ucorealty`, user `sa`, no password).
 
 ## `dev-start.sh`
 It stops old runs, builds both apps, starts staff then customer, and waits until each log says "Started". `--oracle` also starts the Docker Oracle, creates the tables once (01, 03, 05; `--reset` drops them first) and runs with the `uat` profile. It prints each command in grey.
@@ -31,7 +31,7 @@ It stops old runs, builds both apps, starts staff then customer, and waits until
 | :--- | :--- | :--- |
 | `dev-stop.sh` | kills the two apps (with `h2`, that also ends the in-memory database) | no |
 | `package-release.sh uat|prod` | builds both WARs and zips them with the SQL files, the deployment guide and SHA-256 checksums. `uat` includes the test employees (03, 05); `prod` never does and refuses to build unless `spring.profiles.active=prod` | optional: a convenient hand-over bundle |
-| `h2_schema.py` | regenerates `ucorealty-staff/src/main/resources/h2-init.sql` from `db_migrations` 01, 03, 05. **Run it after changing any of those** | no |
+| `h2_schema.py` | regenerates `UcoRealtyStaff/src/main/resources/h2-init.sql` from `db_migrations` 01, 03, 05. **Run it after changing any of those** | no |
 | `smoke_test.py` | 34 quick checks: lockdown of the customer site, headers, CSRF, bad tokens, role access, logout | no (run before a release, `h2` or `uat` profile) |
 | `workflow_test.py` | 83 checks of the whole maker-checker flow through the real screens; leaves two test projects behind | no (`h2` or `uat` profile) |
 | `context_path_check.py` | crawls both apps as several roles and fails if any URL lacks the context path | no (run before a release) |

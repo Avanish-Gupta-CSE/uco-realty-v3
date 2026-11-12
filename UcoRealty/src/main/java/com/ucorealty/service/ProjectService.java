@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 /**
  * Read-only catalog for the internet-facing portal. Only APPROVED + active + published projects are ever
- * returned; everything else behaves as "not found". Project authoring/approval lives in ucorealty-staff.
+ * returned; everything else behaves as "not found". Project authoring/approval lives in UcoRealtyStaff.
  */
 @Service
 public class ProjectService {

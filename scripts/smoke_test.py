@@ -2,7 +2,7 @@
 """Smoke test for a RUNNING local setup (scripts/dev-start.sh): public portal on 8080, internal portal on 8081.
 
     python3 scripts/smoke_test.py
-    PUBLIC_URL=http://localhost:8080/ucorealty-customer INTERNAL_URL=http://localhost:8081/ucorealty-staff python3 scripts/smoke_test.py
+    PUBLIC_URL=http://localhost:8080/UcoRealty INTERNAL_URL=http://localhost:8081/UcoRealtyStaff python3 scripts/smoke_test.py
 
 Checks the customer lockdown, security headers, SSO error paths, CSRF, role isolation and logout. The role checks
 need the h2 or uat profile (employee-id + OTP form with the test employees from db_migrations/05); against a UAT/prod build it runs
@@ -15,8 +15,8 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from uco_http import Client, location  # noqa: E402
 
-PUBLIC = os.environ.get("PUBLIC_URL", "http://localhost:8080/ucorealty-customer")
-INTERNAL = os.environ.get("INTERNAL_URL", "http://localhost:8081/ucorealty-staff")
+PUBLIC = os.environ.get("PUBLIC_URL", "http://localhost:8080/UcoRealty")
+INTERNAL = os.environ.get("INTERNAL_URL", "http://localhost:8081/UcoRealtyStaff")
 results = []
 
 

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Proves the apps work under a context path (on Tomcat the WAR file name is the URL prefix:
-/ucorealty-customer, /ucorealty-staff). It crawls the pages as several roles and fails when a page
+/UcoRealty, /UcoRealtyStaff). It crawls the pages as several roles and fails when a page
 contains a root-relative link/form/script URL that does NOT start with the context path, when a redirect
 leaves the context path, or when the JS files or the public JSON API build such a URL.
 
     python3 scripts/context_path_check.py                       # dev defaults (h2 or uat profile runs under the context paths)
-    PUBLIC_URL=http://host/ucorealty-customer INTERNAL_URL=http://host/ucorealty-staff python3 scripts/context_path_check.py
+    PUBLIC_URL=http://host/UcoRealty INTERNAL_URL=http://host/UcoRealtyStaff python3 scripts/context_path_check.py
 """
 import json
 import os
@@ -16,8 +16,8 @@ import urllib.parse
 sys.path.insert(0, os.path.dirname(__file__))
 from uco_http import Client, location
 
-PUBLIC = os.environ.get("PUBLIC_URL", "http://localhost:8080/ucorealty-customer").rstrip("/")
-INTERNAL = os.environ.get("INTERNAL_URL", "http://localhost:8081/ucorealty-staff").rstrip("/")
+PUBLIC = os.environ.get("PUBLIC_URL", "http://localhost:8080/UcoRealty").rstrip("/")
+INTERNAL = os.environ.get("INTERNAL_URL", "http://localhost:8081/UcoRealtyStaff").rstrip("/")
 
 problems, pages = [], 0
 URL_ATTR = re.compile(r'(?:href|src|action|data-[a-z-]*url)\s*=\s*"(/[^"]*)"', re.I)

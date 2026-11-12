@@ -5,8 +5,8 @@ Fill in the real values only on your own PC. Do not commit the password or the S
 ## A. Before building the WARs (edit two files, then rebuild)
 | What | File | Line | Change |
 | :--- | :--- | :--- | :--- |
-| DB password | `ucorealty-staff/src/main/resources/application.properties` | 22 | in `${DB_PASS:...}` replace what is after the colon with the real `HRMS_DBA` UAT password |
-| DB password | `ucorealty-customer/src/main/resources/application.properties` | 22 | the same |
+| DB password | `UcoRealtyStaff/src/main/resources/application.properties` | 22 | in `${DB_PASS:...}` replace what is after the colon with the real `HRMS_DBA` UAT password |
+| DB password | `UcoRealty/src/main/resources/application.properties` | 22 | the same |
 | (DB address and user are already right, lines 20 and 21) | | | `10.21.128.29:1530/CLDBUAT`, `HRMS_DBA` |
 | SSO key, when you get it | staff `application.properties` | 45 | replace what is after the colon in `${SSO_ENCRYPTION_KEY:...}` (16, 24 or 32 characters). Not needed for the first UAT run |
 
@@ -43,7 +43,7 @@ Then: `scripts/package-release.sh uat` gives both WARs in `release/ucorealty-uat
    SELECT empno, posting_sol, scale_code, cadre_code, tenure_as FROM employee_tenure
    WHERE empno = '<EMPNO>' AND SYSDATE BETWEEN eff_from_date AND eff_to_date AND status_flag = 'V';
    ```
-8. Zone names (compare with `ucorealty-staff/src/main/resources/geo/zones.json`; the text must read `<ZONE NAME> ZONAL OFFICE`):
+8. Zone names (compare with `UcoRealtyStaff/src/main/resources/geo/zones.json`; the text must read `<ZONE NAME> ZONAL OFFICE`):
    ```sql
    SELECT DISTINCT posting_sol_id, posting_sol_desc FROM employee_contact_details
    WHERE posting_sol_id BETWEEN '7001' AND '7099' ORDER BY 1;
@@ -52,10 +52,10 @@ Then: `scripts/package-release.sh uat` gives both WARs in `release/ucorealty-uat
    Do NOT run `03_CREATE_HRMS_MOCK_TABLES.sql` or `05_LOCAL_TEST_EMPLOYEES.sql` here: the real HRMS tables already exist.
 
 ## C. Deploy
-1. Copy `ucorealty-staff.war` and `ucorealty-customer.war` to Tomcat's `webapps` folder (the senior helps). Tomcat 11, JDK 25.
-2. Open `http://<server>:<port>/ucorealty-staff/` and `http://<server>:<port>/ucorealty-customer/projects`.
+1. Copy `UcoRealtyStaff.war` and `UcoRealty.war` to Tomcat's `webapps` folder (the senior helps). Tomcat 11, JDK 25.
+2. Open `http://<server>:<port>/UcoRealtyStaff/` and `http://<server>:<port>/UcoRealty/projects`.
 3. Sign in with an employee number from B6 and OTP `123456` (the test login).
-4. Logs: the `logs` folder in Tomcat's working folder: `ucorealty-staff.log`, `ucorealty-customer.log`.
+4. Logs: the `logs` folder in Tomcat's working folder: `UcoRealtyStaff.log`, `UcoRealty.log`.
 
 ## D. If you cannot reach the Oracle database
 Run on H2 instead (in memory, test employees 55012 ... 600003, data lost when Tomcat stops):
@@ -71,4 +71,4 @@ Remove the option to go back to Oracle.
 ## F. Ask the senior (only these)
 1. The `HRMS_DBA` password for UAT.
 2. Tell the senior which 4 real UAT employees you will test with (found by the step B6 queries: DIT 7115, HO Marketing 8028, a zonal maker and a zonal checker of one zone) and that testers sign in with them using the test OTP.
-3. The intranet portal link (the SSO): who adds "UCO Realty" to the bank's intranet portal and gives us the key? When a person clicks our link there, the portal sends them to `http://<server>:<port>/ucorealty-staff/entry?Value=<encrypted>`. The portal team must be told that address, and they tell us the secret key their portal encrypts with. Only needed when you want the real portal link to work, not for the first UAT run.
+3. The intranet portal link (the SSO): who adds "UCO Realty" to the bank's intranet portal and gives us the key? When a person clicks our link there, the portal sends them to `http://<server>:<port>/UcoRealtyStaff/entry?Value=<encrypted>`. The portal team must be told that address, and they tell us the secret key their portal encrypts with. Only needed when you want the real portal link to work, not for the first UAT run.

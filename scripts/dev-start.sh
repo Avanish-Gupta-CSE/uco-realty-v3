@@ -26,7 +26,7 @@ die() { printf '\n\033[31mERROR: %s\033[0m\n' "$*" >&2; exit 1; }
 "$ROOT/scripts/dev-stop.sh" >/dev/null 2>&1 || true
 
 say "Build"
-for m in ucorealty-customer ucorealty-staff; do
+for m in UcoRealty UcoRealtyStaff; do
   show "(cd $m && mvn -q clean package -DskipTests)"
   (cd "$ROOT/$m" && mvn -q clean package -DskipTests)
 done
@@ -78,17 +78,17 @@ start() {  # module, port, log name, text that means started, extra envs...
   die "$mod did not start in 3 minutes (see .run/$logname.log)"
 }
 if [ "$ORACLE" = 1 ]; then
-  start ucorealty-staff 8081 internal "Started InternalPortalApplication"
-  start ucorealty-customer 8080 public "Started PublicPortalApplication"
+  start UcoRealtyStaff 8081 internal "Started InternalPortalApplication"
+  start UcoRealty 8080 public "Started PublicPortalApplication"
 else
-  start ucorealty-staff 8081 internal "Started InternalPortalApplication" SPRING_SQL_INIT_SCHEMA_LOCATIONS=classpath:h2-init.sql SPRING_SQL_INIT_MODE=always
-  start ucorealty-customer 8080 public "Started PublicPortalApplication"
+  start UcoRealtyStaff 8081 internal "Started InternalPortalApplication" SPRING_SQL_INIT_SCHEMA_LOCATIONS=classpath:h2-init.sql SPRING_SQL_INIT_MODE=always
+  start UcoRealty 8080 public "Started PublicPortalApplication"
 fi
 
 printf '\n\033[1mReady.\033[0m\n'
 cat <<'MSG'
-  Customer : http://localhost:8080/ucorealty-customer/projects
-  Staff    : http://localhost:8081/ucorealty-staff/   (employees 55012, 54534, 58382, 52260, 68696 ... see TESTING_GUIDE.md, OTP 123456)
+  Customer : http://localhost:8080/UcoRealty/projects
+  Staff    : http://localhost:8081/UcoRealtyStaff/   (employees 55012, 54534, 58382, 52260, 68696 ... see TESTING_GUIDE.md, OTP 123456)
   Logs     : .run/public.log, .run/internal.log
   Stop     : scripts/dev-stop.sh
 MSG

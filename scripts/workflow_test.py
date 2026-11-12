@@ -2,7 +2,7 @@
 """End-to-end test of the maker-checker workflow (STAGING model) on a RUNNING local setup (h2 or uat profile).
 
     python3 scripts/workflow_test.py
-    PUBLIC_URL=http://localhost:8080/ucorealty-customer INTERNAL_URL=http://localhost:8081/ucorealty-staff python3 scripts/workflow_test.py
+    PUBLIC_URL=http://localhost:8080/UcoRealty INTERNAL_URL=http://localhost:8081/UcoRealtyStaff python3 scripts/workflow_test.py
 
 The model under test: the master table holds only APPROVED projects; everything a maker does (new project, edit, unit
 reduction, deletion) is a row in the STAGING table that he edits until he sends it for approval, and only a checker's
@@ -19,8 +19,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from uco_http import Client, location  # noqa: E402
 import load_demo_data as demo  # noqa: E402
 
-PUBLIC = os.environ.get("PUBLIC_URL", "http://localhost:8080/ucorealty-customer")
-INTERNAL = os.environ.get("INTERNAL_URL", "http://localhost:8081/ucorealty-staff")
+PUBLIC = os.environ.get("PUBLIC_URL", "http://localhost:8080/UcoRealty")
+INTERNAL = os.environ.get("INTERNAL_URL", "http://localhost:8081/UcoRealtyStaff")
 PHOTO = [p for p in sorted((Path(__file__).resolve().parent.parent / ".brain" / "07_REFERENCE" / "sample-uploads" / "UCR-PROJ-0001").glob("photo-*.jpg"))
          if p.stat().st_size <= 1024 * 1024]   # the form accepts photos of 1 MB at most
 results = []

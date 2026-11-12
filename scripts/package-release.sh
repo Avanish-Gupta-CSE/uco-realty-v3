@@ -21,28 +21,28 @@ fi
 
 # Single application.properties layout: in production, dev login and test OTP should not be enabled
 if [ "$MODE" = "prod" ]; then
-  if grep -q '^uco.sso.dev-login-enabled=.*true' "$ROOT/ucorealty-staff/src/main/resources/application.properties"; then
-    echo "!! ucorealty-staff: set uco.sso.dev-login-enabled=false in application.properties before building a prod bundle"
+  if grep -q '^uco.sso.dev-login-enabled=.*true' "$ROOT/UcoRealtyStaff/src/main/resources/application.properties"; then
+    echo "!! UcoRealtyStaff: set uco.sso.dev-login-enabled=false in application.properties before building a prod bundle"
     exit 1
   fi
 fi
 
 echo "==> Building both WARs"
 # shellcheck disable=SC2086
-for m in ucorealty-customer ucorealty-staff; do
+for m in UcoRealty UcoRealtyStaff; do
   (cd "$ROOT/$m" && mvn -q ${MVN_OPTS:-} clean package -DskipTests)
 done
 
-PUBLIC_WAR="$ROOT/ucorealty-customer/target/ucorealty-customer.war"
-INTERNAL_WAR="$ROOT/ucorealty-staff/target/ucorealty-staff.war"
+PUBLIC_WAR="$ROOT/UcoRealty/target/UcoRealty.war"
+INTERNAL_WAR="$ROOT/UcoRealtyStaff/target/UcoRealtyStaff.war"
 [ -f "$PUBLIC_WAR" ] && [ -f "$INTERNAL_WAR" ] || { echo "!! build did not produce both WARs"; exit 1; }
 
 echo "==> Assembling $OUT"
 mkdir -p "$OUT/db"
-# The WAR file name becomes the URL path on an external Tomcat (ucorealty-staff.war -> /ucorealty-staff),
+# The WAR file name becomes the URL path on an external Tomcat (UcoRealtyStaff.war -> /UcoRealtyStaff),
 # so ship them without the version number.
-cp "$PUBLIC_WAR" "$OUT/ucorealty-customer.war"
-cp "$INTERNAL_WAR" "$OUT/ucorealty-staff.war"
+cp "$PUBLIC_WAR" "$OUT/UcoRealty.war"
+cp "$INTERNAL_WAR" "$OUT/UcoRealtyStaff.war"
 cp "$ROOT"/db_migrations/*.sql "$ROOT"/db_migrations/README_DBA_DEPLOYMENT.md "$OUT/db/"
 # 03 / 05 create stand-in HRMS tables (test employees and a fake LG_ENTRY_REVAMP with fake leads). Both UAT and production read the
 # bank's real HRMS tables, which the stand-ins would hide: never ship them in a bundle.
