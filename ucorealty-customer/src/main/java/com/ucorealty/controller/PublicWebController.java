@@ -70,8 +70,8 @@ public class PublicWebController {
 
     Map<String, Long> thumbnails = new HashMap<>();
     if (!pageItems.isEmpty()) {
-      for (Object[] row : imageRepo.findFirstImageIds(pageItems.stream().map(p -> p.id).collect(Collectors.toList()))) {
-        thumbnails.put((String) row[1], (Long) row[0]);
+      for (ProjectImageRepository.FirstPhoto photo : imageRepo.findFirstImageIds(pageItems.stream().map(p -> p.id).collect(Collectors.toList()))) {
+        thumbnails.put(photo.getProjectId(), photo.getImageId());
       }
     }
     model.addAttribute("projectThumbnails", thumbnails);
@@ -86,11 +86,14 @@ public class PublicWebController {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Project not found or not published");
     }
 
-    List<Long> imgs = imageRepo.findIdsByProjectId(id);
+    List<Long> imgs = new ArrayList<>();
+    for (ProjectImageRepository.PhotoId photo : imageRepo.findPhotoIds(id)) {
+      imgs.add(photo.getImageId());
+    }
     model.addAttribute("project", p);
     model.addAttribute("images", imgs);
-    for (Object[] doc : imageRepo.findDocuments(id)) {      // PDF documents: [id, kind]
-      model.addAttribute(ProjectImage.BROCHURE.equals(doc[1]) ? "brochureId" : "floorPlanId", doc[0]);
+    for (ProjectImageRepository.DocumentInfo doc : imageRepo.findDocuments(id)) {      // PDF documents
+      model.addAttribute(ProjectImage.BROCHURE.equals(doc.getFileKind()) ? "brochureId" : "floorPlanId", doc.getImageId());
     }
     model.addAttribute("amenityRows", com.ucorealty.util.Amenities.parse(p.amenityFlags));
     model.addAttribute("homeLoanUrl", homeLoanUrl);
