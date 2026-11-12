@@ -19,12 +19,22 @@ if [ -d "/opt/homebrew/opt/openjdk@25/libexec/openjdk.jdk/Contents/Home" ]; then
   export PATH="$JAVA_HOME/bin:$PATH"
 fi
 
-# Single application.properties layout: in production, dev login and test OTP should not be enabled
+# A production bundle must not carry any of the UAT / laptop settings. Every problem is listed, then the build stops.
 if [ "$MODE" = "prod" ]; then
-  if grep -q '^uco.sso.dev-login-enabled=.*true' "$ROOT/UcoRealtyStaff/src/main/resources/application.properties"; then
-    echo "!! UcoRealtyStaff: set uco.sso.dev-login-enabled=false in application.properties before building a prod bundle"
-    exit 1
-  fi
+  STAFF_PROPS="$ROOT/UcoRealtyStaff/src/main/resources/application.properties"
+  PUBLIC_PROPS="$ROOT/UcoRealty/src/main/resources/application.properties"
+  PROBLEMS=0
+  problem() { echo "!! $1"; PROBLEMS=1; }
+  for props in "$STAFF_PROPS" "$PUBLIC_PROPS"; do
+    name="$(basename "$(dirname "$(dirname "$(dirname "$(dirname "$props")")")")")"
+    grep -q '^spring.profiles.active=h2' "$props" && problem "$name: delete the line spring.profiles.active=h2 (it switches the application to the laptop database)"
+    grep -q 'CHANGE_ME_DB_PASSWORD' "$props" && problem "$name: put the real database password in place of CHANGE_ME_DB_PASSWORD"
+  done
+  grep -q '^uco.sso.dev-login-enabled=.*true' "$STAFF_PROPS" && problem "UcoRealtyStaff: set uco.sso.dev-login-enabled=false (the test login must be off)"
+  grep -q '^uco.sso.test-otp=' "$STAFF_PROPS" && problem "UcoRealtyStaff: delete the line uco.sso.test-otp (the test one-time password)"
+  grep -q 'UCOBANKSSOKEY2026' "$STAFF_PROPS" && problem "UcoRealtyStaff: replace the UAT SSO key (sso.encryption.key) by the production key"
+  grep -E '^uco.rbac.superadmin-sols=' "$STAFF_PROPS" | grep -q '7103' && problem "UcoRealtyStaff: uco.rbac.superadmin-sols must be only 7115 (7103 is the UAT DIT posting)"
+  [ "$PROBLEMS" = "0" ] || { echo "Fix the lines above, then run this script again."; exit 1; }
 fi
 
 echo "==> Building both WARs"

@@ -92,7 +92,7 @@ public class HrmsService {
         if (hasText(posting.get().getTenureAs())) profile.setTenureAs(posting.get().getTenureAs());
       }
     } catch (DataAccessException e) {
-      logger.debug("[UCO HRMS] Posting lookup on {} failed: {}", DatabaseTables.EMPLOYEE_TENURE, e.getMessage());
+      logger.warn("[UCO HRMS] Posting lookup on {} failed, the posting in the employee record is used instead: {}", DatabaseTables.EMPLOYEE_TENURE, e.getMessage());
     }
   }
 

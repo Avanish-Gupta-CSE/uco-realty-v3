@@ -26,7 +26,7 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(MaxUploadSizeExceededException.class)
   public String handleMaxSizeException(MaxUploadSizeExceededException exc, Model model) {
     log.error("File upload size limit exceeded: {}", exc.getMessage());
-    model.addAttribute("errorMessage", "File upload failed: Maximum file size allowed is 2MB per photo.");
+    model.addAttribute("errorMessage", "File upload failed: A photo can be at most 1 MB and a PDF document at most 3 MB.");
     return "error";
   }
 

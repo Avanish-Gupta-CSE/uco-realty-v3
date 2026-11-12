@@ -59,7 +59,8 @@ if [ "$ORACLE" = 1 ]; then
     done
     printf 'GRANT SELECT ON HRMS_DBA.employee_contact_details TO uco_realty;\nGRANT SELECT ON HRMS_DBA.employee_tenure TO uco_realty;\nGRANT SELECT ON HRMS_DBA.LG_ENTRY_REVAMP TO uco_realty;\nexit\n' | $HRMSQ >/dev/null
   fi
-  ENV_ARGS=(DB_URL=jdbc:oracle:thin:@localhost:1521/XEPDB1 DB_USER=uco_realty DB_PASS=uco_realty_pwd)
+  # SPRING_PROFILES_ACTIVE: without it the line spring.profiles.active=h2 in application.properties would still switch the apps to H2.
+  ENV_ARGS=(SPRING_PROFILES_ACTIVE=oracle-local DB_URL=jdbc:oracle:thin:@localhost:1521/XEPDB1 DB_USER=uco_realty DB_PASS=uco_realty_pwd)
 else
   say "H2 in-memory (local dev)"
   ENV_ARGS=(SPRING_PROFILES_ACTIVE=h2 DB_URL="jdbc:h2:tcp://localhost:9092/mem:ucorealty;MODE=Oracle;DB_CLOSE_DELAY=-1" DB_USER=sa DB_PASS="")

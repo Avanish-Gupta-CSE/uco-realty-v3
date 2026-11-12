@@ -29,7 +29,7 @@ The application schema user needs `SELECT` on the bank HRMS tables of the user `
 
 ## 2. Configuration
 **Single `application.properties` per module (aligned with the bank IndiaPost UAT pattern, Decision 133):**
-Each app maintains only one `application.properties` file (`WEB-INF/classes/application.properties`). No separate profile files exist.
+Each app has one `application.properties` file (`WEB-INF/classes/application.properties`) that holds the bank UAT values. The file `application-h2.properties` is only for laptops; it is used only while the line `spring.profiles.active=h2` is present (see the TODO comments in `application.properties`).
 The bank UAT database connection is embedded directly as defaults:
 - URL: `jdbc:oracle:thin:@//10.21.128.29:1530/CLDBUAT`
 - User: `HRMS_DBA`
@@ -37,7 +37,7 @@ The bank UAT database connection is embedded directly as defaults:
 - SSO key: UAT testing key
 
 **Tomcat on Windows VM (the bank way):**
-Simply copy both WAR files into Tomcat's `webapps/` folder and start Tomcat. Zero server configuration or environment variables are required.
+Copy both WAR files into Tomcat's `webapps/` folder and start Tomcat. The values built into `application.properties` are used unless you override them. Before a production build: `scripts/package-release.sh prod` refuses to build while the laptop profile, the test login, the test OTP, the UAT SSO key, SOL 7103 or the placeholder database password are still in the files.
 
 **Optional overrides (if connecting to a different DB or port):**
 Any setting can still be overridden using JVM `-D` flags or environment variables:

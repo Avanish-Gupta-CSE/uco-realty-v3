@@ -86,7 +86,7 @@ public class ProjectWorkflowService {
     List<Project> masters = projectService.approvedList(username);
     Map<String, ProjectStaging> openByProject = new HashMap<>();
     if (!masters.isEmpty()) {
-      for (ProjectStaging s : staging.findByProjectIdInAndStatusIn(masters.stream().map(p -> p.id).collect(Collectors.toList()), OPEN)) {
+      for (ProjectStaging s : staging.findForProjects(masters.stream().map(p -> p.id).collect(Collectors.toList()), OPEN)) {
         if (!ProjectStaging.CREATE.equals(s.requestType) && canSee(u, s)) openByProject.put(s.projectId, s);
       }
     }
