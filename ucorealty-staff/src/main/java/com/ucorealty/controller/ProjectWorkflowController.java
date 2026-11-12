@@ -8,6 +8,7 @@ import com.ucorealty.model.ProjectForm;
 import com.ucorealty.model.ProjectImage;
 import com.ucorealty.model.ProjectStaging;
 import com.ucorealty.repository.ProjectImageRepository;
+import com.ucorealty.service.HrmsService;
 import com.ucorealty.service.MasterDataService;
 import com.ucorealty.service.ProjectService;
 import com.ucorealty.service.ProjectWorkflowService;
@@ -50,11 +51,11 @@ public class ProjectWorkflowController {
   private final ProjectService projectService;
   private final ProjectImageRepository imageRepo;
   private final MasterDataService masterData;
-  private final com.ucorealty.service.HrmsService hrms;
+  private final HrmsService hrms;
 
   public ProjectWorkflowController(ProjectWorkflowService workflow, ProjectService projectService,
                                    ProjectImageRepository imageRepo, MasterDataService masterData,
-                                   com.ucorealty.service.HrmsService hrms) {
+                                   HrmsService hrms) {
     this.hrms = hrms;
     this.workflow = workflow;
     this.projectService = projectService;
@@ -325,7 +326,7 @@ public class ProjectWorkflowController {
     model.addAttribute("project", live != null ? live : workflow.previewOf(s));
     model.addAttribute("isCreate", create);
     model.addAttribute("isDelete", delete);
-    model.addAttribute("makerName", hrms.namesOf(java.util.Collections.singletonList(s.createdBy)).get(s.createdBy));
+    model.addAttribute("makerName", hrms.namesOf(Collections.singletonList(s.createdBy)).get(s.createdBy));
     model.addAttribute("diff", ProjectStaging.UPDATE.equals(s.requestType) ? workflow.diff(live, s) : Collections.emptyList());
     model.addAttribute("contents", create ? workflow.contents(s) : Collections.emptyList());
     model.addAttribute("removedImages", workflow.removedImages(s));
@@ -417,12 +418,7 @@ public class ProjectWorkflowController {
     doc.mimeType = "application/pdf";
     doc.fileSize = file.getSize();
     doc.fileData = bytes;
-    doc.uploadedBy = username;
-    doc.isVerified = 0;
-    doc.filePath = "/files/pending/" + doc.fileName;
-    doc = imageRepo.save(doc);
-    doc.filePath = "/files/" + doc.id;
-    imageRepo.save(doc);
+    storeFile(doc, username);
   }
 
   private void addPhotos(ProjectStaging s, String username, MultipartFile... files) throws IOException {
@@ -446,14 +442,19 @@ public class ProjectWorkflowController {
       img.mimeType = mime;
       img.fileSize = file.getSize();
       img.fileData = bytes;
-      img.uploadedBy = username;
-      img.isVerified = 0;
-      img.filePath = "/files/pending/" + img.fileName;
-      img = imageRepo.save(img);
-      img.filePath = "/files/" + img.id;
-      imageRepo.save(img);
+      storeFile(img, username);
       count++;
     }
+  }
+
+  /** Saves an uploaded file (photo or PDF) of a staging request; its path needs the id the database gives it, so it is saved twice. */
+  private void storeFile(ProjectImage file, String username) {
+    file.uploadedBy = username;
+    file.isVerified = 0;
+    file.filePath = "/files/pending/" + file.fileName;
+    file = imageRepo.save(file);
+    file.filePath = "/files/" + file.id;
+    imageRepo.save(file);
   }
 
   private static String rootMessage(Throwable e) {

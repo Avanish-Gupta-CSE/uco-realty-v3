@@ -2,6 +2,7 @@ package com.ucorealty.controller;
 
 import com.ucorealty.service.MasterDataService;
 import com.ucorealty.util.RoleCheck;
+import com.ucorealty.util.Roles;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,18 +16,13 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/admin/geo")
 public class GeoController {
-  static final String[] ALL_STAFF = {
-    "SUPERADMIN_DIT", "HO_MARKETING", "HO_RETAIL",
-    "ZO_MAKER", "ZO_CHECKER"
-  };
-
   private final MasterDataService masterData;
 
   public GeoController(MasterDataService masterData) { this.masterData = masterData; }
 
   @GetMapping
   public Map<String, Object> geo(Authentication auth) {
-    RoleCheck.require(auth, ALL_STAFF);
+    RoleCheck.require(auth, Roles.ALL_STAFF);
     Map<String, Object> m = new LinkedHashMap<>();
     m.put("zones", masterData.getZones());
     m.put("states", masterData.getStates());
