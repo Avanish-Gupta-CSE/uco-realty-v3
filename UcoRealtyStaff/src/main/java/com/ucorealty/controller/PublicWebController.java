@@ -5,7 +5,9 @@ import com.ucorealty.model.ProjectImage;
 import com.ucorealty.repository.ProjectImageRepository;
 import com.ucorealty.repository.ProjectRepository;
 import com.ucorealty.service.MasterDataService;
+import com.ucorealty.model.ProjectStaging;
 import com.ucorealty.service.ProjectService;
+import com.ucorealty.service.ProjectWorkflowService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -32,13 +34,16 @@ public class PublicWebController {
   private final MasterDataService masterDataService;
   private final ProjectImageRepository imageRepo;
   private final ProjectRepository projectRepo;
+  private final ProjectWorkflowService workflow;
 
   public PublicWebController(ProjectService projectService, MasterDataService masterDataService,
-                             ProjectImageRepository imageRepo, ProjectRepository projectRepo) {
+                             ProjectImageRepository imageRepo, ProjectRepository projectRepo,
+                             ProjectWorkflowService workflow) {
     this.projectService = projectService;
     this.masterDataService = masterDataService;
     this.imageRepo = imageRepo;
     this.projectRepo = projectRepo;
+    this.workflow = workflow;
   }
 
   @GetMapping("/projects")
@@ -141,6 +146,11 @@ public class PublicWebController {
       if (p == null) {
         throw new ResponseStatusException(HttpStatus.NOT_FOUND);
       }
+    } else if (img.stagingId != null) {
+      // A file of a maker's unapproved work: only people who may open that request (the maker, or the checker of the zone) may fetch it.
+      // The same check protects the edit, review and preview pages of the request.
+      ProjectStaging request = workflow.get(img.stagingId);
+      workflow.requireCanView(request, auth.getName());
     }
 
     if (img.fileData == null || img.fileData.length == 0) {
