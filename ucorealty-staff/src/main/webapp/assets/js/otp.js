@@ -1,4 +1,9 @@
 document.addEventListener('DOMContentLoaded', function () {
+  // The "wrong OTP" notice comes from the address (/otp?error=otp): show it once, so a reload opens the clean page
+  if (window.location.search && window.history && window.history.replaceState) {
+    window.history.replaceState(null, '', window.location.pathname);
+  }
+
   const otpFields = document.querySelectorAll('.otp-box');
   const hiddenOtpInput = document.getElementById('hidden-otp-input');
   const otpForm = document.getElementById('otpForm');

@@ -44,8 +44,9 @@ mkdir -p "$OUT/db"
 cp "$PUBLIC_WAR" "$OUT/ucorealty-customer.war"
 cp "$INTERNAL_WAR" "$OUT/ucorealty-staff.war"
 cp "$ROOT"/db_migrations/*.sql "$ROOT"/db_migrations/README_DBA_DEPLOYMENT.md "$OUT/db/"
-# UAT gets the test employees (03, 05). Production reads the bank's real HRMS tables: never ship them there.
-[ "$MODE" = "prod" ] && rm -f "$OUT/db/03_CREATE_HRMS_MOCK_TABLES.sql" "$OUT/db/05_LOCAL_TEST_EMPLOYEES.sql"
+# 03 / 05 create stand-in HRMS tables (test employees and a fake LG_ENTRY_REVAMP with fake leads). Both UAT and production read the
+# bank's real HRMS tables, which the stand-ins would hide: never ship them in a bundle.
+rm -f "$OUT/db/03_CREATE_HRMS_MOCK_TABLES.sql" "$OUT/db/05_LOCAL_TEST_EMPLOYEES.sql"
 # one-time upgrade scripts for old laptop databases: a new bank database only needs 01_CREATE_TABLES.sql
 rm -f "$OUT/db/06_STAGING_MODEL.sql" "$OUT/db/07_DROP_UNUSED_TABLES.sql"
 # the drop-everything script is for UAT resets only

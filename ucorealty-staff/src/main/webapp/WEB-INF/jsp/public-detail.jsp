@@ -122,16 +122,17 @@
                                         <div id="spec-avg-rate"><c:out value="${project.avgRate != null ? project.avgRate : 'On request'}"/></div>
                                     </div>
                                     <div class="col-sm-6 col-md-3">
-                                        <div class="text-muted small">Total Units</div>
+                                        <div class="text-muted small" title="Subject to availability">Total Units*</div>
                                         <div id="spec-total-inventory">${project.totalInventory != null ?
                                             project.totalInventory : '-'}</div>
                                     </div>
                                     <div class="col-sm-6 col-md-3">
-                                        <div class="text-muted small">Available Units</div>
+                                        <div class="text-muted small" title="Subject to availability">Available Units*</div>
                                         <strong class="text-success fs-6"
                                             id="spec-unsold-inventory">${project.unsoldInventory != null ?
                                             project.unsoldInventory : 'Enquire'}</strong>
                                     </div>
+                                    <div class="col-12 text-muted small" id="units-availability-note">* Subject to availability</div>
                                 </div>
                             </div>
 
@@ -207,10 +208,33 @@
                                                     project.projectAddress : 'Not provided'}"/></td>
                                             </tr>
                                             </c:if>
-                                            <c:if test="${project.amenities != null}">
+                                            <c:if test="${not empty amenityRows || not empty project.amenities}">
                                                 <tr>
                                                     <th>Amenities</th>
-                                                    <td id="spec-amenities"><c:out value="${project.amenities}"/></td>
+                                                    <td id="spec-amenities">
+                                                        <c:forEach var="a" items="${amenityRows}">
+                                                            <div><c:out value="${a.key}"/>: <strong class="${a.value == 'Y' ? 'text-success' : 'text-muted'}">${a.value == 'Y' ? 'Yes' : 'No'}</strong></div>
+                                                        </c:forEach>
+                                                        <c:if test="${not empty project.amenities}"><div class="mt-1"><c:out value="${project.amenities}"/></div></c:if>
+                                                    </td>
+                                                </tr>
+                                            </c:if>
+                                            <c:if test="${not empty project.videoUrl && fn:startsWith(project.videoUrl, 'http')}">
+                                                <tr>
+                                                    <th>Project Video</th>
+                                                    <td><a href="<c:out value='${project.videoUrl}'/>" target="_blank" rel="noopener noreferrer" id="link-project-video">Watch Project Video &rarr;</a></td>
+                                                </tr>
+                                            </c:if>
+                                            <c:if test="${not empty brochureId}">
+                                                <tr>
+                                                    <th>Brochure</th>
+                                                    <td><a href="${pageContext.request.contextPath}/files/<c:out value='${brochureId}'/>" target="_blank" rel="noopener" id="link-brochure">Download Brochure (PDF)</a></td>
+                                                </tr>
+                                            </c:if>
+                                            <c:if test="${not empty floorPlanId}">
+                                                <tr>
+                                                    <th>Floor Plan</th>
+                                                    <td><a href="${pageContext.request.contextPath}/files/<c:out value='${floorPlanId}'/>" target="_blank" rel="noopener" id="link-floor-plan">View Floor Plan (PDF)</a></td>
                                                 </tr>
                                             </c:if>
                                         </tbody>
@@ -239,7 +263,7 @@
                                             <c:if test="${project.builderRating != null}">
                                                 <tr>
                                                     <th>Rating</th>
-                                                    <td id="builder-rating-cell"><c:out value="${project.builderRating}"/></td>
+                                                    <td id="builder-rating-cell"><c:out value="${project.builderRating}"/><c:if test="${not empty project.builderRatingOutOf}"> / <c:out value="${project.builderRatingOutOf}"/></c:if></td>
                                                 </tr>
                                             </c:if>
                                             <c:if
@@ -265,20 +289,7 @@
 
                         <!-- Right Column: Home Loan Lead & Branch Contacts -->
                         <div class="col-lg-4" id="project-loan-column">
-                            <!-- Apply for Home Loan Card -->
-                            <div class="loan-apply-card" id="card-apply-home-loan">
-                                <h2 class="card-title-custom border-0 pb-0 mb-2" id="loan-card-heading">Apply for Home Loan</h2>
-                                <p class="text-muted small mb-3" id="loan-card-subheading">
-                                    Fast-track loan processing with preferential interest rates for this approved
-                                    project.
-                                </p>
-                                <button type="button" class="btn btn-primary w-100 py-2 fw-bold"
-                                    id="btn-apply-loan-sidebar" data-action="apply-loan"
-                                    data-project-id="${project.id}">
-                                    Apply for Home Loan &rarr;
-                                </button>
-                            </div>
-
+                            <%-- The Apply for Home Loan card is for customers only: bank staff never see it (preview or live). --%>
                             <!-- UCO Bank Branch Assistance -->
                             <div class="card-custom" id="card-branch-assistance">
                                 <h2 class="card-title-custom" id="branch-assistance-heading">Bank Branch Assistance</h2>

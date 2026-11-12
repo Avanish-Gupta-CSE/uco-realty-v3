@@ -93,16 +93,17 @@
                                         <div id="spec-avg-rate"><c:out value="${project.avgRate != null ? project.avgRate : 'On request'}"/></div>
                                     </div>
                                     <div class="col-sm-6 col-md-3">
-                                        <div class="text-muted small">Total Units</div>
+                                        <div class="text-muted small" title="Subject to availability">Total Units*</div>
                                         <div id="spec-total-inventory">${project.totalInventory != null ?
                                             project.totalInventory : '-'}</div>
                                     </div>
                                     <div class="col-sm-6 col-md-3">
-                                        <div class="text-muted small">Available Units</div>
+                                        <div class="text-muted small" title="Subject to availability">Available Units*</div>
                                         <strong class="text-success fs-6"
                                             id="spec-unsold-inventory">${project.unsoldInventory != null ?
                                             project.unsoldInventory : 'Enquire'}</strong>
                                     </div>
+                                    <div class="col-12 text-muted small" id="units-availability-note">* Subject to availability</div>
                                 </div>
                             </div>
 
@@ -178,10 +179,33 @@
                                                     project.projectAddress : 'Not provided'}"/></td>
                                             </tr>
                                             </c:if>
-                                            <c:if test="${project.amenities != null}">
+                                            <c:if test="${not empty amenityRows || not empty project.amenities}">
                                                 <tr>
                                                     <th>Amenities</th>
-                                                    <td id="spec-amenities"><c:out value="${project.amenities}"/></td>
+                                                    <td id="spec-amenities">
+                                                        <c:forEach var="a" items="${amenityRows}">
+                                                            <div><c:out value="${a.key}"/>: <strong class="${a.value == 'Yes' ? 'text-success' : 'text-muted'}">${a.value == 'Yes' ? 'Yes' : 'No'}</strong></div>
+                                                        </c:forEach>
+                                                        <c:if test="${not empty project.amenities}"><div class="mt-1"><c:out value="${project.amenities}"/></div></c:if>
+                                                    </td>
+                                                </tr>
+                                            </c:if>
+                                            <c:if test="${not empty project.videoUrl && fn:startsWith(project.videoUrl, 'http')}">
+                                                <tr>
+                                                    <th>Project Video</th>
+                                                    <td><a href="<c:out value='${project.videoUrl}'/>" target="_blank" rel="noopener noreferrer" id="link-project-video">Watch Project Video &rarr;</a></td>
+                                                </tr>
+                                            </c:if>
+                                            <c:if test="${not empty brochureId}">
+                                                <tr>
+                                                    <th>Brochure</th>
+                                                    <td><a href="${pageContext.request.contextPath}/files/<c:out value='${brochureId}'/>" target="_blank" rel="noopener" id="link-brochure">Download Brochure (PDF)</a></td>
+                                                </tr>
+                                            </c:if>
+                                            <c:if test="${not empty floorPlanId}">
+                                                <tr>
+                                                    <th>Floor Plan</th>
+                                                    <td><a href="${pageContext.request.contextPath}/files/<c:out value='${floorPlanId}'/>" target="_blank" rel="noopener" id="link-floor-plan">View Floor Plan (PDF)</a></td>
                                                 </tr>
                                             </c:if>
                                         </tbody>
@@ -210,7 +234,7 @@
                                             <c:if test="${project.builderRating != null}">
                                                 <tr>
                                                     <th>Rating</th>
-                                                    <td id="builder-rating-cell"><c:out value="${project.builderRating}"/></td>
+                                                    <td id="builder-rating-cell"><c:out value="${project.builderRating}"/><c:if test="${not empty project.builderRatingOutOf}"> / <c:out value="${project.builderRatingOutOf}"/></c:if></td>
                                                 </tr>
                                             </c:if>
                                             <c:if
@@ -276,6 +300,13 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+
+                    <%-- Second Apply for Home Loan button, at the bottom of the page (same link as the sidebar card) --%>
+                    <div class="text-center my-4" id="bottom-apply-home-loan">
+                        <a href="<c:out value='${homeLoanUrl}'/>" class="btn btn-primary btn-lg px-5 fw-bold" id="btn-apply-loan-bottom" rel="noopener">
+                            Apply for Home Loan &rarr;
+                        </a>
                     </div>
                 </main>
 

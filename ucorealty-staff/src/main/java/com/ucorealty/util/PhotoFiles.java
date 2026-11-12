@@ -14,6 +14,11 @@ public final class PhotoFiles {
     return null;
   }
 
+  /** True when the bytes start like a real PDF file ("%PDF-"). */
+  public static boolean isPdf(byte[] b) {
+    return b != null && b.length > 8 && b[0] == '%' && b[1] == 'P' && b[2] == 'D' && b[3] == 'F' && b[4] == '-';
+  }
+
   public static boolean extensionMatches(String ext, String mime) {
     if (".png".equals(ext)) return "image/png".equals(mime);
     if (".jpg".equals(ext) || ".jpeg".equals(ext)) return "image/jpeg".equals(mime);

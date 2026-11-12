@@ -122,11 +122,12 @@
                                 </c:if>
 
                                 <div class="project-meta-row">
-                                    <span class="text-muted">Available Units:</span>
+                                    <span class="text-muted" title="Subject to availability">Total Units*:</span>
                                     <span class="text-success fw-bold">
-                                        ${p.unsoldInventory != null ? p.unsoldInventory : 'Enquire'}
+                                        ${p.totalInventory != null ? p.totalInventory : 'Enquire'}
                                     </span>
                                 </div>
+                                <div class="text-muted small" id="units-note-${p.id}">* Subject to availability</div>
 
                                 <div class="mt-auto pt-3">
                                     <a href="${pageContext.request.contextPath}/project/<c:out value="${p.id}"/>" class="btn btn-primary w-100" id="btn-view-project-${p.id}">

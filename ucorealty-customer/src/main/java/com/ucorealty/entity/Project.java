@@ -140,6 +140,15 @@ public class Project {
   @Column(name = "builder_rating", length = 50)
   public String builderRating;
 
+  @Column(name = "builder_rating_out_of", length = 20)
+  public String builderRatingOutOf;
+
+  @Column(name = "video_url", length = 500)
+  public String videoUrl;
+
+  @Column(name = "amenity_flags", length = 600)
+  public String amenityFlags;
+
   @Lob
   @Column(name = "builder_bg")
   public String builderBg;
@@ -249,6 +258,12 @@ public class Project {
   public void setWebsite(String website) { this.website = website; }
   public String getBuilderRating() { return builderRating; }
   public void setBuilderRating(String builderRating) { this.builderRating = builderRating; }
+  public String getBuilderRatingOutOf() { return builderRatingOutOf; }
+  public void setBuilderRatingOutOf(String builderRatingOutOf) { this.builderRatingOutOf = builderRatingOutOf; }
+  public String getVideoUrl() { return videoUrl; }
+  public void setVideoUrl(String videoUrl) { this.videoUrl = videoUrl; }
+  public String getAmenityFlags() { return amenityFlags; }
+  public void setAmenityFlags(String amenityFlags) { this.amenityFlags = amenityFlags; }
   public String getBuilderBg() { return builderBg; }
   public void setBuilderBg(String builderBg) { this.builderBg = builderBg; }
   public String getBranchHeadName() { return branchHeadName; }

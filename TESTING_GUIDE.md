@@ -36,7 +36,7 @@ Checks the customer-site lockdown, headers, bad SSO tokens, CSRF, roles (DIT/mak
 **A. Maker in Patna (700001)**
 1. Open http://localhost:8081/ucorealty-staff/login, enter `700001`, press *Generate OTP*, enter `123456`. The header shows `ROLE_ZO_MAKER`; there is no Logs and no Customer Leads tab.
 2. **+ Add New Project**. The zone is fixed to **Patna** (it comes from the login, never typed). Pick State, then District (or **+ Other / Custom City**). Fill name, builder, branch name, a 6-digit pincode; available units must not exceed total.
-3. Add photos (4 slots, **+ Add More Photos** up to 10, 2 MB each, JPG/PNG/WEBP). **Save Draft**, reopen it, edit it.
+3. Add photos (4 slots, **+ Add More Photos** up to 10, 1 MB each, JPG/PNG/WEBP). **Save Draft**, reopen it, edit it.
 4. **Save & Request Approval**. Leave the branch name empty first: it must be refused with the message on the same form.
 
 **B. Checker in Patna (700002) and zone isolation**
@@ -65,14 +65,14 @@ Checks the customer-site lockdown, headers, bad SSO tokens, CSRF, roles (DIT/mak
 3. Press **Save as Draft**. Back on the dashboard the project still shows **Approved** with a small tag **Your change: draft**.
 4. Check what others see: open http://localhost:8080/ucorealty-customer/projects, open the project: **old** values and **old** photos. Sign in as checker `700002`: the project row has **no** pending tag and no review button (a draft is private).
 
-**Send for approval, then the checker decides**
-5. As `700001` press **Continue change**, then **Send for Approval** (try it with nothing changed first: refused). The project now shows **Change pending approval**; the customer site is still unchanged.
+**Submit for approval, then the checker decides**
+5. As `700001` press **Continue change**, then **Submit for Approval** (try it with nothing changed first: refused). The project now shows **Change pending approval**; the customer site is still unchanged.
 6. As `700002` press **Review change**. You see a table *Approved (live now) → Proposed*, plus new/removed photos. Try the wrong people first: the maker `700001` and the Ajmer checker `200002` cannot approve (the row has no button for the maker; a direct request is refused).
-7. **Return to maker** with a remark. As `700001` the row shows **Your change: returned** with the remark. Fix, **Send for Approval** again.
+7. **Return to maker** with a remark. As `700001` the row shows **Your change: returned** with the remark. Fix, **Submit for Approval** again.
 8. As `700002` **Approve and apply change**. Now the customer site shows the new values and the new photo; the removed photo is gone; no pending tag remains. Try **Reject** on another change: nothing changes on the approved project.
 
 **Reduce units** (maker only)
-9. As `700001` press **Reduce Units**, enter units and a reason, **Send for Approval**. The unit count on the dashboard does not change yet. As `700002` review (old → new units, reason) and approve: the count drops. HO retail `400001` has no such button.
+9. As `700001` press **Reduce Units**, enter units and a reason, **Submit for Approval**. The unit count on the dashboard does not change yet. As `700002` review (old → new units, reason) and approve: the count drops. HO retail `400001` has no such button.
 
 **Delete**
 10. As `700001` press **Delete**, enter a reason. The project stays on the customer site and shows **Deletion pending approval**. As `700002` open **Review deletion** (reason shown; only *Approve* or *Reject* are possible). **Approve**: the project disappears from every dashboard (maker, checker, HO, DIT) and from the customer site; it is still in the database with status `DELETED` (see the **Logs** page for the whole history under `DELETE_REQUESTED` / `DELETE_APPROVED`).
@@ -94,7 +94,7 @@ select id, project_id, request_type, status, created_by, base_version, row_versi
 select id, project_id, staging_id, file_name from realty_project_images order by id;
 SQL
 ```
-Watch it between the steps: *Save as Draft* changes only `realty_project_staging`; *Send for Approval* flips its status to `PENDING_APPROVAL`; *Approve* copies the values into `realty_projects` (`row_version` +1) and marks the staging row `APPROVED`; a deletion sets `realty_projects.status = 'DELETED'`.
+Watch it between the steps: *Save as Draft* changes only `realty_project_staging`; *Submit for Approval* flips its status to `PENDING_APPROVAL`; *Approve* copies the values into `realty_projects` (`row_version` +1) and marks the staging row `APPROVED`; a deletion sets `realty_projects.status = 'DELETED'`.
 
 ## 3d. Regression checklist (run before every release)
 | # | Area | How | Pass when |

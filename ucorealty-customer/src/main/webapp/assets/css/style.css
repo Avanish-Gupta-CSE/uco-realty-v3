@@ -67,6 +67,9 @@ a:hover {
    Header & Navigation
    ========================================================================== */
 .header {
+  position: sticky;            /* stays at the top of the screen while the page scrolls */
+  top: 0;
+  z-index: 1030;
   background: #ffffff;
   border-bottom: 2px solid var(--uco-navy);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
@@ -88,8 +91,12 @@ a:hover {
 }
 
 .logo-img {
-  height: 52px;
+  height: 88px;                /* large, so the page clearly looks like a UCO Bank product */
   width: auto;
+}
+
+@media (max-width: 768px) {
+  .logo-img { height: 56px; }
 }
 
 .logo-text h1 {
@@ -124,7 +131,7 @@ a:hover {
 }
 
 .navbar-custom {
-  background: var(--uco-navy);
+  background: linear-gradient(90deg, #00264d 0%, #004d99 55%, #3b8fd9 100%);
   padding: 0;
 }
 
@@ -139,7 +146,7 @@ a:hover {
 
 .navbar-custom .nav-link:hover,
 .navbar-custom .nav-link.active {
-  background: var(--uco-dark);
+  background: rgba(0, 20, 51, 0.35);
   color: #ffffff;
   border-bottom: 3px solid var(--uco-saffron);
 }
@@ -166,7 +173,7 @@ a:hover {
 }
 
 .hero-banner {
-  background: linear-gradient(90deg, #003366 0%, #004d80 50%, #005599 100%);
+  background: linear-gradient(90deg, #00264d 0%, #004d99 55%, #3b8fd9 100%);
   color: #ffffff;
   padding: 28px;
   border-radius: 8px;

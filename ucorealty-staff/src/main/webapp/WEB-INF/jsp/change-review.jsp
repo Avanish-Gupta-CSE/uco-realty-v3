@@ -63,10 +63,10 @@
                     </table>
                 </div>
                 <c:if test="${not empty newImages}">
-                    <h3 class="form-section-title" id="review-new-photos-title">Photos</h3>
+                    <h3 class="form-section-title" id="review-new-photos-title">New photos and documents</h3>
                     <div class="d-flex flex-wrap gap-3 mb-3" id="review-new-photos">
                         <c:forEach var="img" items="${newImages}">
-                            <div id="new-photo-${img.id}"><img src="${pageContext.request.contextPath}/files/<c:out value="${img.id}"/>" alt="Photo" class="slot-preview-img" id="new-photo-img-${img.id}"></div>
+                            <div id="new-photo-${img.id}"><c:choose><c:when test="${img.photo}"><img src="${pageContext.request.contextPath}/files/<c:out value="${img.id}"/>" alt="Photo" class="slot-preview-img" id="new-photo-img-${img.id}"></c:when><c:otherwise><a href="${pageContext.request.contextPath}/files/<c:out value="${img.id}"/>" target="_blank" rel="noopener" class="btn btn-outline-primary btn-sm" id="new-doc-link-${img.id}"><c:out value="${img.fileKind == 'BROCHURE' ? 'Brochure' : 'Floor plan'}"/>: <c:out value="${img.fileName}"/> (PDF)</a></c:otherwise></c:choose></div>
                         </c:forEach>
                     </div>
                 </c:if>
@@ -102,18 +102,18 @@
                 </c:choose>
 
                 <c:if test="${not empty removedImages}">
-                    <h3 class="form-section-title" id="review-removed-photos-title">Photos to be removed</h3>
+                    <h3 class="form-section-title" id="review-removed-photos-title">Photos and documents to be removed</h3>
                     <div class="d-flex flex-wrap gap-3 mb-3" id="review-removed-photos">
                         <c:forEach var="img" items="${removedImages}">
-                            <div id="removed-photo-${img.id}"><img src="${pageContext.request.contextPath}/files/<c:out value="${img.id}"/>" alt="Photo to remove" class="slot-preview-img" id="removed-photo-img-${img.id}"></div>
+                            <div id="removed-photo-${img.id}"><c:choose><c:when test="${img.photo}"><img src="${pageContext.request.contextPath}/files/<c:out value="${img.id}"/>" alt="Photo to remove" class="slot-preview-img" id="removed-photo-img-${img.id}"></c:when><c:otherwise><a href="${pageContext.request.contextPath}/files/<c:out value="${img.id}"/>" target="_blank" rel="noopener" class="btn btn-outline-primary btn-sm" id="removed-doc-link-${img.id}"><c:out value="${img.fileKind == 'BROCHURE' ? 'Brochure' : 'Floor plan'}"/>: <c:out value="${img.fileName}"/> (PDF)</a></c:otherwise></c:choose></div>
                         </c:forEach>
                     </div>
                 </c:if>
                 <c:if test="${not empty newImages}">
-                    <h3 class="form-section-title" id="review-new-photos-title">New photos</h3>
+                    <h3 class="form-section-title" id="review-new-photos-title">New photos and documents</h3>
                     <div class="d-flex flex-wrap gap-3 mb-3" id="review-new-photos">
                         <c:forEach var="img" items="${newImages}">
-                            <div id="new-photo-${img.id}"><img src="${pageContext.request.contextPath}/files/<c:out value="${img.id}"/>" alt="New photo" class="slot-preview-img" id="new-photo-img-${img.id}"></div>
+                            <div id="new-photo-${img.id}"><c:choose><c:when test="${img.photo}"><img src="${pageContext.request.contextPath}/files/<c:out value="${img.id}"/>" alt="New photo" class="slot-preview-img" id="new-photo-img-${img.id}"></c:when><c:otherwise><a href="${pageContext.request.contextPath}/files/<c:out value="${img.id}"/>" target="_blank" rel="noopener" class="btn btn-outline-primary btn-sm" id="new-doc-link-${img.id}"><c:out value="${img.fileKind == 'BROCHURE' ? 'Brochure' : 'Floor plan'}"/>: <c:out value="${img.fileName}"/> (PDF)</a></c:otherwise></c:choose></div>
                         </c:forEach>
                     </div>
                 </c:if>

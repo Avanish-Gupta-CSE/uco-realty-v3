@@ -32,6 +32,9 @@ public final class ProjectValidator {
     MAX.put("projectAddress", 500);
     MAX.put("renewalPending", 20);
     MAX.put("pinCode", 10);
+    MAX.put("builderRatingOutOf", 20);
+    MAX.put("videoUrl", 500);
+    MAX.put("amenityFlags", 600);
   }
 
   private static final Pattern RERA = Pattern.compile("^[A-Za-z0-9][A-Za-z0-9 /._-]{2,38}[A-Za-z0-9]$");
@@ -70,6 +73,7 @@ public final class ProjectValidator {
 
     if (!s(p.salesEmail).isEmpty() && !EMAIL.matcher(s(p.salesEmail)).matches()) out.add("Sales email is not a valid email address");
     if (!s(p.website).isEmpty() && !validUrl(s(p.website))) out.add("Website must be a full address starting with http:// or https://");
+    if (!s(p.videoUrl).isEmpty() && !validUrl(s(p.videoUrl))) out.add("Project Video URL must be a full address starting with http:// or https://");
 
     // numbers
     if (p.totalInventory != null && (p.totalInventory < 1 || p.totalInventory > 100000)) out.add("Total inventory must be between 1 and 100000");
@@ -114,7 +118,7 @@ public final class ProjectValidator {
     v.put("builderName", p.builderName); v.put("projectAddress", p.projectAddress); v.put("pinCode", p.pinCode);
     v.put("promoter1", p.promoter1); v.put("promoter2", p.promoter2); v.put("promoter3", p.promoter3);
     v.put("promoter4", p.promoter4); v.put("promoter5", p.promoter5); v.put("salesExecName", p.salesExecName);
-    v.put("salesMobile", p.salesMobile); v.put("salesEmail", p.salesEmail); v.put("website", p.website);
+    v.put("salesMobile", p.salesMobile); v.put("salesEmail", p.salesEmail); v.put("website", p.website); v.put("videoUrl", p.videoUrl); v.put("builderRatingOutOf", p.builderRatingOutOf);
     v.put("builderRating", p.builderRating); v.put("branchHeadName", p.branchHeadName); v.put("branchHeadNumber", p.branchHeadNumber);
     v.put("relExecName", p.relExecName); v.put("relExecNumber", p.relExecNumber); v.put("renewalPending", p.renewalPending);
     v.put("approvalSought", p.approvalSought);

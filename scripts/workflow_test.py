@@ -21,7 +21,8 @@ import load_demo_data as demo  # noqa: E402
 
 PUBLIC = os.environ.get("PUBLIC_URL", "http://localhost:8080/ucorealty-customer")
 INTERNAL = os.environ.get("INTERNAL_URL", "http://localhost:8081/ucorealty-staff")
-PHOTO = sorted((Path(__file__).resolve().parent.parent / ".brain" / "07_REFERENCE" / "sample-uploads" / "UCR-PROJ-0001").glob("photo-*.jpg"))
+PHOTO = [p for p in sorted((Path(__file__).resolve().parent.parent / ".brain" / "07_REFERENCE" / "sample-uploads" / "UCR-PROJ-0001").glob("photo-*.jpg"))
+         if p.stat().st_size <= 1024 * 1024]   # the form accepts photos of 1 MB at most
 results = []
 
 
@@ -281,7 +282,7 @@ prev = maker.get(f"/admin/projects/staging/{sid6}/preview")[2].decode()
 check("special characters survived the packing (& + new line, accent)", "Park &amp; Gym + Pool" in prev and "\u00e9" in prev)
 fl["stagingId"] = str(sid6)
 s_, _, _ = save_packed(maker, fl, action="submit")
-check("packed 'Send for Approval' works (302) and the status is Pending Approval", s_ == 302 and status_of(maker, pid6) == "Pending Approval")
+check("packed 'Submit for Approval' works (302) and the status is Pending Approval", s_ == 302 and status_of(maker, pid6) == "Pending Approval")
 decide(checker, sid6, "reject", "test only")
 
 print(f"\n{results.count(True)}/{len(results)} checks passed")

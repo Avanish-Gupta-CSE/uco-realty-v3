@@ -245,7 +245,7 @@
                                             <sec:authorize access="hasAnyRole('ZO_CHECKER', 'HO_MARKETING', 'SUPERADMIN_DIT')">
                                                 <c:if test="${p.waitingForChecker && !mine}">
                                                     <a href="${pageContext.request.contextPath}/admin/projects/staging/${p.stagingId}/review" class="btn btn-warning btn-sm" id="link-review-${p.id}">
-                                                        ${p.requestType == 'DELETE' ? 'Review deletion' : (p.requestType == 'UPDATE' ? 'Review change' : 'Review')}
+                                                        ${p.requestType == 'DELETE' ? 'Approve deletion' : (p.requestType == 'UPDATE' ? 'Approve change' : 'Approve')}
                                                     </a>
                                                 </c:if>
                                             </sec:authorize>
@@ -315,7 +315,7 @@
 
                 <div class="modal-footer border-top bg-light">
                     <button type="button" class="btn btn-secondary btn-sm" id="btn-reduce-cancel" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger btn-sm" id="btn-reduce-confirm">Send for Approval</button>
+                    <button type="submit" class="btn btn-danger btn-sm" id="btn-reduce-confirm">Submit for Approval</button>
                 </div>
             </form>
         </div>
@@ -342,7 +342,7 @@
                 </div>
                 <div class="modal-footer border-top bg-light">
                     <button type="button" class="btn btn-secondary btn-sm" id="btn-delete-cancel" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger btn-sm" id="btn-delete-confirm">Send for Approval</button>
+                    <button type="submit" class="btn btn-danger btn-sm" id="btn-delete-confirm">Submit for Approval</button>
                 </div>
             </form>
         </div>

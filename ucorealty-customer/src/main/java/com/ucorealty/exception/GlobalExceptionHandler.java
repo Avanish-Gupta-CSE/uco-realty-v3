@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -48,8 +49,18 @@ public class GlobalExceptionHandler {
     return "public-projects";
   }
 
+  // A bad value in the address (for example a letter where a number is expected): 400, not a system error
+  @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+  public String handleBadValue(HttpServletRequest request, HttpServletResponse response, Model model) {
+    response.setStatus(400);
+    log.info("[UCO HTTP 400] {} {} (bad value in the address)", request.getMethod(), request.getRequestURI());
+    model.addAttribute("errorMessage", "That page is not available.");
+    return "public-projects";
+  }
+
   @ExceptionHandler(Exception.class)
-  public String handleGeneralException(Exception exc, HttpServletRequest request, Model model) {
+  public String handleGeneralException(Exception exc, HttpServletRequest request, HttpServletResponse response, Model model) {
+    response.setStatus(500);   // a real system error must not look like a successful page (200) to monitoring
     log.error("[UCO ERROR] Unhandled exception on {} {}: {}", request.getMethod(), request.getRequestURI(), exc.getMessage(), exc);
     model.addAttribute("errorMessage", "An error occurred while loading projects. Please try again.");
     return "public-projects";

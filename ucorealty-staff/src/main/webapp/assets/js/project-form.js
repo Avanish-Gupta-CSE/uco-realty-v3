@@ -7,6 +7,7 @@
 document.addEventListener("DOMContentLoaded", function () {
     initDistrictSelector();
     initPhotoSlots();
+    initDocumentInputs();
     initDateGuards();
 });
 
@@ -228,9 +229,9 @@ function initPhotoSlots() {
 
             var file = input.files[0];
 
-            // Size ceiling: 2MB (2 * 1024 * 1024 bytes)
-            if (file.size > 2 * 1024 * 1024) {
-                showFormNotice("File \"" + file.name + "\" exceeds the 2MB limit (" + (file.size / 1024 / 1024).toFixed(2) + " MB). Please choose an image under 2MB.");
+            // Size ceiling: 1MB (1 * 1024 * 1024 bytes)
+            if (file.size > 1 * 1024 * 1024) {
+                showFormNotice("File \"" + file.name + "\" exceeds the 1MB limit (" + (file.size / 1024 / 1024).toFixed(2) + " MB). Please choose an image under 1MB.");
                 input.value = "";
                 return;
             }
@@ -335,7 +336,7 @@ function initPhotoSlots() {
             var context = btn.getAttribute("data-context-path") || "";
 
             if (!imgId || !projectId) return;
-            window.ucoConfirm("Delete this saved photo?", "Yes, delete photo", "danger", function () {
+            window.ucoConfirm("Delete this saved file?", "Yes, delete", "danger", function () {
 
                 var form = document.createElement("form");
                 form.method = "POST";
@@ -420,6 +421,24 @@ function initDateGuards() {
     if (completionDate && startDate && startDate.value) {
         completionDate.min = startDate.value;
     }
+}
+
+/** Brochure / floor plan: a PDF of at most 3 MB (the server checks again). */
+function initDocumentInputs() {
+    document.querySelectorAll(".doc-file-input").forEach(function (input) {
+        input.addEventListener("change", function () {
+            var file = input.files && input.files[0];
+            if (!file) return;
+            var isPdf = file.name.toLowerCase().endsWith(".pdf");
+            if (!isPdf) {
+                showFormNotice("\"" + file.name + "\" is not a PDF. Please choose a PDF file.");
+                input.value = "";
+            } else if (file.size > 3 * 1024 * 1024) {
+                showFormNotice("\"" + file.name + "\" is " + (file.size / 1024 / 1024).toFixed(2) + " MB. The limit is 3 MB.");
+                input.value = "";
+            }
+        });
+    });
 }
 
 /**

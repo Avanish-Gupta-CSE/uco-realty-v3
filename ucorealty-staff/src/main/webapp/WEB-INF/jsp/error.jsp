@@ -13,7 +13,8 @@
   <div class="error-card">
     <div class="error-icon error-icon-info" id="error-icon">!</div>
     <h1 class="error-title" id="error-title">We could not open this page</h1>
-    <p class="error-desc" id="error-message"><c:out value="${errorMessage != null ? errorMessage : 'Please open the Realty portal from the UCO Bank intranet portal.'}"/></p>
+    <p class="error-desc" id="error-message"><c:set var="sc" value="${empty status ? requestScope['jakarta.servlet.error.status_code'] : status}"/>
+    <c:out value="${errorMessage != null ? errorMessage : (sc == 403 ? 'Access Denied: your role cannot open this page.' : (sc == 404 ? 'The page you asked for was not found.' : (sc == 400 ? 'The request was not valid.' : (sc == 405 ? 'This page cannot be opened this way.' : (sc >= 500 ? 'An unexpected system error occurred. Please contact the SWDC Cell or Bank Administrator.' : 'Please open the Realty portal from the UCO Bank intranet portal.')))))}"/></p>
     <div class="mt-4 d-flex justify-content-center gap-3">
       <a href="${pageContext.request.contextPath}/login" class="btn btn-primary btn-sm">
         Go to Staff Login

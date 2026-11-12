@@ -65,6 +65,10 @@ class Client:
         """fields: dict of text parts; files: iterable of (field, filename, bytes, content_type)."""
         boundary = "----uco" + uuid.uuid4().hex
         out = []
+        if path.endswith("/admin/projects/staging/save") and "__packed" not in fields and len(fields) > 30:
+            # like the real page (project-form.js): Tomcat refuses more than 50 parts, so all text fields travel in ONE part
+            fields = {"_csrf": fields.get("_csrf", ""), "action": fields.get("action", "draft"),
+                      "__packed": urllib.parse.urlencode([(k, v) for k, v in fields.items() if k not in ("_csrf", "action")])}
         for k, v in fields.items():
             out.append(f'--{boundary}\r\nContent-Disposition: form-data; name="{k}"\r\n\r\n{v}\r\n'.encode())
         for k, fn, data, ctype in files:

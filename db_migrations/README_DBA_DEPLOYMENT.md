@@ -19,7 +19,7 @@ Scripts for UCO Bank's Oracle database (UAT and Production). The application nee
 
 That is all. The application creates and changes no tables itself; in UAT it checks at start that the tables match the code (`validate`) and refuses to start otherwise.
 
-**UAT also runs `03` and `05`** (test employees). `00`, `03`, `05` are in a UAT bundle only; `06`, `07` only for an old laptop database:
+**`03` and `05` are for a laptop / H2 / Docker database only, NOT for the bank's UAT or production** (they create stand-in HRMS tables, including a fake `LG_ENTRY_REVAMP` with fake REALTY leads, which would hide the bank's real tables). `00`, `03`, `05` are in a UAT bundle only; `06`, `07` only for an old laptop database:
 | Script | Purpose |
 | :--- | :--- |
 | `00_DROP_ALL_TABLES.sql` | drops the six `realty_` application tables (nothing else). Included in a UAT bundle for resets, **never run in production** |

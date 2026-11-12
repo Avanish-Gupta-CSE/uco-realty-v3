@@ -122,7 +122,10 @@ public class PublicWebController {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Project not found or not published");
     }
 
-    List<ProjectImage> imgs = imageRepo.findByProjectId(id);
+    List<ProjectImage> all = imageRepo.findByProjectId(id);
+    List<ProjectImage> imgs = all.stream().filter(ProjectImage::isPhoto).collect(Collectors.toList());
+    ProjectWorkflowController.addDocumentLinks(model, all.stream().filter(i -> !i.isPhoto()).collect(Collectors.toList()));
+    model.addAttribute("amenityRows", com.ucorealty.util.Amenities.parse(p.amenityFlags));
     model.addAttribute("project", p);
     model.addAttribute("images", imgs);
     model.addAttribute("isStaffPreview", isStaff);

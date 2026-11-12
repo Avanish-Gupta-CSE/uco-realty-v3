@@ -125,6 +125,8 @@ public class ProjectWorkflowService {
     for (Field f : ProjectData.businessFields()) {
       if ("zoneName".equals(f.getName())) continue;
       String a = show(ProjectData.value(live, f)), b = show(ProjectData.value(s, f));
+      // an older project has no amenity answers yet and the form always posts "No" for every item: that is not a change
+      if ("amenityFlags".equals(f.getName()) && "-".equals(a) && !b.contains(":Y")) continue;
       if (!a.equals(b)) out.add(new FieldChange(label(f.getName()), a, b));
     }
     return out;
@@ -152,14 +154,28 @@ public class ProjectWorkflowService {
 
   public List<ProjectImage> newImages(ProjectStaging s) { return images.findByStagingId(s.id); }
 
-  /** The photos the maker sees on the form: live ones not marked for removal (UPDATE), plus those added in this request. */
-  public List<ProjectImage> photosForForm(ProjectStaging s) {
+  /** Every uploaded file the maker sees for this request: live ones not marked for removal (UPDATE), plus those added in this request. */
+  private List<ProjectImage> filesForForm(ProjectStaging s) {
     List<ProjectImage> out = new ArrayList<>();
     if (ProjectStaging.UPDATE.equals(s.requestType)) {
       Set<Long> removed = removedImageIds(s);
       for (ProjectImage i : images.findByProjectId(s.projectId)) if (!removed.contains(i.id)) out.add(i);
     }
     out.addAll(images.findByStagingId(s.id));
+    return out;
+  }
+
+  /** The photos (gallery pictures) of this request. */
+  public List<ProjectImage> photosForForm(ProjectStaging s) {
+    List<ProjectImage> out = new ArrayList<>();
+    for (ProjectImage i : filesForForm(s)) if (i.isPhoto()) out.add(i);
+    return out;
+  }
+
+  /** The PDF documents (brochure, floor plan) of this request. */
+  public List<ProjectImage> documentsForForm(ProjectStaging s) {
+    List<ProjectImage> out = new ArrayList<>();
+    for (ProjectImage i : filesForForm(s)) if (!i.isPhoto()) out.add(i);
     return out;
   }
 
@@ -466,7 +482,7 @@ public class ProjectWorkflowService {
       images.save(img);
     }
     images.flush();
-    p.totalImgCount = images.findByProjectId(p.id).size();
+    p.totalImgCount = (int) images.findByProjectId(p.id).stream().filter(ProjectImage::isPhoto).count();
     projects.save(p);
   }
 
@@ -565,8 +581,10 @@ public class ProjectWorkflowService {
     List<String> parts = new ArrayList<>();
     for (FieldChange c : diff) parts.add(c.label + ": " + c.oldValue + " -> " + c.newValue);
     if (!removedImageIds(s).isEmpty()) parts.add(removedImageIds(s).size() + " photo(s) removed");
-    int added = images.findByStagingId(s.id).size();
-    if (added > 0) parts.add(added + " photo(s) added");
+    int addedPhotos = (int) images.findByStagingId(s.id).stream().filter(ProjectImage::isPhoto).count();
+    int addedDocs = images.findByStagingId(s.id).size() - addedPhotos;
+    if (addedPhotos > 0) parts.add(addedPhotos + " photo(s) added");
+    if (addedDocs > 0) parts.add(addedDocs + " document(s) added");
     return String.join("; ", parts);
   }
 

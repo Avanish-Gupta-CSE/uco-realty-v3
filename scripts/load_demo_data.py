@@ -56,9 +56,10 @@ def form(i, name, builder, state, city, pin, units):
         "carpetMin": "650 sq.ft.", "carpetMax": "1100 sq.ft.", "buildupMin": "800 sq.ft.", "buildupMax": "1350 sq.ft.",
         "budgetMin": "32 L", "budgetMax": "68 L", "avgRate": "4800 per sq.ft.", "totalProjectArea": "3.5 acres",
         "distRailway": "4 km", "distAirport": "22 km", "aptPerFloor": "4", "noOfTowers": "3",
-        "amenities": "Park, Gym, Clubhouse, 24x7 security, Power backup",
+        "amenities": "Jogging track, Clubhouse",
+        **{f"amenity_{k}": ("Y" if k in (0, 2, 4, 5, 7) else "N") for k in range(8)},   # Yes/No amenities (staff form order)
         "builderBg": f"{builder} has delivered residential projects in the region for over 15 years.",
-        "builderRating": "4.2", "website": "https://example.com", "salesExecName": "Demo Sales Executive",
+        "builderRating": "4.2", "builderRatingOutOf": "5", "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "website": "https://example.com", "salesExecName": "Demo Sales Executive",
         "salesMobile": "9000000000", "salesEmail": "sales@example.com",
         "branchHeadName": "Demo Branch Head", "branchHeadNumber": "9000000001",
         "relExecName": "Demo Relationship Executive", "relExecNumber": "9000000002",
@@ -67,9 +68,20 @@ def form(i, name, builder, state, city, pin, units):
 
 def photos(n=3):
     files = []
-    for k, p in enumerate(sorted(PHOTOS.glob("photo-*.jpg"))[:n], start=1):
+    small = [p for p in sorted(PHOTOS.glob("photo-*.jpg")) if p.stat().st_size <= 1024 * 1024]   # the form accepts 1 MB at most
+    for k, p in enumerate(small[:n], start=1):
         files.append((f"photo{k}", p.name, p.read_bytes(), "image/jpeg"))
     return files
+
+
+# a tiny but valid one-page PDF (for the Brochure and Floor Plan uploads)
+DEMO_PDF = (b"%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n"
+            b"3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 300 144]>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n")
+
+
+def documents():
+    return [("brochure", "demo-brochure.pdf", DEMO_PDF, "application/pdf"),
+            ("floorPlan", "demo-floor-plan.pdf", DEMO_PDF, "application/pdf")]
 
 
 def newest_project_id(client, name):
@@ -108,7 +120,12 @@ def main():
         fields["_csrf"] = mk.csrf("/admin/projects/new")
         fields["action"] = "draft" if fate == "draft" else "submit"
         files = photos(3 if fate in ("approved", "pending") else 1)
-        s, h, _ = mk.multipart_post("/admin/projects/staging/save", fields, files)
+        if fate in ("approved", "pending"):
+            files += documents()
+        # like the real page (project-form.js): all text fields go in ONE part, "__packed", because Tomcat refuses more than 50 parts
+        from urllib.parse import urlencode
+        packed = urlencode([(k, v) for k, v in fields.items() if k not in ("_csrf", "action")])
+        s, h, _ = mk.multipart_post("/admin/projects/staging/save", {"_csrf": fields["_csrf"], "action": fields["action"], "__packed": packed}, files)
         if s != 302:
             sys.exit(f"Saving '{name}' failed (HTTP {s}); the form probably showed a validation error.")
         pid = newest_project_id(mk, name)

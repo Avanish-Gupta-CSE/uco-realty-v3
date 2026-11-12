@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CsrfException;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.access.AccessDeniedHandlerImpl;
 import org.springframework.security.web.session.DisableEncodeUrlFilter;
@@ -33,6 +34,14 @@ public class InternalSecurityConfig {
     // Spring Security answers 403 by itself (wrong role, or a form posted without a valid CSRF token); this writes it to the log first.
     AccessDeniedHandler standard = new AccessDeniedHandlerImpl();
     AccessDeniedHandler logged = (request, response, denied) -> {
+      // A missing/old security token (CsrfException) is not a role problem: the page in the browser belongs to a session the server
+      // no longer has (idle 30 minutes, restart, cached page). Send the user to the login page with the "session expired" notice.
+      if (denied instanceof CsrfException) {
+        log.info("[UCO SECURITY] Session expired or stale page: {} {} had no valid security token, sent to login ({})",
+            request.getMethod(), request.getRequestURI(), denied.getMessage());
+        response.sendRedirect(request.getContextPath() + "/login?expired");
+        return;
+      }
       log.warn("[UCO SECURITY] 403 {} {} by {} from {}: {}", request.getMethod(), request.getRequestURI(),
           request.getUserPrincipal() == null ? "anonymous" : request.getUserPrincipal().getName(), request.getRemoteAddr(), denied.getMessage());
       standard.handle(request, response, denied);

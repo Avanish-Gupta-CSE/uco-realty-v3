@@ -93,6 +93,10 @@ public class PublicWebController {
     List<Long> imgs = imageRepo.findIdsByProjectId(id);
     model.addAttribute("project", p);
     model.addAttribute("images", imgs);
+    for (Object[] doc : imageRepo.findDocuments(id)) {      // PDF documents: [id, kind]
+      model.addAttribute(ProjectImage.BROCHURE.equals(doc[1]) ? "brochureId" : "floorPlanId", doc[0]);
+    }
+    model.addAttribute("amenityRows", com.ucorealty.util.Amenities.parse(p.amenityFlags));
     model.addAttribute("homeLoanUrl", homeLoanUrl);
     return "public-detail";
   }

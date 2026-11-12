@@ -144,6 +144,12 @@ public class HomeController {
   /**
    * SSO Login Landing Page for direct login and OTP entry.
    */
+  /** Someone typed /logout in the address bar. Logging out needs the Logout button (a POST with a security token), so just go home. */
+  @GetMapping("/logout")
+  public String logoutByAddress() {
+    return "redirect:/home";
+  }
+
   @GetMapping("/login")
   public String loginPage(Authentication auth, Model model) {
     if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getName())) {

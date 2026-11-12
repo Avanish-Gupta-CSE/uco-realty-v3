@@ -73,4 +73,4 @@
         </div>
     </nav>
 </header>
-<jsp:include page="gate-modal.jsp"/>
+<%-- The customer lead pop-up (gate-modal.jsp) is switched off: the bank's Home Loan page captures leads. It must never show to bank staff. --%>

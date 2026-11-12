@@ -2,6 +2,7 @@
 <footer class="footer" id="app-footer">
     <div class="container text-center">
         <p class="mb-0" id="copyright-text">&copy; <%= java.time.Year.now() %> UCO Bank. All rights reserved. | Approved Housing Projects Portal</p>
+        <p class="mb-0 mt-1" id="developed-by-text">Developed By UCO Bank - Department of Information Technology</p>
     </div>
 </footer>
 

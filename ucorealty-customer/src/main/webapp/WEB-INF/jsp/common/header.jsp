@@ -10,7 +10,7 @@
     <!-- Bootstrap 5.3.2 CSS (Bank Standard) -->
     <link rel="stylesheet" id="bootstrap-css" href="${pageContext.request.contextPath}/assets/css/bootstrap.min.css">
     <!-- UCO Bank Theme Stylesheet -->
-    <link rel="stylesheet" id="uco-theme-css" href="${pageContext.request.contextPath}/assets/css/style.css?v=20261106a">
+    <link rel="stylesheet" id="uco-theme-css" href="${pageContext.request.contextPath}/assets/css/style.css?v=20261113a">
 </head>
 <body>
 

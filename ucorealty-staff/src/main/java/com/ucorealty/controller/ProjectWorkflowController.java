@@ -14,6 +14,7 @@ import com.ucorealty.service.MasterDataService;
 import com.ucorealty.service.ProjectRow;
 import com.ucorealty.service.ProjectService;
 import com.ucorealty.service.ProjectWorkflowService;
+import com.ucorealty.util.Amenities;
 import com.ucorealty.util.PhotoFiles;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -42,7 +43,8 @@ import java.util.stream.Collectors;
 @RequestMapping("/admin")
 public class ProjectWorkflowController {
   private static final Logger log = LoggerFactory.getLogger(ProjectWorkflowController.class);
-  private static final long MAX_PHOTO_BYTES = 2L * 1024 * 1024;
+  private static final long MAX_PHOTO_BYTES = 1L * 1024 * 1024;   // each photo: 1 MB at most
+  private static final long MAX_DOC_BYTES = 3L * 1024 * 1024;     // brochure / floor plan PDF: 3 MB at most
 
   private final ProjectWorkflowService workflow;
   private final ProjectService projectService;
@@ -189,10 +191,14 @@ public class ProjectWorkflowController {
                      @RequestParam(value = "photo8", required = false) MultipartFile photo8,
                      @RequestParam(value = "photo9", required = false) MultipartFile photo9,
                      @RequestParam(value = "photo10", required = false) MultipartFile photo10,
+                     @RequestParam(value = "brochure", required = false) MultipartFile brochure,
+                     @RequestParam(value = "floorPlan", required = false) MultipartFile floorPlan,
                      @RequestParam(value = "customCity", required = false) String customCity,
                      HttpServletRequest request, Authentication auth, Model model, RedirectAttributes ra) {
     String user = RoleCheck.require(auth, Roles.MAKERS);
     Set<String> sent = new HashSet<>(request.getParameterMap().keySet());
+    String amenityFlags = Amenities.fromRequest(request);       // the Yes/No amenity buttons, joined into one value
+    if (amenityFlags != null) { form.amenityFlags = amenityFlags; sent.add("amenityFlags"); }
     ProjectStaging s = null;
     try {
       if (customCity != null && !customCity.trim().isEmpty()) {
@@ -202,6 +208,8 @@ public class ProjectWorkflowController {
       }
       s = stagingId == null ? workflow.createDraft(form, sent, user) : workflow.saveDraft(stagingId, form, sent, user);
       addPhotos(s, user, photo1, photo2, photo3, photo4, photo5, photo6, photo7, photo8, photo9, photo10);
+      addDocument(s, user, ProjectImage.BROCHURE, "Brochure", brochure);
+      addDocument(s, user, ProjectImage.FLOOR_PLAN, "Floor plan", floorPlan);
 
       boolean update = ProjectStaging.UPDATE.equals(s.requestType);
       if ("submit".equalsIgnoreCase(action)) {
@@ -232,7 +240,7 @@ public class ProjectWorkflowController {
     String user = RoleCheck.require(auth, Roles.MAKERS);
     try {
       workflow.removePhoto(stagingId, imageId, user);
-      ra.addFlashAttribute("message", "Photo removed. A photo that is already live disappears only after the checker approves.");
+      ra.addFlashAttribute("message", "File removed. A file that is already live disappears only after the checker approves.");
     } catch (ResponseStatusException e) {
       ra.addFlashAttribute("error", e.getReason());
     }
@@ -350,6 +358,8 @@ public class ProjectWorkflowController {
     workflow.requireCanView(s, user);
     model.addAttribute("project", workflow.previewOf(s));
     model.addAttribute("images", workflow.photosForForm(s));
+    addDocumentLinks(model, workflow.documentsForForm(s));
+    model.addAttribute("amenityRows", Amenities.parse(workflow.previewOf(s).amenityFlags));
     model.addAttribute("isStaffPreview", true);
     model.addAttribute("stagingPreview", true);
     model.addAttribute("stagingId", s.id);
@@ -369,9 +379,50 @@ public class ProjectWorkflowController {
     model.addAttribute("zones", masterData.getZones());
     model.addAttribute("states", masterData.getStates());
     model.addAttribute("existingImages", photos);
+    List<ProjectImage> docs = s != null ? workflow.documentsForForm(s) : Collections.emptyList();
+    for (ProjectImage d : docs) {
+      model.addAttribute(ProjectImage.BROCHURE.equals(d.fileKind) ? "existingBrochure" : "existingFloorPlan", d);
+    }
+    model.addAttribute("amenityList", Amenities.LIST);
+    model.addAttribute("amenityAnswers", Amenities.parse(shown != null ? shown.amenityFlags : null));
     model.addAttribute("existingCount", photos.size());
     model.addAttribute("initialVisible", Math.max(photos.size(), 4));
     return "project-form";
+  }
+
+  /** Puts the ids of the brochure / floor plan PDFs into the page model (the detail page shows them as buttons). */
+  static void addDocumentLinks(Model model, List<ProjectImage> docs) {
+    for (ProjectImage d : docs) {
+      model.addAttribute(ProjectImage.BROCHURE.equals(d.fileKind) ? "brochureId" : "floorPlanId", d.id);
+    }
+  }
+
+  /** Stores one PDF (brochure or floor plan) for the request; a new one replaces the old one of the same kind. */
+  private void addDocument(ProjectStaging s, String username, String kind, String label, MultipartFile file) throws IOException {
+    if (file == null || file.isEmpty()) return;
+    String name = file.getOriginalFilename();
+    byte[] bytes = file.getBytes();
+    boolean pdfName = name != null && name.toLowerCase().endsWith(".pdf");
+    if (file.getSize() > MAX_DOC_BYTES || !pdfName || !PhotoFiles.isPdf(bytes)) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, label + " must be a PDF file of at most 3 MB.");
+    }
+    for (ProjectImage old : workflow.documentsForForm(s)) {
+      if (kind.equals(old.fileKind)) workflow.removePhoto(s.id, old.id, username);
+    }
+    ProjectImage doc = new ProjectImage();
+    doc.stagingId = s.id;
+    doc.projectId = null;
+    doc.fileKind = kind;
+    doc.fileName = PhotoFiles.cleanName(name);
+    doc.mimeType = "application/pdf";
+    doc.fileSize = file.getSize();
+    doc.fileData = bytes;
+    doc.uploadedBy = username;
+    doc.isVerified = 0;
+    doc.filePath = "/files/pending/" + doc.fileName;
+    doc = imageRepo.save(doc);
+    doc.filePath = "/files/" + doc.id;
+    imageRepo.save(doc);
   }
 
   private void addPhotos(ProjectStaging s, String username, MultipartFile... files) throws IOException {

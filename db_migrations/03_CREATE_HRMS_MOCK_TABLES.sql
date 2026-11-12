@@ -7,6 +7,8 @@
 -- CADRE_CODE varchar2(4), POSTING_REGION_NAME varchar2(50)). Only the columns the application reads are created.
 -- Created in the current schema; the application also tries the hrms_dba. prefix.
 -- Fill with 05_LOCAL_TEST_EMPLOYEES.sql.
+-- WARNING: this also creates a fake LG_ENTRY_REVAMP (with fake REALTY leads in 05). The application tries the schema WITHOUT a prefix first,
+-- so on a database that has the bank's real HRMS tables this stand-in would hide them. Never run 03/05 there.
 -- ============================================================================
 
 CREATE TABLE employee_contact_details (

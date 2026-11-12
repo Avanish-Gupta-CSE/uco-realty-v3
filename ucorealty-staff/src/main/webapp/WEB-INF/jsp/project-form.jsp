@@ -25,7 +25,7 @@
         <c:if test="${changeMode}">
             <div class="alert alert-info small" id="change-mode-banner">
                 <strong><c:out value="${project.projectName}"/></strong> is an <strong>approved</strong> project and stays live, exactly as approved, while you work here.
-                Use <em>Save as Draft</em> to keep your edits private; use <em>Send for Approval</em> when ready. A checker then compares your change
+                Use <em>Save as Draft</em> to keep your edits private; use <em>Submit for Approval</em> when ready. A checker then compares your change
                 with the approved data and approves, returns or rejects it.
                 <c:if test="${staging.status == 'NEEDS_CORRECTION'}">
                     <div class="mt-2 text-warning-emphasis" id="change-returned-note"><strong>Returned by the checker:</strong> <c:out value="${staging.checkerComment}"/></div>
@@ -259,8 +259,30 @@
                 </div>
 
                 <div class="col-12">
-                    <label for="amenities" class="form-label fw-semibold small">Amenities</label>
-                    <textarea id="amenities" name="amenities" class="form-control" rows="2" placeholder="e.g. Swimming Pool, Gymnasium, Clubhouse, 24x7 Power Backup, Covered Car Parking..."><c:out value="${project.amenities}"/></textarea>
+                    <span class="form-label fw-semibold small d-block mb-1">Amenities (Yes / No)</span>
+                    <div class="row g-2" id="amenity-checklist">
+                        <c:forEach var="am" items="${amenityList}" varStatus="vs">
+                            <div class="col-sm-6 col-lg-3">
+                                <div class="border rounded p-2 d-flex justify-content-between align-items-center" id="amenity-row-${vs.index}">
+                                    <span class="small"><c:out value="${am}"/></span>
+                                    <span class="d-inline-flex gap-2 small">
+                                        <label class="mb-0"><input type="radio" name="amenity_${vs.index}" value="Y" id="amenity_${vs.index}_yes" ${amenityAnswers[am] == 'Y' ? 'checked' : ''}> Yes</label>
+                                        <label class="mb-0"><input type="radio" name="amenity_${vs.index}" value="N" id="amenity_${vs.index}_no" ${amenityAnswers[am] != 'Y' ? 'checked' : ''}> No</label>
+                                    </span>
+                                </div>
+                            </div>
+                        </c:forEach>
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <label for="amenities" class="form-label fw-semibold small">Other amenities (optional)</label>
+                    <textarea id="amenities" name="amenities" class="form-control" rows="2" placeholder="Anything else, e.g. Clubhouse, Jogging Track..."><c:out value="${project.amenities}"/></textarea>
+                </div>
+
+                <div class="col-12">
+                    <label for="videoUrl" class="form-label fw-semibold small">Project Video URL (optional)</label>
+                    <input type="url" id="videoUrl" name="videoUrl" class="form-control" maxlength="500" value="<c:out value="${project.videoUrl}"/>" placeholder="Paste the builder's YouTube or other video link, e.g. https://www.youtube.com/watch?v=...">
                 </div>
             </div>
 
@@ -280,8 +302,12 @@
                 </div>
 
                 <div class="col-md-6 col-lg-4">
-                    <label for="builderRating" class="form-label fw-semibold small">Builder Rating</label>
-                    <input type="text" id="builderRating" name="builderRating" class="form-control" value="<c:out value="${project.builderRating}"/>" placeholder="e.g. CRISIL DA2+">
+                    <label for="builderRating" class="form-label fw-semibold small">Builder Rating (X / Y)</label>
+                    <div class="input-group">
+                        <input type="text" id="builderRating" name="builderRating" class="form-control" maxlength="50" value="<c:out value="${project.builderRating}"/>" placeholder="X e.g. 4">
+                        <span class="input-group-text">/</span>
+                        <input type="text" id="builderRatingOutOf" name="builderRatingOutOf" class="form-control" maxlength="20" value="<c:out value="${project.builderRatingOutOf}"/>" placeholder="Y e.g. 5">
+                    </div>
                 </div>
 
                 <div class="col-12">
@@ -333,10 +359,10 @@
 
             <!-- 6. Project Photographs (10 Dedicated Upload Slots) -->
             <h3 class="form-section-title" id="section-photos">
-                6. Project Photographs (Upload up to 10 Photos — Max 2MB each)
+                6. Project Photographs (Upload up to 10 Photos — Max 1MB each)
             </h3>
             <p class="text-muted small mb-3" id="photos-hint-text">
-                Upload distinct project photos into the separate slots below (JPG, PNG, WEBP). Showing 4 slots initially. Click <strong>"+ Add More Photos"</strong> to add more slots (up to 10 photos total). Maximum 2MB per photo.
+                Upload distinct project photos into the separate slots below (JPG, PNG, WEBP). Showing 4 slots initially. Click <strong>"+ Add More Photos"</strong> to add more slots (up to 10 photos total). Maximum 1MB per photo.
             </p>
 
             <c:set var="existingCount" value="${not empty existingCount ? existingCount : (not empty existingImages ? existingImages.size() : 0)}"/>
@@ -393,7 +419,7 @@
                                     </div>
                                     <strong class="text-primary small mb-1" id="slot-upload-title-${i}">Upload Photo ${i}</strong>
                                     <span class="text-info small fw-semibold" id="slot-select-hint-${i}">Click to select photo</span>
-                                    <span class="text-muted extra-small" id="slot-rules-hint-${i}">JPG, PNG, WEBP (Max 2MB)</span>
+                                    <span class="text-muted extra-small" id="slot-rules-hint-${i}">JPG, PNG, WEBP (Max 1MB)</span>
                                 </div>
 
                                 <div id="preview_wrap_${i}" class="slot-preview-wrap d-none">
@@ -430,13 +456,48 @@
                 </div>
             </div>
 
+            <!-- 7. PDF documents -->
+            <h3 class="form-section-title" id="section-documents">
+                7. Brochure &amp; Floor Plan (PDF, Max 3MB each)
+            </h3>
+            <div class="row g-3 mb-4" id="documents-row">
+                <div class="col-md-6" id="doc-brochure">
+                    <label for="brochure" class="form-label fw-semibold small">Brochure (PDF)</label>
+                    <c:if test="${not empty existingBrochure}">
+                        <div class="small mb-1" id="existing-brochure-info">
+                            <a href="${pageContext.request.contextPath}/files/<c:out value="${existingBrochure.id}"/>" target="_blank" rel="noopener"><c:out value="${existingBrochure.fileName}"/></a>
+                            <button type="button" class="slot-delete-btn slot-delete-saved-btn ms-2" id="btn-delete-saved-photo-${existingBrochure.id}"
+                                    data-image-id="${existingBrochure.id}" data-project-id="${staging.projectId}"
+                                    data-delete-url="${pageContext.request.contextPath}/admin/projects/staging/<c:out value="${staging.id}"/>/photos/<c:out value="${existingBrochure.id}"/>/remove"
+                                    data-context-path="${pageContext.request.contextPath}">✕ Remove</button>
+                        </div>
+                        <div class="text-muted small mb-1">Choose a new file below to replace it.</div>
+                    </c:if>
+                    <input type="file" id="brochure" name="brochure" class="form-control form-control-sm doc-file-input" accept="application/pdf,.pdf">
+                </div>
+                <div class="col-md-6" id="doc-floorplan">
+                    <label for="floorPlan" class="form-label fw-semibold small">Floor Plan (PDF)</label>
+                    <c:if test="${not empty existingFloorPlan}">
+                        <div class="small mb-1" id="existing-floorplan-info">
+                            <a href="${pageContext.request.contextPath}/files/<c:out value="${existingFloorPlan.id}"/>" target="_blank" rel="noopener"><c:out value="${existingFloorPlan.fileName}"/></a>
+                            <button type="button" class="slot-delete-btn slot-delete-saved-btn ms-2" id="btn-delete-saved-photo-${existingFloorPlan.id}"
+                                    data-image-id="${existingFloorPlan.id}" data-project-id="${staging.projectId}"
+                                    data-delete-url="${pageContext.request.contextPath}/admin/projects/staging/<c:out value="${staging.id}"/>/photos/<c:out value="${existingFloorPlan.id}"/>/remove"
+                                    data-context-path="${pageContext.request.contextPath}">✕ Remove</button>
+                        </div>
+                        <div class="text-muted small mb-1">Choose a new file below to replace it.</div>
+                    </c:if>
+                    <input type="file" id="floorPlan" name="floorPlan" class="form-control form-control-sm doc-file-input" accept="application/pdf,.pdf">
+                </div>
+            </div>
+
             <!-- Submission Actions -->
             <div class="d-flex gap-2 flex-wrap sticky-actions" id="form-action-buttons">
                 <button type="submit" name="action" value="draft" formnovalidate class="btn btn-secondary px-4" id="btn-save-draft">
                     Save as Draft
                 </button>
-                <button type="submit" name="action" value="submit" class="btn btn-success px-4" id="btn-save-submit" data-confirm-ok="Yes, send for approval" data-confirm-style="success" data-confirm="${changeMode ? 'Send this change to the checker? The approved project stays live until it is approved.' : 'Submit this project for Checker approval?'}">
-                    Send for Approval
+                <button type="submit" name="action" value="submit" class="btn btn-success px-4" id="btn-save-submit" data-confirm-ok="Yes, submit for approval" data-confirm-style="success" data-confirm="${changeMode ? 'Submit this change to the checker? The approved project stays live until it is approved.' : 'Submit this project for Checker approval?'}">
+                    Submit for Approval
                 </button>
                 <a href="${pageContext.request.contextPath}/admin/projects" class="btn btn-outline-secondary ms-auto" id="btn-cancel-form">
                     Cancel
