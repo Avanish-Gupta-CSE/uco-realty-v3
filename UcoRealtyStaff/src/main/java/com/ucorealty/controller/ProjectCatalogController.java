@@ -145,7 +145,7 @@ public class ProjectCatalogController {
     HttpHeaders headers = new HttpHeaders();
     headers.setContentType(MediaType.parseMediaType(img.mimeType != null ? img.mimeType : "image/jpeg"));
     headers.setContentLength(img.fileData.length);
-    headers.setCacheControl("max-age=86400, public");
+    headers.setCacheControl("max-age=86400, private");   // private: a maker's unapproved file must never be kept by a shared proxy
     return new ResponseEntity<>(img.fileData, headers, HttpStatus.OK);
   }
 
