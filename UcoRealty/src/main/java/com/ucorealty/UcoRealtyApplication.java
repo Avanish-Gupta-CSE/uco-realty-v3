@@ -12,15 +12,15 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @SpringBootApplication(exclude = UserDetailsServiceAutoConfiguration.class)
 @EntityScan(basePackages = "com.ucorealty.model")
 @EnableJpaRepositories(basePackages = "com.ucorealty.repository")
-public class PublicPortalApplication extends SpringBootServletInitializer {
+public class UcoRealtyApplication extends SpringBootServletInitializer {
 
   @Override
   protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
-    return builder.sources(PublicPortalApplication.class);
+    return builder.sources(UcoRealtyApplication.class);
   }
 
   public static void main(String[] args) {
-    SpringApplication.run(PublicPortalApplication.class, args);
+    SpringApplication.run(UcoRealtyApplication.class, args);
   }
 }
 

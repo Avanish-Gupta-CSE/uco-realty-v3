@@ -1,8 +1,8 @@
 package com.ucorealty.service;
 
-import com.ucorealty.model.AppUser;
+import com.ucorealty.model.StaffUser;
 import com.ucorealty.model.Project;
-import com.ucorealty.model.ProjectData;
+import com.ucorealty.model.ProjectFields;
 import com.ucorealty.repository.ProjectRepository;
 import com.ucorealty.util.CurrentUser;
 import org.slf4j.Logger;
@@ -30,8 +30,8 @@ public class ProjectService {
   // ---- shared rules (package-private statics, used by the workflow service) ----
 
   /** The signed-in employee (role and zone were taken from HRMS at login and live in the session). */
-  AppUser requireActiveUser(String username) {
-    AppUser u = CurrentUser.find(username);
+  StaffUser requireActiveUser(String username) {
+    StaffUser u = CurrentUser.find(username);
     if (u == null) {
       log.warn("[UCO ACCESS] No signed-in session found for {}: asked to sign in again", username);
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Please sign in again");
@@ -43,23 +43,23 @@ public class ProjectService {
     return a != null && b != null && !a.trim().isEmpty() && a.trim().equalsIgnoreCase(b.trim());
   }
 
-  static boolean isNationalMaker(AppUser u) {
+  static boolean isNationalMaker(StaffUser u) {
     return "SUPERADMIN_DIT".equals(u.role) || "HO_MARKETING".equals(u.role);
   }
 
-  static boolean isNational(AppUser u) {
+  static boolean isNational(StaffUser u) {
     return isNationalMaker(u) || "HO_RETAIL".equals(u.role);
   }
 
   // The screens hide buttons by role, but the rules must also hold when someone posts a form directly.
-  static void requireMakerRole(AppUser u) {
+  static void requireMakerRole(StaffUser u) {
     if (!"ZO_MAKER".equals(u.role) && !isNationalMaker(u)) {
       log.warn("[UCO ACCESS] REFUSED: {} ({}) tried to create or change a project", u.username, u.role);
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Your role cannot create or change projects");
     }
   }
 
-  static void requireCheckerRole(AppUser u) {
+  static void requireCheckerRole(StaffUser u) {
     if (!"ZO_CHECKER".equals(u.role) && !isNationalMaker(u)) {
       log.warn("[UCO ACCESS] REFUSED: {} ({}) tried to approve, reject or return a request", u.username, u.role);
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only a Zonal Checker (or Head Office Marketing / DIT) can approve, reject or return a request");
@@ -67,7 +67,7 @@ public class ProjectService {
   }
 
   /** A zonal maker/checker works only inside their own zone; national roles in every zone. */
-  static void requireZoneAccess(AppUser u, String zone) {
+  static void requireZoneAccess(StaffUser u, String zone) {
     if (isNational(u)) return;
     if (!sameText(u.zone, zone)) {
       log.warn("[UCO ACCESS] REFUSED: {} ({}, zone {}) tried to open a project of zone {}", u.username, u.role, u.zone, zone);
@@ -88,7 +88,7 @@ public class ProjectService {
   }
 
   // Format checks on everything the maker typed (see ProjectValidator). The pincode is trimmed first.
-  static void validateDetails(ProjectData p) {
+  static void validateDetails(ProjectFields p) {
     if (p.pinCode != null) p.pinCode = p.pinCode.trim();
     List<String> problems = ProjectValidator.problems(p);
     if (!problems.isEmpty()) {
@@ -97,7 +97,7 @@ public class ProjectService {
   }
 
   // What a project must have before it can go to the checker (the mandatory BRD fields + pincode).
-  static void requireSubmittable(ProjectData p) {
+  static void requireSubmittable(ProjectFields p) {
     List<String> missing = new ArrayList<>();
     if (blank(p.zoneName)) missing.add("Zone Name");
     if (blank(p.branchName)) missing.add("Branch Name");
@@ -146,7 +146,7 @@ public class ProjectService {
 
   /** Live (approved) projects the user may see: all zones for Head Office roles, own zone for zonal staff. DELETED never. */
   public List<Project> approvedList(String username) {
-    AppUser user = requireActiveUser(username);
+    StaffUser user = requireActiveUser(username);
     List<Project> visible;
     if (isNational(user)) {
       visible = repo.findAll();

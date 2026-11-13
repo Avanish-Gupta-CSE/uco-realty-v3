@@ -1,9 +1,9 @@
 package com.ucorealty.service;
 
 import com.ucorealty.dto.ProjectRow;
-import com.ucorealty.model.AppUser;
+import com.ucorealty.model.StaffUser;
 import com.ucorealty.model.Project;
-import com.ucorealty.model.ProjectData;
+import com.ucorealty.model.ProjectFields;
 import com.ucorealty.model.ProjectForm;
 import com.ucorealty.model.ProjectImage;
 import com.ucorealty.model.ProjectStaging;
@@ -73,7 +73,7 @@ public class ProjectWorkflowService {
   }
 
   /** Who may see a staging row: its maker always; others only once it waits for (or was refused by) a checker. */
-  public boolean canSee(AppUser u, ProjectStaging s) {
+  public boolean canSee(StaffUser u, ProjectStaging s) {
     if (u.username.equals(s.createdBy)) return true;
     if (ProjectStaging.DRAFT.equals(s.status) || ProjectStaging.NEEDS_CORRECTION.equals(s.status)) return false;
     if (!ProjectStaging.PENDING.equals(s.status) && !ProjectStaging.REJECTED.equals(s.status)) return false;
@@ -82,7 +82,7 @@ public class ProjectWorkflowService {
 
   /** The dashboard of one user: live projects (with their open request) and the maker's unapproved new projects. */
   public List<ProjectRow> dashboard(String username) {
-    AppUser u = projectService.requireActiveUser(username);
+    StaffUser u = projectService.requireActiveUser(username);
     List<Project> masters = projectService.approvedList(username);
     Map<String, ProjectStaging> openByProject = new HashMap<>();
     if (!masters.isEmpty()) {
@@ -105,7 +105,7 @@ public class ProjectWorkflowService {
   /** A customer-style preview of an unapproved request (a transient copy, never saved). */
   public Project previewOf(ProjectStaging s) {
     Project p = new Project();
-    ProjectData.copyBusinessFields(s, p, false);
+    ProjectFields.copyBusinessFields(s, p, false);
     p.id = s.projectId;
     p.status = s.status;
     p.isPublished = 0;
@@ -123,9 +123,9 @@ public class ProjectWorkflowService {
   /** UPDATE: the fields that differ between the live project and the maker's working copy. */
   public List<FieldChange> diff(Project live, ProjectStaging s) {
     List<FieldChange> out = new ArrayList<>();
-    for (Field f : ProjectData.businessFields()) {
+    for (Field f : ProjectFields.businessFields()) {
       if ("zoneName".equals(f.getName())) continue;
-      String a = show(ProjectData.value(live, f)), b = show(ProjectData.value(s, f));
+      String a = show(ProjectFields.value(live, f)), b = show(ProjectFields.value(s, f));
       // an older project has no amenity answers yet and the form always posts "No" for every item: that is not a change
       if ("amenityFlags".equals(f.getName()) && "-".equals(a) && !b.contains(":Y")) continue;
       if (!a.equals(b)) out.add(new FieldChange(label(f.getName()), a, b));
@@ -136,8 +136,8 @@ public class ProjectWorkflowService {
   /** CREATE: every filled field of the new project, for the checker's review page. */
   public List<FieldChange> contents(ProjectStaging s) {
     List<FieldChange> out = new ArrayList<>();
-    for (Field f : ProjectData.businessFields()) {
-      String v = show(ProjectData.value(s, f));
+    for (Field f : ProjectFields.businessFields()) {
+      String v = show(ProjectFields.value(s, f));
       if (!"-".equals(v)) out.add(new FieldChange(label(f.getName()), "", v));
     }
     return out;
@@ -183,7 +183,7 @@ public class ProjectWorkflowService {
   /** The maker; or, while the request waits for approval, staff of the right zone who are not makers. */
   public void requireCanView(ProjectStaging s, String username) {
     if (username.equals(s.createdBy)) return;
-    AppUser u = projectService.requireActiveUser(username);
+    StaffUser u = projectService.requireActiveUser(username);
     if (!ProjectStaging.PENDING.equals(s.status))
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "This request is not waiting for approval");
     if ("ZO_MAKER".equals(u.role))
@@ -198,7 +198,7 @@ public class ProjectWorkflowService {
   /** First save of a NEW project: creates the working copy (staging row) with its project code. */
   @Transactional
   public ProjectStaging createDraft(ProjectForm form, Set<String> sent, String username) {
-    AppUser user = projectService.requireActiveUser(username);
+    StaffUser user = projectService.requireActiveUser(username);
     ProjectService.requireMakerRole(user);
     ProjectStaging s = new ProjectStaging();
     s.requestType = ProjectStaging.CREATE;
@@ -217,7 +217,7 @@ public class ProjectWorkflowService {
   /** Opens the maker's working copy of a LIVE project (created from the approved values). */
   @Transactional
   public ProjectStaging openUpdateDraft(String projectId, String username) {
-    AppUser user = projectService.requireActiveUser(username);
+    StaffUser user = projectService.requireActiveUser(username);
     ProjectService.requireMakerRole(user);
     Project p = liveProject(projectId);
     ProjectService.requireZoneAccess(user, p.zoneName);
@@ -244,7 +244,7 @@ public class ProjectWorkflowService {
   public ProjectStaging saveDraft(Long id, ProjectForm form, Set<String> sent, String username) {
     ProjectStaging s = ownEditable(id, username);
     boolean update = ProjectStaging.UPDATE.equals(s.requestType);
-    AppUser user = projectService.requireActiveUser(username);
+    StaffUser user = projectService.requireActiveUser(username);
     applySent(form, s, sent, update);
     if (!update) pinZone(user, s);
     ProjectService.validateDetails(s);
@@ -300,7 +300,7 @@ public class ProjectWorkflowService {
   /** Unit reduction is an edit of a live project: a one-step request that waits for a checker. */
   @Transactional
   public ProjectStaging requestUnitReduction(String projectId, int units, String reason, String username) {
-    AppUser user = projectService.requireActiveUser(username);
+    StaffUser user = projectService.requireActiveUser(username);
     ProjectService.requireMakerRole(user);
     Project p = liveProject(projectId);
     ProjectService.requireZoneAccess(user, p.zoneName);
@@ -326,7 +326,7 @@ public class ProjectWorkflowService {
 
   @Transactional
   public ProjectStaging requestDelete(String projectId, String reason, String username) {
-    AppUser user = projectService.requireActiveUser(username);
+    StaffUser user = projectService.requireActiveUser(username);
     ProjectService.requireMakerRole(user);
     Project p = liveProject(projectId);
     ProjectService.requireZoneAccess(user, p.zoneName);
@@ -368,7 +368,7 @@ public class ProjectWorkflowService {
     ProjectStaging s = get(id);
     if (!ProjectStaging.PENDING.equals(s.status))
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only a request waiting for approval can be decided (current: " + s.status + ")");
-    AppUser checker = projectService.requireActiveUser(checkerUsername);
+    StaffUser checker = projectService.requireActiveUser(checkerUsername);
     ProjectService.requireCheckerRole(checker);
     if (checkerUsername.equals(s.createdBy)) {
       log.warn("[UCO WORKFLOW] REFUSED: {} tried to decide on their own request {} of project {}", checkerUsername, s.id, s.projectId);
@@ -429,7 +429,7 @@ public class ProjectWorkflowService {
     ProjectService.validateDetails(s);
     ProjectService.requireSubmittable(s);
     Project p = new Project();
-    ProjectData.copyBusinessFields(s, p, false);
+    ProjectFields.copyBusinessFields(s, p, false);
     p.id = s.projectId;
     p.status = Project.APPROVED;
     p.isActive = 1;
@@ -448,7 +448,7 @@ public class ProjectWorkflowService {
       throw new ResponseStatusException(HttpStatus.CONFLICT, "The live project changed after this request was opened. Return it to the maker");
     }
     ProjectService.validateDetails(s);
-    ProjectData.copyBusinessFields(s, p, true);          // the zone never changes
+    ProjectFields.copyBusinessFields(s, p, true);          // the zone never changes
     for (Long imageId : removedImageIds(s)) {
       images.findById(imageId).filter(i -> p.id.equals(i.projectId)).ifPresent(images::delete);
     }
@@ -501,7 +501,7 @@ public class ProjectWorkflowService {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A deletion request has nothing to edit");
     if (!ProjectStaging.DRAFT.equals(s.status) && !ProjectStaging.NEEDS_CORRECTION.equals(s.status))
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "It can be edited only while it is a draft or returned for correction (current: " + s.status + ")");
-    AppUser user = projectService.requireActiveUser(username);
+    StaffUser user = projectService.requireActiveUser(username);
     ProjectService.requireMakerRole(user);
     if (ProjectStaging.UPDATE.equals(s.requestType)) {
       liveProject(s.projectId);
@@ -533,7 +533,7 @@ public class ProjectWorkflowService {
 
   private ProjectStaging fromLive(Project p, String type, String status, String username) {
     ProjectStaging s = new ProjectStaging();
-    ProjectData.copyBusinessFields(p, s, false);
+    ProjectFields.copyBusinessFields(p, s, false);
     s.projectId = p.id;
     s.requestType = type;
     s.status = status;
@@ -552,14 +552,14 @@ public class ProjectWorkflowService {
 
   /** Copies the fields the form sent onto the working copy (the zone of an UPDATE never changes). */
   private void applySent(ProjectForm form, ProjectStaging s, Set<String> sent, boolean keepZone) {
-    for (Field f : ProjectData.businessFields()) {
+    for (Field f : ProjectFields.businessFields()) {
       if (keepZone && "zoneName".equals(f.getName())) continue;
-      if (sent.contains(f.getName())) ProjectData.set(s, f, ProjectData.value(form, f));
+      if (sent.contains(f.getName())) ProjectFields.set(s, f, ProjectFields.value(form, f));
     }
   }
 
   /** A zonal maker's zone comes from his login; a Head Office maker must pick one of the 49 official zones. */
-  private void pinZone(AppUser user, ProjectStaging s) {
+  private void pinZone(StaffUser user, ProjectStaging s) {
     if ("ZO_MAKER".equals(user.role) && user.zone != null && !user.zone.trim().isEmpty()) {
       s.zoneName = user.zone.trim();
     } else if (s.zoneName != null && !s.zoneName.trim().isEmpty()) {

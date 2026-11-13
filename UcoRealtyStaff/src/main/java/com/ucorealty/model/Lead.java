@@ -20,7 +20,7 @@ import java.time.format.DateTimeFormatter;
 @Entity
 @Immutable
 @Table(name = "LG_ENTRY_REVAMP")
-public class LeadRow {
+public class Lead {
   private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a");
 
   @Id

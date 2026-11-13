@@ -1,6 +1,6 @@
 package com.ucorealty.repository;
 
-import com.ucorealty.model.HrmsUserProfile;
+import com.ucorealty.model.HrmsEmployee;
 import com.ucorealty.util.DatabaseTables;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.Repository;
@@ -17,7 +17,7 @@ import java.util.Optional;
  * short lines with + because the table name comes from DatabaseTables (a text block cannot contain a constant).
  * Change this file when: the sign-in needs another fact about the employee.
  */
-public interface HrmsRepository extends Repository<HrmsUserProfile, String> {
+public interface HrmsRepository extends Repository<HrmsEmployee, String> {
 
   /** The current posting of an employee (the row valid today). It overrides SOL, scale and designation of the contact row. */
   interface CurrentPosting {
@@ -38,7 +38,7 @@ public interface HrmsRepository extends Repository<HrmsUserProfile, String> {
     + "       POSTING_REGION_NAME, DESIG, MOBILE_NO, E_MAIL, RETIRE_FLAG "
     + "FROM " + DatabaseTables.EMPLOYEE + " "
     + "WHERE EMPNO = :empNo")
-  Optional<HrmsUserProfile> findByEmpNo(@Param("empNo") String empNo);
+  Optional<HrmsEmployee> findByEmpNo(@Param("empNo") String empNo);
 
   /** The posting row that is valid today (valid from/to dates and status V), if the employee has one. */
   @Query(nativeQuery = true, value =

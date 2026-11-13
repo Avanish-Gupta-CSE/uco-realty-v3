@@ -15,12 +15,12 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("/api/public")
-public class PublicApiController {
+public class CatalogApiController {
 
   private final ProjectService projects;
   private final ProjectImageRepository imageRepo;
 
-  public PublicApiController(ProjectService projects, ProjectImageRepository imageRepo) {
+  public CatalogApiController(ProjectService projects, ProjectImageRepository imageRepo) {
     this.projects = projects;
     this.imageRepo = imageRepo;
   }

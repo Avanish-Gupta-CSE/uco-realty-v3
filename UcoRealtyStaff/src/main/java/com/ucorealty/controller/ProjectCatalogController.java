@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
  * For authenticated bank staff, displays all projects across the bank.
  */
 @Controller
-public class PublicWebController {
+public class ProjectCatalogController {
   private static final int PAGE_SIZE = 12;
 
   private final ProjectService projectService;
@@ -36,7 +36,7 @@ public class PublicWebController {
   private final ProjectRepository projectRepo;
   private final ProjectWorkflowService workflow;
 
-  public PublicWebController(ProjectService projectService, MasterDataService masterDataService,
+  public ProjectCatalogController(ProjectService projectService, MasterDataService masterDataService,
                              ProjectImageRepository imageRepo, ProjectRepository projectRepo,
                              ProjectWorkflowService workflow) {
     this.projectService = projectService;

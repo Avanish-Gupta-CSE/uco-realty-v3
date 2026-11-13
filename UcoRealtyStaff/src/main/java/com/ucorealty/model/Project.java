@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "realty_projects")
-public class Project extends ProjectData {
+public class Project extends ProjectFields {
   public static final String APPROVED = "APPROVED";
   public static final String DELETED = "DELETED";
 

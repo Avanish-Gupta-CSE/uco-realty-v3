@@ -12,11 +12,11 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  * Change this file when: a new URL area must require the sign-in check.
  */
 @Configuration
-public class InternalWebMvcConfig implements WebMvcConfigurer {
+public class StaffWebConfig implements WebMvcConfigurer {
 
   private final SessionInterceptor sessionInterceptor;
 
-  public InternalWebMvcConfig(SessionInterceptor sessionInterceptor) {
+  public StaffWebConfig(SessionInterceptor sessionInterceptor) {
     this.sessionInterceptor = sessionInterceptor;
   }
 

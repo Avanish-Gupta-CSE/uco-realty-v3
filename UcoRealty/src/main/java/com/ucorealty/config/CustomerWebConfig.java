@@ -9,7 +9,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  * Change this file when: a new kind of static file is added.
  */
 @Configuration
-public class PublicWebMvcConfig implements WebMvcConfigurer {
+public class CustomerWebConfig implements WebMvcConfigurer {
 
   @Override
   public void addResourceHandlers(ResourceHandlerRegistry registry) {

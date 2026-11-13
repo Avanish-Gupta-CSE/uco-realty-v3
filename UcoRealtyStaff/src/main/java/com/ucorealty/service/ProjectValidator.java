@@ -1,6 +1,6 @@
 package com.ucorealty.service;
 
-import com.ucorealty.model.ProjectData;
+import com.ucorealty.model.ProjectFields;
 
 import java.math.BigDecimal;
 import java.net.URI;
@@ -48,12 +48,12 @@ public final class ProjectValidator {
   private static String s(String v) { return v == null ? "" : v.trim(); }
 
   /** Every problem found, as short sentences a maker can act on. Empty list means the details are well formed. */
-  public static List<String> problems(ProjectData p) {
+  public static List<String> problems(ProjectFields p) {
     List<String> out = new ArrayList<>();
 
     // Free text is shown on many screens: markup characters are refused on input (screens also HTML-escape on output)
-    for (java.lang.reflect.Field f : ProjectData.businessFields()) {
-      Object v = ProjectData.value(p, f);
+    for (java.lang.reflect.Field f : ProjectFields.businessFields()) {
+      Object v = ProjectFields.value(p, f);
       if (v instanceof String && (((String) v).indexOf('<') >= 0 || ((String) v).indexOf('>') >= 0))
         out.add(label(f.getName()) + " must not contain the characters < or >");
     }
@@ -108,7 +108,7 @@ public final class ProjectValidator {
     return out;
   }
 
-  private static void lengths(ProjectData p, List<String> out) {
+  private static void lengths(ProjectFields p, List<String> out) {
     Map<String, String> v = new LinkedHashMap<>();
     v.put("zoneName", p.zoneName); v.put("branchName", p.branchName); v.put("stateName", p.stateName); v.put("cityName", p.cityName);
     v.put("projectName", p.projectName); v.put("reraNo", p.reraNo); v.put("propertyId", p.propertyId); v.put("typeOfUnit", p.typeOfUnit);

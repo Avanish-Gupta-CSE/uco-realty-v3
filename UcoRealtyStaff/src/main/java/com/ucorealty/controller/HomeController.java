@@ -1,10 +1,10 @@
 package com.ucorealty.controller;
 
-import com.ucorealty.model.HrmsUserProfile;
-import com.ucorealty.model.AppUser;
+import com.ucorealty.model.HrmsEmployee;
+import com.ucorealty.model.StaffUser;
 import com.ucorealty.service.AuditService;
 import com.ucorealty.service.HrmsService;
-import com.ucorealty.util.SsoCryptoUtil;
+import com.ucorealty.util.SsoToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -52,7 +52,7 @@ public class HomeController {
 
   @PostConstruct
   void init() {
-    if (!SsoCryptoUtil.isValidKey(encryptionKey)) {
+    if (!SsoToken.isValidKey(encryptionKey)) {
       throw new IllegalStateException("sso.encryption.key (SSO_ENCRYPTION_KEY) must be 16, 24 or 32 characters long");
     }
   }
@@ -74,9 +74,9 @@ public class HomeController {
     String empNo;
     String sol;
     try {
-      String text = SsoCryptoUtil.decrypt(value, encryptionKey);
-      empNo = SsoCryptoUtil.employeeNumber(text);
-      sol = SsoCryptoUtil.solId(text);
+      String text = SsoToken.decrypt(value, encryptionKey);
+      empNo = SsoToken.employeeNumber(text);
+      sol = SsoToken.solId(text);
     } catch (GeneralSecurityException | IllegalArgumentException e) {
       logger.warn("[UCO SSO /entry] Token could not be decrypted: {}", e.getMessage());
       auditService.logLoginAttempt("UNKNOWN", extractClientIp(request), false, "SSO token could not be decrypted");
@@ -102,7 +102,7 @@ public class HomeController {
    * Core helper to authenticate employee against HRMS, build the signed-in user, and set the session attributes.
    */
   private String authenticateAndEstablishSession(String empId, HttpServletRequest request, String loginMechanism) {
-    HrmsUserProfile profile = hrmsService.fetchUserProfile(empId);
+    HrmsEmployee profile = hrmsService.fetchUserProfile(empId);
     if (profile == null || !profile.isActive()) {
       logger.warn("[UCO SSO] Employee record {} could not be verified in HRMS.", empId);
       auditService.logLoginAttempt(empId, extractClientIp(request), false, loginMechanism + " - employee not found/inactive in HRMS");
@@ -117,7 +117,7 @@ public class HomeController {
       return "redirect:/error-page?reason=not_authorized";
     }
 
-    AppUser appUser = hrmsService.toAppUser(profile);
+    StaffUser appUser = hrmsService.toAppUser(profile);
     HttpSession session = freshSession(request);
 
     Authentication auth = new UsernamePasswordAuthenticationToken(appUser, null, appUser.getAuthorities());
@@ -170,7 +170,7 @@ public class HomeController {
     }
 
     String normalized = empId.trim();
-    HrmsUserProfile profile = hrmsService.fetchUserProfile(normalized);
+    HrmsEmployee profile = hrmsService.fetchUserProfile(normalized);
     if (profile == null || !profile.isActive()) {
       logger.warn("[UCO SSO] OTP requested for non-existent or inactive employee: {}", normalized);
       return "redirect:/login?error=invalid_employee";
@@ -250,7 +250,7 @@ public class HomeController {
   }
 
   /** The SSO gives us only the employee number and SOL; role and zone come from HRMS and travel in the principal. */
-  private void populateBankSessionAttributes(HttpSession session, HrmsUserProfile profile) {
+  private void populateBankSessionAttributes(HttpSession session, HrmsEmployee profile) {
     session.setAttribute("emp_id", profile.getEmpNo());
     session.setAttribute("emp_name", profile.getName());   // shown in the header
     session.setAttribute("sol_id", profile.getPostingSolId());

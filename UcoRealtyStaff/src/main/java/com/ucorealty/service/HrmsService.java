@@ -1,7 +1,7 @@
 package com.ucorealty.service;
 
-import com.ucorealty.model.HrmsUserProfile;
-import com.ucorealty.model.AppUser;
+import com.ucorealty.model.HrmsEmployee;
+import com.ucorealty.model.StaffUser;
 import com.ucorealty.repository.HrmsRepository;
 import com.ucorealty.util.DatabaseTables;
 import jakarta.annotation.PostConstruct;
@@ -60,11 +60,11 @@ public class HrmsService {
    * The employee as HRMS knows them, or null when unknown, retired, or when the table cannot be read (the log says why).
    * Two steps: the contact row says who the employee is; the current posting row (if any) overrides SOL, scale and designation.
    */
-  public HrmsUserProfile fetchUserProfile(String empId) {
+  public HrmsEmployee fetchUserProfile(String empId) {
     if (empId == null || empId.trim().isEmpty()) {
       return null;
     }
-    HrmsUserProfile profile;
+    HrmsEmployee profile;
     try {
       profile = hrmsRepository.findByEmpNo(empId.trim()).orElse(null);
     } catch (DataAccessException e) {
@@ -83,7 +83,7 @@ public class HrmsService {
   }
 
   /** The current posting row overrides SOL, scale and designation of the contact row. A missing posting is not an error. */
-  private void applyCurrentPosting(HrmsUserProfile profile) {
+  private void applyCurrentPosting(HrmsEmployee profile) {
     try {
       Optional<HrmsRepository.CurrentPosting> posting = hrmsRepository.findCurrentPosting(profile.getEmpNo());
       if (posting.isPresent()) {
@@ -136,18 +136,18 @@ public class HrmsService {
   }
 
   /** Portal role for this posting, or null when the employee has no access. */
-  public String resolveRole(HrmsUserProfile profile) {
+  public String resolveRole(HrmsEmployee profile) {
     return roleResolver.resolveRole(profile);
   }
 
   /** Official zone name for zonal-office employees, otherwise null. */
-  public String resolveZone(HrmsUserProfile profile) {
+  public String resolveZone(HrmsEmployee profile) {
     return roleResolver.resolveZone(profile);
   }
 
   /** The signed-in user object (employee number, role, zone, office name) built from an HRMS profile. */
-  public AppUser toAppUser(HrmsUserProfile profile) {
+  public StaffUser toAppUser(HrmsEmployee profile) {
     if (profile == null) return null;
-    return new AppUser(profile.getEmpNo(), resolveRole(profile), resolveZone(profile), profile.getPostingSolDesc());
+    return new StaffUser(profile.getEmpNo(), resolveRole(profile), resolveZone(profile), profile.getPostingSolDesc());
   }
 }

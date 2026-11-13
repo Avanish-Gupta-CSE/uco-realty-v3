@@ -16,7 +16,7 @@ import java.util.List;
  * row field by field when a checker approves it.
  */
 @MappedSuperclass
-public abstract class ProjectData {
+public abstract class ProjectFields {
 
   @Column(name = "zone_name")
   public String zoneName;
@@ -288,7 +288,7 @@ public abstract class ProjectData {
   // ---- generic access to the business fields (used by the maker-checker workflow) ----
   private static final List<Field> BUSINESS_FIELDS = new ArrayList<>();
   static {
-    for (Field f : ProjectData.class.getDeclaredFields()) {
+    for (Field f : ProjectFields.class.getDeclaredFields()) {
       if (!Modifier.isStatic(f.getModifiers())) BUSINESS_FIELDS.add(f);
     }
   }
@@ -296,18 +296,18 @@ public abstract class ProjectData {
   public static List<Field> businessFields() { return Collections.unmodifiableList(BUSINESS_FIELDS); }
 
   /** Copies every business field from one record to another (zone excluded when {@code keepZone} is true). */
-  public static void copyBusinessFields(ProjectData from, ProjectData to, boolean keepZone) {
+  public static void copyBusinessFields(ProjectFields from, ProjectFields to, boolean keepZone) {
     for (Field f : BUSINESS_FIELDS) {
       if (keepZone && "zoneName".equals(f.getName())) continue;
       try { f.set(to, f.get(from)); } catch (IllegalAccessException e) { throw new IllegalStateException(e); }
     }
   }
 
-  public static Object value(ProjectData d, Field f) {
+  public static Object value(ProjectFields d, Field f) {
     try { return f.get(d); } catch (IllegalAccessException e) { throw new IllegalStateException(e); }
   }
 
-  public static void set(ProjectData d, Field f, Object v) {
+  public static void set(ProjectFields d, Field f, Object v) {
     try { f.set(d, v); } catch (IllegalAccessException e) { throw new IllegalStateException(e); }
   }
 }

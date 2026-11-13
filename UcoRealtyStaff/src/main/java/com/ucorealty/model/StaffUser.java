@@ -11,7 +11,7 @@ import java.util.Collections;
  * It extends Spring's User so that Spring knows the employee number and the role (ROLE_ + role) and nothing else is needed.
  * Change this file when: a new fact about the signed-in employee must be available on every request.
  */
-public class AppUser extends User {
+public class StaffUser extends User {
   private static final long serialVersionUID = 1L;
 
   public String username;   // employee number (EMPNO)
@@ -19,7 +19,7 @@ public class AppUser extends User {
   public String zone;       // for zonal staff: the official zone name; null for Head Office
   public String branch;     // posting description, e.g. "PATNA ZONAL OFFICE"
 
-  public AppUser(String username, String role, String zone, String branch) {
+  public StaffUser(String username, String role, String zone, String branch) {
     super(username, "", Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role)));
     this.username = username;
     this.role = role;

@@ -17,9 +17,9 @@ import org.springframework.security.web.session.DisableEncodeUrlFilter;
  * There is no login and no POST page here. Change this file when: a new public URL is added.
  */
 @Configuration
-public class PublicSecurityConfig {
+public class CustomerSecurityConfig {
 
-  private static final Logger log = LoggerFactory.getLogger(PublicSecurityConfig.class);
+  private static final Logger log = LoggerFactory.getLogger(CustomerSecurityConfig.class);
 
   @Bean
   public SecurityFilterChain publicFilterChain(HttpSecurity http) throws Exception {

@@ -1,6 +1,6 @@
 package com.ucorealty.repository;
 
-import com.ucorealty.model.LeadRow;
+import com.ucorealty.model.Lead;
 import com.ucorealty.util.DatabaseTables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,9 +25,9 @@ import java.util.List;
  * a null value (a null in a query value is unreliable on Oracle). The three public methods without @Query (find, count, statuses)
  * turn the page's filters (dates, status, search text) into those flags and values, so the controllers can pass them as they are.
  * Locally (h2 profile) the table comes from db_migrations/03_CREATE_HRMS_MOCK_TABLES.sql + 05_LOCAL_TEST_EMPLOYEES.sql.
- * Change this file when: the Leads page needs another filter or another column (then also model/LeadRow).
+ * Change this file when: the Leads page needs another filter or another column (then also model/Lead).
  */
-public interface LgEntryRepository extends Repository<LeadRow, String> {
+public interface LgEntryRepository extends Repository<Lead, String> {
 
   Logger log = LoggerFactory.getLogger(LgEntryRepository.class);
 
@@ -55,7 +55,7 @@ public interface LgEntryRepository extends Repository<LeadRow, String> {
     + LEAD_CONDITIONS
     + "ORDER BY NVL(SUBMIT_DATE, CRE_DT) DESC, LEAD_ID DESC "
     + "OFFSET :offset ROWS FETCH NEXT :limit ROWS ONLY")
-  List<LeadRow> findLeads(@Param("useFrom") int useFrom, @Param("from") Timestamp from,
+  List<Lead> findLeads(@Param("useFrom") int useFrom, @Param("from") Timestamp from,
                           @Param("useTo") int useTo, @Param("to") Timestamp to,
                           @Param("useStatus") int useStatus, @Param("status") String status,
                           @Param("useSearch") int useSearch, @Param("search") String search,
@@ -83,12 +83,12 @@ public interface LgEntryRepository extends Repository<LeadRow, String> {
   // ---------------------------------------------------------------------------------------------------------------
 
   /** All matching leads, newest first (used by the Excel export). Every filter is optional (null = not used). */
-  default List<LeadRow> find(LocalDate from, LocalDate to, String status, String search) {
+  default List<Lead> find(LocalDate from, LocalDate to, String status, String search) {
     return find(from, to, status, search, 0, 0);
   }
 
   /** One page of matching leads: skip `offset` rows, return at most `limit` (limit 0 = all of them). */
-  default List<LeadRow> find(LocalDate from, LocalDate to, String status, String search, int offset, int limit) {
+  default List<Lead> find(LocalDate from, LocalDate to, String status, String search, int offset, int limit) {
     try {
       return findLeads(
           from != null ? 1 : 0, from != null ? Timestamp.valueOf(from.atStartOfDay()) : NO_DATE,

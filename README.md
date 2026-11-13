@@ -35,7 +35,7 @@ java -jar UcoRealty/target/UcoRealty.war   # second shell
 ```
 
 ### Eclipse / STS
-Import `UcoRealty` and `UcoRealtyStaff` as two separate *Existing Maven Projects* (each folder has its own `pom.xml`). Use a Java 25 JRE. Run `com.ucorealty.PublicPortalApplication` and/or `com.ucorealty.InternalPortalApplication` as a Java Application with VM argument `-Dspring.profiles.active=local` (add `-Dserver.port=8081` etc. only if you change ports).
+Import `UcoRealty` and `UcoRealtyStaff` as two separate *Existing Maven Projects* (each folder has its own `pom.xml`). Use a Java 25 JRE. Run `com.ucorealty.UcoRealtyApplication` and/or `com.ucorealty.UcoRealtyStaffApplication` as a Java Application with VM argument `-Dspring.profiles.active=local` (add `-Dserver.port=8081` etc. only if you change ports).
 
 ## Layout
 ```

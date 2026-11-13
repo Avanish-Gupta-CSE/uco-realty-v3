@@ -12,12 +12,12 @@ import java.util.Arrays;
  * Base64 of [12-byte IV][AES/GCM ciphertext + 128-bit tag]; the key is the plain text of the setting, used as raw bytes.
  * After decrypting, the text is either emp_id=61801&sol_id=7115 or the other bank form xx~61801&yy~7115.
  */
-public final class SsoCryptoUtil {
+public final class SsoToken {
 
   private static final int IV_SIZE = 12;
   private static final int TAG_BITS = 128;
 
-  private SsoCryptoUtil() {}
+  private SsoToken() {}
 
   /** True when the key has a length AES accepts: 16, 24 or 32 characters. */
   public static boolean isValidKey(String key) {

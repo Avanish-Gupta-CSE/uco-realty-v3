@@ -79,11 +79,11 @@ start() {  # module, port, log name, text that means started, extra envs...
   die "$mod did not start in 3 minutes (see .run/$logname.log)"
 }
 if [ "$ORACLE" = 1 ]; then
-  start UcoRealtyStaff 8081 internal "Started InternalPortalApplication"
-  start UcoRealty 8080 public "Started PublicPortalApplication"
+  start UcoRealtyStaff 8081 internal "Started UcoRealtyStaffApplication"
+  start UcoRealty 8080 public "Started UcoRealtyApplication"
 else
-  start UcoRealtyStaff 8081 internal "Started InternalPortalApplication" SPRING_SQL_INIT_SCHEMA_LOCATIONS=classpath:h2-init.sql SPRING_SQL_INIT_MODE=always
-  start UcoRealty 8080 public "Started PublicPortalApplication"
+  start UcoRealtyStaff 8081 internal "Started UcoRealtyStaffApplication" SPRING_SQL_INIT_SCHEMA_LOCATIONS=classpath:h2-init.sql SPRING_SQL_INIT_MODE=always
+  start UcoRealty 8080 public "Started UcoRealtyApplication"
 fi
 
 printf '\n\033[1mReady.\033[0m\n'

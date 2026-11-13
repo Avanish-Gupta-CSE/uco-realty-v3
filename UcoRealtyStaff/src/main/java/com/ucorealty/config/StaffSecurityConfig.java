@@ -18,13 +18,13 @@ import org.springframework.security.web.session.DisableEncodeUrlFilter;
  * pages are sent to /login (the SSO landing page).
  */
 @Configuration
-public class InternalSecurityConfig {
+public class StaffSecurityConfig {
 
-  private static final Logger log = LoggerFactory.getLogger(InternalSecurityConfig.class);
+  private static final Logger log = LoggerFactory.getLogger(StaffSecurityConfig.class);
 
   private final CustomLogoutSuccessHandler logoutSuccessHandler;
 
-  public InternalSecurityConfig(CustomLogoutSuccessHandler logoutSuccessHandler) {
+  public StaffSecurityConfig(CustomLogoutSuccessHandler logoutSuccessHandler) {
     this.logoutSuccessHandler = logoutSuccessHandler;
   }
 

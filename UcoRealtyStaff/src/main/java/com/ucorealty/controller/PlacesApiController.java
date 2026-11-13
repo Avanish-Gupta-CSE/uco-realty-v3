@@ -15,10 +15,10 @@ import java.util.Map;
 // Customers use /api/public/meta instead, which lists only places that have approved projects.
 @RestController
 @RequestMapping("/api/admin/geo")
-public class GeoController {
+public class PlacesApiController {
   private final MasterDataService masterData;
 
-  public GeoController(MasterDataService masterData) { this.masterData = masterData; }
+  public PlacesApiController(MasterDataService masterData) { this.masterData = masterData; }
 
   @GetMapping
   public Map<String, Object> geo(Authentication auth) {

@@ -1,13 +1,16 @@
 package com.ucorealty.controller;
 
-import com.ucorealty.model.LeadRow;
+import com.ucorealty.model.Lead;
 import com.ucorealty.repository.LgEntryRepository;
+import com.ucorealty.service.AuditService;
 import com.ucorealty.util.RoleCheck;
 import com.ucorealty.util.Roles;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -17,46 +20,88 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 /**
- * Lead list + Excel export for Head Office Marketing, Retail Banking and DIT.
+ * The customer Leads page, its Excel export and the same list as JSON, for Head Office Marketing, Retail Banking and DIT.
  * The leads are NOT stored by us: the bank's Home Loan page keeps them in HRMS table LG_ENTRY_REVAMP (CHANNEL = 'REALTY'),
- * and LgEntryRepository reads them from there.
+ * and LgEntryRepository reads them from there. The page itself is leads.jsp.
+ * Change this file when: the Leads page or the Excel columns change (see MAINTENANCE_GUIDE.md, "Add or remove a column").
  */
-@RestController
-@RequestMapping("/api/admin/leads")
-public class LeadExportController {
-  private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(LeadExportController.class);
-  private final LgEntryRepository leads;
+@Controller
+public class LeadsController {
+  private static final int LEADS_PER_PAGE = 20;
+  private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(LeadsController.class);
+  private final LgEntryRepository leadSource;
+  private final AuditService auditService;
 
-  public LeadExportController(LgEntryRepository leads) {
-    this.leads = leads;
+  public LeadsController(LgEntryRepository leads, AuditService auditService) {
+    this.leadSource = leads;
+    this.auditService = auditService;
   }
 
-  /**
-   * Filter leads with optional date range, lead status, and keyword search.
-   */
-  @GetMapping
-  public List<LeadRow> list(@RequestParam(required = false) String from,
-                         @RequestParam(required = false) String to,
-                         @RequestParam(required = false) String status,
-                         @RequestParam(required = false) String search,
-                         Authentication auth) {
+  @GetMapping("/admin/leads")
+  public String listLeads(@RequestParam(required = false) String from,
+                          @RequestParam(required = false) String to,
+                          @RequestParam(required = false) String status,
+                          @RequestParam(required = false) String search,
+                          @RequestParam(defaultValue = "1") int pageNo,
+                          Authentication auth,
+                          Model model) {
+    // The nav link is hidden for other roles, but hiding is not protection: customer phone numbers need a real check
+    RoleCheck.require(auth, Roles.LEAD_ROLES);
+    int total = countLeads(from, to, status, search);
+    int pages = Math.max(1, (total + LEADS_PER_PAGE - 1) / LEADS_PER_PAGE);
+    int current = Math.min(Math.max(1, pageNo), pages);
+    // only the 20 rows of this page are fetched from the bank table
+    List<Lead> leads = leadsPage(from, to, status, search, (current - 1) * LEADS_PER_PAGE, LEADS_PER_PAGE);
+    model.addAttribute("leadCount", total);
+    model.addAttribute("pageCount", pages);
+    model.addAttribute("pageNo", current);
+
+    model.addAttribute("leads", leads);
+    model.addAttribute("statuses", leadSource.statuses());   // status codes for the filter drop-down
+    return "leads";
+  }
+
+  @GetMapping("/admin/leads/export.xlsx")
+  public void exportFromPage(@RequestParam(required = false) String from,
+                             @RequestParam(required = false) String to,
+                             @RequestParam(required = false) String status,
+                             @RequestParam(required = false) String search,
+                             HttpServletResponse res,
+                             Authentication auth) throws IOException {
+    RoleCheck.require(auth, Roles.LEAD_ROLES);   // before the audit row: a refused export must not be recorded as an export
+    auditService.logActivity(auth.getName(), "EXPORT_LEADS", "LEAD", "EXCEL", "Exported leads to Excel");
+    writeExcel(from, to, status, search, res, auth);
+  }
+
+  /** The same leads as JSON (filters: date range, lead status, keyword). */
+  @GetMapping("/api/admin/leads")
+  @ResponseBody
+  public List<Lead> listAsJson(@RequestParam(required = false) String from,
+                               @RequestParam(required = false) String to,
+                               @RequestParam(required = false) String status,
+                               @RequestParam(required = false) String search,
+                               Authentication auth) {
     RoleCheck.require(auth, Roles.LEAD_ROLES);
     return filterLeads(from, to, status, search);
   }
 
-  /**
-   * Export filtered leads to a beautifully styled Excel (.xlsx) file with Call Center action columns.
-   */
-  @GetMapping("/export.xlsx")
-  public void export(@RequestParam(required = false) String from,
-                     @RequestParam(required = false) String to,
-                     @RequestParam(required = false) String status,
-                     @RequestParam(required = false) String search,
-                     HttpServletResponse res,
-                     Authentication auth) throws IOException {
+  /** The Excel export without the audit row (kept as it was: this address is the older one). */
+  @GetMapping("/api/admin/leads/export.xlsx")
+  public void exportAsApi(@RequestParam(required = false) String from,
+                          @RequestParam(required = false) String to,
+                          @RequestParam(required = false) String status,
+                          @RequestParam(required = false) String search,
+                          HttpServletResponse res,
+                          Authentication auth) throws IOException {
+    writeExcel(from, to, status, search, res, auth);
+  }
+
+  /** Writes the filtered leads as a styled Excel (.xlsx) file with Call Center action columns. */
+  private void writeExcel(String from, String to, String status, String search,
+                          HttpServletResponse res, Authentication auth) throws IOException {
     String exporter = RoleCheck.require(auth, Roles.LEAD_ROLES);
 
-    List<LeadRow> filtered = filterLeads(from, to, status, search);
+    List<Lead> filtered = filterLeads(from, to, status, search);
     log.info("[UCO LEAD] {} exports {} leads to Excel (from={}, to={}, status={})", exporter, filtered.size(), from, to, status);
 
     // Build dynamic date-based filename
@@ -174,7 +219,7 @@ public class LeadExportController {
 
       // Data Rows
       int rowIdx = 4;
-      for (LeadRow l : filtered) {
+      for (Lead l : filtered) {
         Row r = sh.createRow(rowIdx);
         CellStyle rowStyle = (rowIdx % 2 == 0) ? altDataStyle : dataStyle;
         String[] values = {
@@ -213,17 +258,17 @@ public class LeadExportController {
     return (formulaStart || signedText) ? "'" + text : text;
   }
 
-  List<LeadRow> filterLeads(String from, String to, String status, String search) {
-    return leads.find(parseDate(from), parseDate(to), status, search);   // the database does the filtering, newest first
+  private List<Lead> filterLeads(String from, String to, String status, String search) {
+    return leadSource.find(parseDate(from), parseDate(to), status, search);   // the database does the filtering, newest first
   }
 
   /** One page of leads (the database skips and limits the rows). */
-  List<LeadRow> leadsPage(String from, String to, String status, String search, int offset, int limit) {
-    return leads.find(parseDate(from), parseDate(to), status, search, offset, limit);
+  private List<Lead> leadsPage(String from, String to, String status, String search, int offset, int limit) {
+    return leadSource.find(parseDate(from), parseDate(to), status, search, offset, limit);
   }
 
-  int countLeads(String from, String to, String status, String search) {
-    return leads.count(parseDate(from), parseDate(to), status, search);
+  private int countLeads(String from, String to, String status, String search) {
+    return leadSource.count(parseDate(from), parseDate(to), status, search);
   }
 
   private static LocalDate parseDate(String text) {

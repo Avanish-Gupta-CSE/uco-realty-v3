@@ -1,9 +1,9 @@
 package com.ucorealty.controller;
 
 import com.ucorealty.dto.ProjectRow;
-import com.ucorealty.model.AppUser;
+import com.ucorealty.model.StaffUser;
 import com.ucorealty.model.Project;
-import com.ucorealty.model.ProjectData;
+import com.ucorealty.model.ProjectFields;
 import com.ucorealty.model.ProjectForm;
 import com.ucorealty.model.ProjectImage;
 import com.ucorealty.model.ProjectStaging;
@@ -14,7 +14,7 @@ import com.ucorealty.service.ProjectService;
 import com.ucorealty.service.ProjectWorkflowService;
 import com.ucorealty.util.Amenities;
 import com.ucorealty.util.CurrentUser;
-import com.ucorealty.util.PhotoFiles;
+import com.ucorealty.util.UploadChecks;
 import com.ucorealty.util.RoleCheck;
 import com.ucorealty.util.Roles;
 import jakarta.servlet.http.HttpServletRequest;
@@ -73,7 +73,7 @@ public class ProjectWorkflowController {
                           @RequestParam(defaultValue = "10") int size,
                           Authentication auth, Model model) {
     String username = auth.getName();
-    AppUser user = CurrentUser.find(username);
+    StaffUser user = CurrentUser.find(username);
     List<ProjectRow> rows = new ArrayList<>(workflow.dashboard(username));
 
     if (zone != null && !zone.trim().isEmpty() && !"ALL".equalsIgnoreCase(zone.trim())) {
@@ -144,7 +144,7 @@ public class ProjectWorkflowController {
   public String newProject(Authentication auth, Model model) {
     RoleCheck.require(auth, Roles.MAKERS);
     ProjectForm blank = new ProjectForm();
-    AppUser user = CurrentUser.of(auth);
+    StaffUser user = CurrentUser.of(auth);
     if (user != null && "ZO_MAKER".equals(user.role) && user.zone != null) {
       blank.zoneName = user.zone.trim();
       blank.branchName = user.branch;
@@ -319,7 +319,7 @@ public class ProjectWorkflowController {
     boolean create = ProjectStaging.CREATE.equals(s.requestType);
     boolean delete = ProjectStaging.DELETE.equals(s.requestType);
     Project live = create ? null : projectService.findById(s.projectId);
-    AppUser me = CurrentUser.find(user);
+    StaffUser me = CurrentUser.find(user);
     boolean checkerRole = me != null && ("ZO_CHECKER".equals(me.role) || "HO_MARKETING".equals(me.role) || "SUPERADMIN_DIT".equals(me.role));
 
     model.addAttribute("staging", s);
@@ -369,8 +369,8 @@ public class ProjectWorkflowController {
 
   // ================================================================================ helpers
 
-  private String form(Model model, Authentication auth, ProjectData shown, ProjectStaging s, String error) {
-    AppUser user = CurrentUser.of(auth);
+  private String form(Model model, Authentication auth, ProjectFields shown, ProjectStaging s, String error) {
+    StaffUser user = CurrentUser.of(auth);
     if (user != null && "ZO_MAKER".equals(user.role) && user.zone != null) model.addAttribute("userZone", user.zone.trim());
     List<ProjectImage> photos = s != null ? workflow.photosForForm(s) : Collections.emptyList();
     if (error != null) model.addAttribute("error", error);
@@ -404,7 +404,7 @@ public class ProjectWorkflowController {
     String name = file.getOriginalFilename();
     byte[] bytes = file.getBytes();
     boolean pdfName = name != null && name.toLowerCase().endsWith(".pdf");
-    if (file.getSize() > MAX_DOC_BYTES || !pdfName || !PhotoFiles.isPdf(bytes)) {
+    if (file.getSize() > MAX_DOC_BYTES || !pdfName || !UploadChecks.isPdf(bytes)) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, label + " must be a PDF file of at most 3 MB.");
     }
     for (ProjectImage old : workflow.documentsForForm(s)) {
@@ -414,7 +414,7 @@ public class ProjectWorkflowController {
     doc.stagingId = s.id;
     doc.projectId = null;
     doc.fileKind = kind;
-    doc.fileName = PhotoFiles.cleanName(name);
+    doc.fileName = UploadChecks.cleanName(name);
     doc.mimeType = "application/pdf";
     doc.fileSize = file.getSize();
     doc.fileData = bytes;
@@ -432,13 +432,13 @@ public class ProjectWorkflowController {
       String ext = name != null && name.contains(".") ? name.substring(name.lastIndexOf('.')).toLowerCase() : ".jpg";
       if (!Arrays.asList(".jpg", ".jpeg", ".png", ".webp").contains(ext)) continue;
       byte[] bytes = file.getBytes();
-      String mime = PhotoFiles.sniffMime(bytes);
-      if (mime == null || !PhotoFiles.extensionMatches(ext, mime)) continue;
+      String mime = UploadChecks.sniffMime(bytes);
+      if (mime == null || !UploadChecks.extensionMatches(ext, mime)) continue;
 
       ProjectImage img = new ProjectImage();
       img.stagingId = s.id;                       // belongs to the maker's working copy: not live, never shown to customers
       img.projectId = null;
-      img.fileName = PhotoFiles.cleanName(name != null ? name : "photo.jpg");
+      img.fileName = UploadChecks.cleanName(name != null ? name : "photo.jpg");
       img.mimeType = mime;
       img.fileSize = file.getSize();
       img.fileData = bytes;

@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
  * Only approved, active and published projects are shown. Change this file when: a customer page needs other data.
  */
 @Controller
-public class PublicWebController {
+public class CatalogPageController {
   private static final int PAGE_SIZE = 12;
 
   private final ProjectService projectService;
@@ -34,7 +34,7 @@ public class PublicWebController {
   private static final String HOME_LOAN_PATH = "/Lead_App/lead_web.jsp?utm=REALTY";
   private final String homeLoanUrl;
 
-  public PublicWebController(ProjectService projectService, MasterDataService masterDataService,
+  public CatalogPageController(ProjectService projectService, MasterDataService masterDataService,
                              ProjectImageRepository imageRepo,
                              @Value("${uco.homeloan.base-url}") String homeLoanBaseUrl) {
     this.homeLoanUrl = homeLoanBaseUrl.replaceAll("/+$", "") + HOME_LOAN_PATH;

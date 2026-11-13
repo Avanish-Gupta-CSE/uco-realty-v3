@@ -1,6 +1,6 @@
 package com.ucorealty.service;
 
-import com.ucorealty.model.HrmsUserProfile;
+import com.ucorealty.model.HrmsEmployee;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,7 +53,7 @@ public class RoleResolver {
     }
   }
 
-  public String resolveRole(HrmsUserProfile p) {
+  public String resolveRole(HrmsEmployee p) {
     if (p == null) return null;
     String sol = digits(p.getPostingSolId());
     if (sol.isEmpty()) return null;
@@ -77,7 +77,7 @@ public class RoleResolver {
   }
 
   /** Official zone name (e.g. "Patna") for a zonal-office employee, otherwise null. */
-  public String resolveZone(HrmsUserProfile p) {
+  public String resolveZone(HrmsEmployee p) {
     if (p == null || !zonalSol.matcher(digits(p.getPostingSolId())).matches()) return null;
     String fromDesc = matchZone(p.getPostingSolDesc());
     return fromDesc != null ? fromDesc : matchZone(p.getPostingRegionName());

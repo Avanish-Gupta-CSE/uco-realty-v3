@@ -15,7 +15,7 @@ import org.hibernate.annotations.Immutable;
 @Entity
 @Immutable
 @Table(name = "employee_contact_details")
-public class HrmsUserProfile {
+public class HrmsEmployee {
 
   @Id
   @Column(name = "EMPNO")

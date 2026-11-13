@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "realty_project_staging")
-public class ProjectStaging extends ProjectData {
+public class ProjectStaging extends ProjectFields {
   public static final String CREATE = "CREATE";
   public static final String UPDATE = "UPDATE";
   public static final String DELETE = "DELETE";
