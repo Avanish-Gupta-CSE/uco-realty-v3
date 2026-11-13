@@ -266,8 +266,8 @@
                                 <div class="border rounded p-2 d-flex justify-content-between align-items-center" id="amenity-row-${vs.index}">
                                     <span class="small"><c:out value="${am}"/></span>
                                     <span class="d-inline-flex gap-2 small">
-                                        <label class="mb-0"><input type="radio" name="amenity_${vs.index}" value="Y" id="amenity_${vs.index}_yes" ${amenityAnswers[am] == 'Y' ? 'checked' : ''}> Yes</label>
-                                        <label class="mb-0"><input type="radio" name="amenity_${vs.index}" value="N" id="amenity_${vs.index}_no" ${amenityAnswers[am] != 'Y' ? 'checked' : ''}> No</label>
+                                        <label class="mb-0"><input type="radio" name="amenity_${vs.index}" value="Y" id="amenity_${vs.index}_yes" ${amenityAnswers[am] == 'Yes' ? 'checked' : ''}> Yes</label>
+                                        <label class="mb-0"><input type="radio" name="amenity_${vs.index}" value="N" id="amenity_${vs.index}_no" ${amenityAnswers[am] != 'Yes' ? 'checked' : ''}> No</label>
                                     </span>
                                 </div>
                             </div>

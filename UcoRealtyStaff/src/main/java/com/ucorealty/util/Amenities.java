@@ -33,13 +33,13 @@ public final class Amenities {
     return any ? sb.toString() : null;
   }
 
-  /** "Gym:Y,Lift:N" -> {Gym=Y, Lift=N} in stored order. */
+  /** "Gym:Y,Lift:N" -> {Gym=Yes, Lift=No} in stored order. (The same method, word for word, is in the customer app: scripts/sync_check.py compares them.) */
   public static Map<String, String> parse(String flags) {
     Map<String, String> out = new LinkedHashMap<>();
     if (flags == null || flags.isBlank()) return out;
     for (String part : flags.split(",")) {
       int i = part.lastIndexOf(':');
-      if (i > 0) out.put(part.substring(0, i).trim(), part.substring(i + 1).trim().toUpperCase());
+      if (i > 0) out.put(part.substring(0, i).trim(), "Y".equalsIgnoreCase(part.substring(i + 1).trim()) ? "Yes" : "No");
     }
     return out;
   }

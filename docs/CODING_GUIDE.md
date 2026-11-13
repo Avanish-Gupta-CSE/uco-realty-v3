@@ -28,7 +28,7 @@ Nothing a maker does touches the master table. Only a checker's approval copies 
 4. **No JavaScript or CSS inside a JSP** (bank rule); every element gets an `id`. Scripts go in `webapp/assets/js`, styles in `css`.
 5. **No test or mock data in code.** Test employees live in `db_migrations/05_*.sql` and `scripts/`, never in Java.
 6. **Plain constructs:** short methods (aim for 30 lines), `if` and `for` before clever streams, a comment above anything that is not obvious saying WHY.
-7. **Two applications, two copies:** there is no shared module on purpose. When you change something that exists in both (`SecurityHeadersFilter`, `H2ServerStarter`, `public-detail.jsp`, `public-projects.jsp`, a project column), change both and run `python3 scripts/sync_check.py`.
+7. **Two applications, two copies:** there is no shared module on purpose. When you change something that exists in both (`SecurityHeadersFilter`, `H2ServerStarter`, `Amenities.parse`, `public-detail.jsp`, `public-projects.jsp`, a project column), change both and run `python3 scripts/sync_check.py`.
 
 ## 4. How to check your work (3 minutes)
 `scripts/dev-start.sh`, then `python3 scripts/smoke_test.py`, `python3 scripts/workflow_test.py`, `python3 scripts/context_path_check.py`, `python3 scripts/sync_check.py`, and look for `[UCO ERROR]` in `.run/*.log`. For a change that must not alter any page: `scripts/snapshot_fresh.sh` before and after, then `python3 scripts/snapshot_pages.py compare` (see `MAINTENANCE_GUIDE.md`).

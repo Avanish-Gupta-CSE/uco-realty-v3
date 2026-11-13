@@ -213,7 +213,7 @@
                                                     <th>Amenities</th>
                                                     <td id="spec-amenities">
                                                         <c:forEach var="a" items="${amenityRows}">
-                                                            <div><c:out value="${a.key}"/>: <strong class="${a.value == 'Y' ? 'text-success' : 'text-muted'}">${a.value == 'Y' ? 'Yes' : 'No'}</strong></div>
+                                                            <div><c:out value="${a.key}"/>: <strong class="${a.value == 'Yes' ? 'text-success' : 'text-muted'}">${a.value == 'Yes' ? 'Yes' : 'No'}</strong></div>
                                                         </c:forEach>
                                                         <c:if test="${not empty project.amenities}"><div class="mt-1"><c:out value="${project.amenities}"/></div></c:if>
                                                     </td>

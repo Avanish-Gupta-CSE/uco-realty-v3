@@ -14,6 +14,7 @@ What it checks (each check says why it exists):
     one copy only shows up here.
  4. Every JSON address (/api/...) found in the Java controllers is described in docs/openapi-*.yaml, and the files describe
     no address that does not exist any more.
+ 5. Amenities.parse (stored "Gym:Y" -> shown "Yes") is the same method in both applications.
 """
 import os
 import re
@@ -115,7 +116,21 @@ def check_openapi():
             problems.append(f"4. docs/{yaml_name} describes {path}, which does not exist in the code")
 
 
-for check in (check_identical, check_columns, check_pages, check_openapi):
+def parse_method(path):
+    text = read(path)
+    start = text.index("public static Map<String, String> parse(")
+    return text[start:text.index("\n  }\n", start)]
+
+
+def check_amenities():
+    """Amenities.parse turns the stored text (Gym:Y,Lift:N) into Yes/No for the pages. Both apps must give the same words."""
+    a = parse_method(os.path.join(CUSTOMER, JAVA, "util", "Amenities.java"))
+    b = parse_method(os.path.join(STAFF, JAVA, "util", "Amenities.java"))
+    if a != b:
+        problems.append("5. Amenities.parse differs between the two applications: the pages of both expect the words Yes / No")
+
+
+for check in (check_identical, check_columns, check_pages, check_openapi, check_amenities):
     check()
 
 if problems:
@@ -123,4 +138,4 @@ if problems:
     for p in problems:
         print("  - " + p)
     sys.exit(1)
-print("OK: both applications are in sync (identical files, columns, page element ids, JSON addresses)")
+print("OK: both applications are in sync (identical files, columns, page element ids, JSON addresses, amenity words)")

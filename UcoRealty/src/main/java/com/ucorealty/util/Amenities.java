@@ -10,7 +10,7 @@ import java.util.Map;
 public final class Amenities {
   private Amenities() {}
 
-  /** "Gym:Y,Lift:N" -> {Gym=Yes, Lift=No} in stored order. */
+  /** "Gym:Y,Lift:N" -> {Gym=Yes, Lift=No} in stored order. (The same method, word for word, is in the staff app: scripts/sync_check.py compares them.) */
   public static Map<String, String> parse(String flags) {
     Map<String, String> out = new LinkedHashMap<>();
     if (flags == null || flags.isBlank()) return out;
