@@ -12,6 +12,7 @@ import java.io.IOException;
  * Adds the browser-hardening response headers before anything else runs, so they are present on every
  * response (JSP pages, redirects, 403s, static files). Spring Security's commit-time header writer is not
  * used because small fully-buffered JSP pages (login, error) bypass it.
+ * Change this file when: a browser security header (for example the Content-Security-Policy) changes. (An identical copy lives in the other application: change both.)
  */
 public class SecurityHeadersFilter extends OncePerRequestFilter {
 

@@ -11,6 +11,7 @@ import java.util.Arrays;
  * Reads the token the bank SSO portal sends to /entry?Value=... (same method as the bank's other projects):
  * Base64 of [12-byte IV][AES/GCM ciphertext + 128-bit tag]; the key is the plain text of the setting, used as raw bytes.
  * After decrypting, the text is either emp_id=61801&sol_id=7115 or the other bank form xx~61801&yy~7115.
+ * Change this file when: the bank changes the token format or the key length.
  */
 public final class SsoToken {
 

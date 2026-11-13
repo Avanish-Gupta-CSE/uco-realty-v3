@@ -3,7 +3,10 @@ package com.ucorealty.model;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
-// Every workflow change lands here: who did what to which record, when.
+/**
+ * One row of the activity log (table realty_audit_log): who did what to which record, and when. Shown on the Logs page (DIT only).
+ * Change this file when: the log needs another column (also AuditService, the Logs page and 01_CREATE_TABLES.sql).
+ */
 @Entity
 @Table(name = "realty_audit_log")
 public class AuditLog {

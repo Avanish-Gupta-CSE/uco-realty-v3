@@ -12,6 +12,7 @@ import java.util.zip.GZIPInputStream;
  * java.util.Base64 on purpose: a test with 20,000 sample tokens showed the standard decoder refuses some tokens this one accepts.
  * It ignores spaces and line breaks, accepts both the standard (+ /) and the URL-safe (- _) letters, does not need the
  * "=" padding, and unzips the result when it is gzip-compressed. Decode only; the SSO token is never produced here.
+ * Change this file when: the bank portal sends the token in a new way.
  */
 public final class LenientBase64 {
 

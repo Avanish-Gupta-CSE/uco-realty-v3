@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 /**
  * Read-only catalog for the internet-facing portal. Only APPROVED + active + published projects are ever
  * returned; everything else behaves as "not found". Project authoring/approval lives in UcoRealtyStaff.
+ * Change this file when: the rule for which projects customers see, or how the catalog is filtered, changes.
  */
 @Service
 public class CatalogService {

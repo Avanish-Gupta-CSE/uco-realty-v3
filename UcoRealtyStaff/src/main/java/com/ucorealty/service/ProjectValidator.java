@@ -12,9 +12,11 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-// Format checks for the details a maker types in. The same rules are repeated on the screen
-// (frontend/src/validation/project.ts) so the maker sees the problem at once; this is the version that cannot be skipped.
-// What is NOT checked here: which fields are mandatory (that depends on the business, see Open_Questions B3).
+/**
+ * Format checks for the details a maker types in (lengths, pin code, dates, numbers, web address): the server-side check that cannot be skipped.
+ * What is NOT checked here: which fields are mandatory (a business decision).
+ * Change this file when: a field gets a new format rule.
+ */
 public final class ProjectValidator {
   private ProjectValidator() {}
 

@@ -1,6 +1,9 @@
 package com.ucorealty.util;
 
-/** Checks on uploaded photos (real file type from the first bytes, safe file names). */
+/**
+ * Checks on uploaded photos and PDFs (real file type from the first bytes, safe file names).
+ * Change this file when: another file type is allowed for upload.
+ */
 public final class UploadChecks {
   private UploadChecks() {}
 

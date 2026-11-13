@@ -4,8 +4,11 @@ import jakarta.persistence.*;
 import org.springframework.format.annotation.DateTimeFormat;
 import java.time.LocalDate;
 
-// Read-only view of a `projects` row for the customer portal: only the columns customers may see.
-// Authoring, approval and the internal workflow columns live in UcoRealtyStaff.
+/**
+ * Read-only view of a row of realty_projects for the customer app: only the columns customers may see.
+ * Authoring, approval and the internal workflow columns live in UcoRealtyStaff (model/Project + ProjectFields).
+ * Change this file when: a new project field must be shown to customers (see docs/MAINTENANCE_GUIDE.md, "Add a field").
+ */
 @Entity
 @Table(name = "realty_projects")
 public class Project {

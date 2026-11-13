@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
 /**
  * Every project screen. The maker works on his own copy (staging row); the checker reviews it; only an approval
  * touches the master table (see ProjectWorkflowService).
+ * Change this file when: a project screen changes (dashboard, form, review, delete or unit-reduction request); the business rules are in ProjectWorkflowService.
  */
 @Controller
 @RequestMapping("/admin")

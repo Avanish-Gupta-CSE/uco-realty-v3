@@ -12,6 +12,7 @@ import java.util.Map;
  * The Yes/No amenities a maker answers on the project form. To add or rename one, change LIST (and the same list in the
  * customer app's Amenities class). The answers are stored in one column (amenity_flags) as text like
  * "Swimming Pool:Y,Community Hall:N,Gym:Y". Anything else goes in the free-text "amenities" column.
+ * Change this file when: the project form gets another Yes/No amenity.
  */
 public final class Amenities {
   private Amenities() {}

@@ -14,6 +14,7 @@ import java.util.List;
  * Shared by the two tables: {@link Project} (master, approved records only) and {@link ProjectStaging}
  * (the maker's working copy). Same field names, same column names, so a staging row can be copied to the master
  * row field by field when a checker approves it.
+ * Change this file when: the project form gets a new field (see docs/MAINTENANCE_GUIDE.md, "Add a field to the project form").
  */
 @MappedSuperclass
 public abstract class ProjectFields {

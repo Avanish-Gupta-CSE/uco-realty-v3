@@ -25,6 +25,7 @@ import java.util.Map;
  * therefore packs every text field into a single urlencoded value, "__packed", and sends only the photos that were
  * chosen as file parts. This filter, which runs after Spring Security has checked the CSRF token, unpacks that value
  * so the controller sees the same request parameters as before.
+ * Change this file when: the project form sends its fields differently (then change project-form.js too).
  */
 @Component
 public class PackedFormFilter extends OncePerRequestFilter {

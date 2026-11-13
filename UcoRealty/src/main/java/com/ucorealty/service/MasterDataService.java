@@ -10,7 +10,10 @@ import java.io.InputStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/** State list for the catalog filter, read once from geo/districts.json. */
+/**
+ * State list for the catalog filter, read once from geo/districts.json.
+ * Change this file when: the state list for the filter must come from somewhere else.
+ */
 @Service
 public class MasterDataService {
   private final List<String> states;

@@ -12,8 +12,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 /**
- * Global Exception Handler for UCO Bank Realty Public Customer Portal.
- * Formatted and aligned with reference projects (DelhiHighCourt, BranchRecordMaintainance).
+ * Answers every error of the customer app: 404 for a page or project that does not exist, 400 for a bad value in the
+ * address, and a plain error page (with a log line tagged [UCO ERROR]) for anything unexpected.
+ * Change this file when: an error page or an error log line should change.
  */
 @ControllerAdvice
 public class GlobalExceptionHandler {

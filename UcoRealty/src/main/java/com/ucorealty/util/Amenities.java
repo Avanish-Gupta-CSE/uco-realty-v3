@@ -3,7 +3,10 @@ package com.ucorealty.util;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/** Reads the Yes/No amenity answers the bank staff saved (amenity_flags, e.g. "Swimming Pool:Y,Gym:N"). The staff app owns the list. */
+/**
+ * Reads the Yes/No amenity answers the bank staff saved (amenity_flags, e.g. "Swimming Pool:Y,Gym:N"). The staff app owns the list.
+ * Change this file when: the stored amenity text format changes. (The list of amenities is in the staff app: UcoRealtyStaff util/Amenities.)
+ */
 public final class Amenities {
   private Amenities() {}
 

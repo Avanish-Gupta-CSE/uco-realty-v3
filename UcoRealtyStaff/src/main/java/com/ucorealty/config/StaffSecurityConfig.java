@@ -16,6 +16,7 @@ import org.springframework.security.web.session.DisableEncodeUrlFilter;
  * Staff authentication happens only through bank SSO / test OTP (see HomeController), which builds the
  * Spring Security context itself. There is no form login, so unauthenticated requests to protected
  * pages are sent to /login (the SSO landing page).
+ * Change this file when: a staff URL must be open without login, or needs a certain role (the role names are in util/StaffRoles).
  */
 @Configuration
 public class StaffSecurityConfig {

@@ -12,6 +12,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
  * Runs before every staff page (see StaffWebConfig), so no controller has to check the session itself:
  * a request passes only when the session holds emp_id and sol_id (set by HomeController at login); otherwise it goes to the login page.
  * /entry is not covered: that is where the session gets created.
+ * Change this file when: the signed-in check changes (which session values must exist).
  */
 @Component
 public class SessionInterceptor implements HandlerInterceptor {

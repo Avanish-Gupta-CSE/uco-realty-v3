@@ -28,6 +28,7 @@ import java.security.GeneralSecurityException;
  * Staff login. The bank SSO portal sends the employee to /entry?Value=<encrypted>; this class decrypts it, checks the employee
  * in HRMS, stores emp_id and sol_id in the session and goes to /home. Without those attributes /home goes to the login page.
  * Every other staff page is guarded by SessionInterceptor. In the h2 and uat profiles the login page also offers the test login.
+ * Change this file when: the sign-in steps change (bank SSO entry, test login, logout, error page).
  */
 @Controller
 public class HomeController {

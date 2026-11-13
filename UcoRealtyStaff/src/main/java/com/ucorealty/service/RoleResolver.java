@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
  *   uco.rbac.zonal-sol-regex  SOLs that are zonal offices                          (default 7001-7049, e.g. 7001 Patna)
  * Zonal offices: Scale 4+ or EXEC cadre = Checker, Scale 1-3 = Maker; scale 0/blank (clerical) = no access.
  * The zone is taken from the SOL description ("PATNA ZONAL OFFICE" -> "Patna") and matched to the 49 official zones.
+ * Change this file when: the rule that turns a posting into a role changes (the SOL lists themselves are in application.properties).
  */
 @Component
 public class RoleResolver {

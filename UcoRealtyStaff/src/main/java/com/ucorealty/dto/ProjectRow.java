@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
  * One line of the dashboard. A line is either a LIVE project (master row, status APPROVED) or a maker's NEW project
  * that is not approved yet (a CREATE row of the staging table: DRAFT, PENDING_APPROVAL, NEEDS_CORRECTION, REJECTED).
  * A live project can carry one open request (UPDATE or DELETE) that is shown next to it.
+ * Change this file when: the dashboard needs another column.
  */
 public class ProjectRow {
   public String id;

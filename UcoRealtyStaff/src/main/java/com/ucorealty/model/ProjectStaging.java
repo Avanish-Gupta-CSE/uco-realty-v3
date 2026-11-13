@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
  *   DELETE  deletion request         (on approval: the project is marked DELETED)
  *
  * Approved, rejected and withdrawn rows stay as the history of who asked for what.
+ * Change this file when: the working copy or the approval steps need a new column or status.
  */
 @Entity
 @Table(name = "realty_project_staging")

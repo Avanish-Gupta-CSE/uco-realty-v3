@@ -22,9 +22,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Intranet Project Catalog & Customer Lead Controller.
- * Provides end-to-end catalog browsing on the bank corporate intranet.
- * For authenticated bank staff, displays all projects across the bank.
+ * The project catalog for signed-in staff (/projects, /project/{id}) and every uploaded photo or PDF (/files/{id}).
+ * Staff see the live projects they are allowed to see; a maker's unapproved files are only handed to people who may open that request.
+ * Change this file when: the catalog page, the project detail page or who may download a file changes.
  */
 @Controller
 public class ProjectCatalogController {

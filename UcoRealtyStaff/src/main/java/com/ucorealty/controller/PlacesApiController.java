@@ -10,8 +10,11 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-// Full reference lists for staff forms (zones, states, districts). Needs a login.
-// Customers use /api/public/meta instead, which lists only places that have approved projects.
+/**
+ * The full lists of zones, states and districts that the staff project form needs (JSON, needs a login).
+ * Customers use /api/public/meta instead, which lists only the places that have approved projects.
+ * Change this file when: the form needs another reference list (the data is read by MasterDataService).
+ */
 @RestController
 @RequestMapping("/api/admin/geo")
 public class PlacesApiController {

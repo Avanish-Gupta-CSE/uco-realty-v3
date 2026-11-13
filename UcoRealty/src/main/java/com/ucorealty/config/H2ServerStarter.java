@@ -14,6 +14,7 @@ import java.sql.SQLException;
  * Profile h2 only: starts H2 in memory inside this application, before the database connection is opened. The two apps
  * share it: whichever starts first runs the server (port 9092), the other finds the port taken and simply connects.
  * Local connections only. Also opens the H2 web console on port 8082.
+ * Change this file when: the laptop test database needs another port. (An identical copy lives in the other application: change both.)
  */
 @Component
 @Profile("h2")

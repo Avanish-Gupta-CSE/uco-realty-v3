@@ -33,6 +33,7 @@ import java.util.stream.Collectors;
  *   CREATE -> a new master row, UPDATE -> the existing master row changes, DELETE -> the master row is marked DELETED.
  * The staging row stays as history (APPROVED / REJECTED / WITHDRAWN). Photos follow the same rule: they belong to the
  * staging row (project_images.staging_id) and become live (project_id) only on approval.
+ * Change this file when: the approval steps change (draft, submit, approve, reject, return, withdraw, delete, unit reduction).
  */
 @Service
 public class ProjectWorkflowService {

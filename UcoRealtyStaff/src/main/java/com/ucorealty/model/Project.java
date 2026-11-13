@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
  * MASTER record: the project as approved and live (customers see exactly this). A row here is created only when a
  * checker approves a CREATE request, and is changed only when a checker approves an UPDATE or DELETE request
  * (see ProjectStaging and ProjectWorkflowService). Status is APPROVED, or DELETED (kept for the logs, shown nowhere).
+ * Change this file when: the live project needs a column that is NOT typed by the maker (a workflow column). Business fields belong in ProjectFields.
  */
 @Entity
 @Table(name = "realty_projects")

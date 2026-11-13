@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 /**
  * Reading side of the MASTER table (approved projects) plus the rules shared by the maker-checker workflow.
  * Everything a maker creates or changes goes through ProjectWorkflowService (staging table) instead.
+ * Change this file when: who may see or do what changes (zone access, maker and checker rules) or the list of live projects changes.
  */
 @Service
 public class ProjectAccessService {
