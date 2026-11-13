@@ -23,7 +23,7 @@ scripts/dev-start.sh --oracle   # the same on Oracle in Docker (uat profile); ad
 - Customer portal: http://localhost:8080/UcoRealty/projects
 - Staff portal: http://localhost:8081/UcoRealtyStaff/ (real UAT tester numbers such as `55012`, `52260`, `68696`; list in docs/TESTING_GUIDE.md, OTP `123456`)
 
-More: `docs/TESTING_GUIDE.md`. Profiles: `docs/DEPLOYMENT.md` section 2. **Want to change something? `docs/MAINTENANCE_GUIDE.md` says which file to open.** Code layout: `config, controller, dto, exception, interceptor, model, repository, service, util`; every SQL is a native `@Query` in `repository`.
+More: `docs/TESTING_GUIDE.md`. Profiles: `docs/DEPLOYMENT.md` section 2. **Want to change something? `docs/MAINTENANCE_GUIDE.md` says which file to open.** New here? Read `docs/CODING_GUIDE.md` first (10 minutes). JSON addresses: `docs/openapi-customer.yaml`, `docs/openapi-staff.yaml`. Code layout: `config, controller, dto, exception, interceptor, model, repository, service, util`; every SQL is a native `@Query` in `repository`.
 
 ### Raw commands (without the scripts)
 ```bash

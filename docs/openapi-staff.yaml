@@ -1,0 +1,104 @@
+# OpenAPI 3 description of the JSON addresses of the STAFF app (UcoRealtyStaff). Needs a signed-in employee (browser session
+# from the bank SSO); there is no API key. Written by hand: when you add or change an address in controller/LeadsController.java
+# or controller/PlacesApiController.java, change this file too (python3 scripts/sync_check.py tells you if an address is missing).
+# The screens of the site (HTML pages and forms) are not described here.
+openapi: 3.0.3
+info:
+  title: UCO Realty - staff API
+  version: "1.0"
+  description: >
+    Read only. Without a session every address answers 302 (redirect to /login). With a session but a role that is not
+    allowed it answers 403. Roles are in util/StaffRoles.java.
+servers:
+  - url: http://localhost:8081/UcoRealtyStaff
+    description: Laptop (scripts/dev-start.sh). On Tomcat the first part of the address is the WAR name, /UcoRealtyStaff.
+security:
+  - bankSessionCookie: []
+paths:
+  /api/admin/geo:
+    get:
+      summary: Zones, states and districts for the project form
+      description: Any staff role (DIT, HO Marketing, HO Retail, zonal maker or checker).
+      responses:
+        "200":
+          description: The reference lists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  zones: { type: array, items: { type: string } }
+                  states: { type: array, items: { type: string } }
+                  stateDistricts:
+                    type: object
+                    description: For each state, its districts
+                    additionalProperties: { type: array, items: { type: string } }
+        "302": { description: Not signed in }
+        "403": { description: Signed in, but the role is not a staff role }
+  /api/admin/leads:
+    get:
+      summary: Home Loan leads that came from UCO Realty (CHANNEL = REALTY), newest first
+      description: Roles HO Marketing, HO Retail and DIT. The leads are read from the bank table LG_ENTRY_REVAMP; we keep no copy.
+      parameters:
+        - { $ref: "#/components/parameters/from" }
+        - { $ref: "#/components/parameters/to" }
+        - { $ref: "#/components/parameters/status" }
+        - { $ref: "#/components/parameters/search" }
+      responses:
+        "200":
+          description: All matching leads (no paging)
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Lead" }
+        "302": { description: Not signed in }
+        "403": { description: Role not allowed }
+        "400": { description: A date was not written as yyyy-MM-dd }
+  /api/admin/leads/export.xlsx:
+    get:
+      summary: The same leads as an Excel file
+      description: Same filters and roles as the list. (The Leads page uses /admin/leads/export.xlsx, which also writes an audit row.)
+      parameters:
+        - { $ref: "#/components/parameters/from" }
+        - { $ref: "#/components/parameters/to" }
+        - { $ref: "#/components/parameters/status" }
+        - { $ref: "#/components/parameters/search" }
+      responses:
+        "200":
+          description: An .xlsx file
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema: { type: string, format: binary }
+        "302": { description: Not signed in }
+        "403": { description: Role not allowed }
+components:
+  securitySchemes:
+    bankSessionCookie:
+      type: apiKey
+      in: cookie
+      name: JSESSIONID
+      description: Created when the employee signs in through the bank SSO (or the test login on a laptop).
+  parameters:
+    from: { name: from, in: query, description: "First day, yyyy-MM-dd", schema: { type: string, format: date } }
+    to: { name: to, in: query, description: "Last day, yyyy-MM-dd", schema: { type: string, format: date } }
+    status: { name: status, in: query, description: Lead status exactly as stored, schema: { type: string } }
+    search: { name: search, in: query, description: Part of the name, mobile number or lead id, schema: { type: string } }
+  schemas:
+    Lead:
+      type: object
+      properties:
+        leadId: { type: string, example: RLTY0000000000001 }
+        name: { type: string }
+        mobile: { type: string }
+        email: { type: string, nullable: true }
+        state: { type: string }
+        district: { type: string }
+        location: { type: string, description: 'District and state, for example "Ajmer, Rajasthan"' }
+        facility: { type: string, example: HL }
+        loanAmount: { type: string, description: 'Text such as "2,500,000"' }
+        loanAmountText: { type: string, nullable: true }
+        tentativeLoanAmount: { type: number, nullable: true }
+        status: { type: string, example: OTP_VERIFIED }
+        submittedAt: { type: string, format: date-time }
+        formattedDate: { type: string, example: "11 Nov 2026, 06:18 am" }

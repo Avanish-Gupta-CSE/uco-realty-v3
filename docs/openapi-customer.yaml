@@ -1,0 +1,130 @@
+# OpenAPI 3 description of the JSON addresses of the CUSTOMER app (UcoRealty). No login. Read only.
+# Open it in https://editor.swagger.io or import it into Postman. It is written by hand: when you add or change an
+# address in controller/CatalogApiController.java, change this file too (python3 scripts/sync_check.py tells you if an address is missing).
+openapi: 3.0.3
+info:
+  title: UCO Realty - customer API
+  version: "1.0"
+  description: >
+    Approved, active and published housing projects only. Nothing else is ever returned.
+    There is no login and no way to change data. The pages of the site (HTML) are not described here.
+servers:
+  - url: http://localhost:8080/UcoRealty
+    description: Laptop (scripts/dev-start.sh). On Tomcat the first part of the address is the WAR name, /UcoRealty.
+paths:
+  /api/public/projects:
+    get:
+      summary: List projects (one page)
+      description: Filters are optional and can be combined. State and city must match exactly (upper or lower case does not matter). Search looks in project name, builder name, pin code and RERA number.
+      parameters:
+        - { name: state, in: query, schema: { type: string }, example: West Bengal }
+        - { name: city, in: query, schema: { type: string }, example: Durgapur }
+        - { name: search, in: query, schema: { type: string }, example: Green }
+        - { name: page, in: query, description: "First page is 0", schema: { type: integer, default: 0 } }
+        - { name: size, in: query, description: Projects per page, schema: { type: integer, default: 8 } }
+      responses:
+        "200":
+          description: One page of projects, plus how many match in total
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total: { type: integer, description: Projects that match the filters (all pages together) }
+                  page: { type: integer }
+                  items:
+                    type: array
+                    items: { $ref: "#/components/schemas/ProjectCard" }
+  /api/public/projects/{id}:
+    get:
+      summary: One project with all its details and photo addresses
+      parameters:
+        - { name: id, in: path, required: true, description: Project code, schema: { type: string }, example: UCR-PROJ-4851C066 }
+      responses:
+        "200":
+          description: The project
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ProjectDetail" }
+        "404":
+          description: There is no such project, or it is not approved, active and published. (The body is the HTML error page, not JSON.)
+  /api/public/meta:
+    get:
+      summary: States and cities that have at least one project (for the filter drop-downs)
+      responses:
+        "200":
+          description: Sorted lists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  states: { type: array, items: { type: string } }
+                  cities: { type: array, items: { type: string }, description: Every city, all states together }
+                  stateCities:
+                    type: object
+                    description: For each state, its cities
+                    additionalProperties: { type: array, items: { type: string } }
+components:
+  schemas:
+    ProjectCard:
+      type: object
+      properties:
+        id: { type: string, example: UCR-PROJ-4851C066 }
+        projectName: { type: string }
+        builder: { type: string }
+        state: { type: string }
+        city: { type: string }
+        pinCode: { type: string }
+        totalInventory: { type: integer }
+        availableInventory: { type: integer }
+        rera: { type: string }
+        price: { type: string, nullable: true, description: 'Text such as "₹ 32 L – 68 L"' }
+        typeOfUnit: { type: string }
+    ProjectDetail:
+      description: Everything in ProjectCard plus the fields below. Any value can be null when the bank did not fill it.
+      allOf:
+        - { $ref: "#/components/schemas/ProjectCard" }
+        - type: object
+          properties:
+            zone: { type: string }
+            branch: { type: string }
+            projectAddress: { type: string }
+            propertyId: { type: string, nullable: true }
+            approvalDate: { type: string }
+            startDate: { type: string }
+            completionDate: { type: string }
+            inventoryAsOnDate: { type: string }
+            amenities: { type: string, description: Free text }
+            aptPerFloor: { type: integer }
+            noOfTowers: { type: integer }
+            totalProjectArea: { type: string }
+            carpetMin: { type: string }
+            carpetMax: { type: string }
+            buildupMin: { type: string }
+            buildupMax: { type: string }
+            distRailway: { type: string }
+            distAirport: { type: string }
+            avgRate: { type: string }
+            budgetMin: { type: string }
+            budgetMax: { type: string }
+            builderName: { type: string }
+            builderRating: { type: string }
+            builderBg: { type: string }
+            website: { type: string }
+            promoter1: { type: string, nullable: true }
+            promoter2: { type: string, nullable: true }
+            promoter3: { type: string, nullable: true }
+            promoter4: { type: string, nullable: true }
+            promoter5: { type: string, nullable: true }
+            salesExecName: { type: string }
+            salesMobile: { type: string }
+            salesEmail: { type: string }
+            branchHeadName: { type: string }
+            branchHeadNumber: { type: string }
+            relExecName: { type: string }
+            relExecNumber: { type: string }
+            images:
+              type: array
+              description: Addresses of the photos (open them with GET, they are not JSON)
+              items: { type: string, example: /UcoRealty/files/1 }

@@ -39,6 +39,11 @@ The bank UAT database connection is embedded directly as defaults:
 **Tomcat on Windows VM (the bank way):**
 Copy both WAR files into Tomcat's `webapps/` folder and start Tomcat. The values built into `application.properties` are used unless you override them. Before a production build: `scripts/package-release.sh prod` refuses to build while the laptop profile, the test login, the test OTP, the UAT SSO key, SOL 7103 or the placeholder database password are still in the files.
 
+**Settings that only a DBA can change (Tomcat, not the WAR):** the `server.*` lines in `application.properties` (`server.servlet.session.*`, `server.error.*`, `server.port`, `server.servlet.context-path`) are used only when an application runs on its own (`java -jar`, as `scripts/dev-start.sh` does). On the bank's Tomcat they are ignored: the URL path comes from the WAR file name and the rest from Tomcat itself. Please check on UAT and write the answer here:
+- gzip of pages (HTML, CSS, JS, JSON): `compression="on"` on the Tomcat `<Connector>` in `server.xml` (saves most of the page size).
+- session time-out: `<session-timeout>` in Tomcat's `conf/web.xml` (the staff app expects 30 minutes).
+- session cookie: `HttpOnly` (Tomcat default) and, once the site runs on https, `Secure` (`<Context useHttpOnly="true">` and the `secure` cookie setting in `context.xml` or the https connector).
+
 **Optional overrides (if connecting to a different DB or port):**
 Any setting can still be overridden using JVM `-D` flags or environment variables:
 ```bash

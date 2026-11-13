@@ -37,7 +37,8 @@ Never put JavaScript or CSS inside a JSP (bank rule): put it in `webapp/assets/j
 1. `scripts/dev-start.sh` (builds both applications and starts them on your laptop with test data in memory).
 2. `python3 scripts/smoke_test.py`, `python3 scripts/workflow_test.py`, `python3 scripts/context_path_check.py` (all must say passed / OK).
 3. Look in `.run/internal.log` and `.run/public.log`: there must be no line with `[UCO ERROR]`.
-4. Optional but strong proof that no page changed: `scripts/snapshot_fresh.sh .run/before` BEFORE your change, again as `.run/after` AFTER it,
+4. `python3 scripts/sync_check.py`: the two applications have not drifted apart (identical files, the same columns and page element ids, every JSON address described in `docs/openapi-customer.yaml` / `docs/openapi-staff.yaml`).
+5. Optional but strong proof that no page changed: `scripts/snapshot_fresh.sh .run/before` BEFORE your change, again as `.run/after` AFTER it,
    then `python3 scripts/snapshot_pages.py compare .run/before .run/after`. It prints every page that differs.
 
 ## Recipes
