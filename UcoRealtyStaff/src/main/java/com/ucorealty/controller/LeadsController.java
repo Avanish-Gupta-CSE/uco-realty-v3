@@ -3,8 +3,7 @@ package com.ucorealty.controller;
 import com.ucorealty.model.Lead;
 import com.ucorealty.repository.LgEntryRepository;
 import com.ucorealty.service.AuditService;
-import com.ucorealty.util.RoleCheck;
-import com.ucorealty.util.Roles;
+import com.ucorealty.util.StaffRoles;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -46,7 +45,7 @@ public class LeadsController {
                           Authentication auth,
                           Model model) {
     // The nav link is hidden for other roles, but hiding is not protection: customer phone numbers need a real check
-    RoleCheck.require(auth, Roles.LEAD_ROLES);
+    StaffRoles.require(auth, StaffRoles.LEAD_ROLES);
     int total = countLeads(from, to, status, search);
     int pages = Math.max(1, (total + LEADS_PER_PAGE - 1) / LEADS_PER_PAGE);
     int current = Math.min(Math.max(1, pageNo), pages);
@@ -68,7 +67,7 @@ public class LeadsController {
                              @RequestParam(required = false) String search,
                              HttpServletResponse res,
                              Authentication auth) throws IOException {
-    RoleCheck.require(auth, Roles.LEAD_ROLES);   // before the audit row: a refused export must not be recorded as an export
+    StaffRoles.require(auth, StaffRoles.LEAD_ROLES);   // before the audit row: a refused export must not be recorded as an export
     auditService.logActivity(auth.getName(), "EXPORT_LEADS", "LEAD", "EXCEL", "Exported leads to Excel");
     writeExcel(from, to, status, search, res, auth);
   }
@@ -81,7 +80,7 @@ public class LeadsController {
                                @RequestParam(required = false) String status,
                                @RequestParam(required = false) String search,
                                Authentication auth) {
-    RoleCheck.require(auth, Roles.LEAD_ROLES);
+    StaffRoles.require(auth, StaffRoles.LEAD_ROLES);
     return filterLeads(from, to, status, search);
   }
 
@@ -99,7 +98,7 @@ public class LeadsController {
   /** Writes the filtered leads as a styled Excel (.xlsx) file with Call Center action columns. */
   private void writeExcel(String from, String to, String status, String search,
                           HttpServletResponse res, Authentication auth) throws IOException {
-    String exporter = RoleCheck.require(auth, Roles.LEAD_ROLES);
+    String exporter = StaffRoles.require(auth, StaffRoles.LEAD_ROLES);
 
     List<Lead> filtered = filterLeads(from, to, status, search);
     log.info("[UCO LEAD] {} exports {} leads to Excel (from={}, to={}, status={})", exporter, filtered.size(), from, to, status);

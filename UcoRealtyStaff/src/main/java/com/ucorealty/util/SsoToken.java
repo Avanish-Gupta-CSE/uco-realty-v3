@@ -28,7 +28,7 @@ public final class SsoToken {
 
   public static String decrypt(String value, String key) throws GeneralSecurityException {
     // A "+" in a URL arrives as a space when the portal has not encoded it
-    byte[] decoded = Base64.decode(value.trim().replaceAll("\\s+", "+"));
+    byte[] decoded = LenientBase64.decode(value.trim().replaceAll("\\s+", "+"));
     if (decoded.length <= IV_SIZE) {
       throw new GeneralSecurityException("Token is too short");
     }

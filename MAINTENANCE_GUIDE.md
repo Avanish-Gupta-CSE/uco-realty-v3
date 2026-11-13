@@ -13,7 +13,7 @@ Two applications share one database: `UcoRealty` (public site) and `UcoRealtySta
 | `model` | One class per database table (or per read-only bank table), plus `StaffUser` (the signed-in employee). |
 | `dto` | Small classes that only carry data to a page (`ProjectRow`). |
 | `config` | Security rules, filters, where static files are found. |
-| `util` | Helpers: bank table names (`DatabaseTables`), role lists (`Roles`, `RoleCheck`), token decoding. |
+| `util` | Helpers: bank table names (`DatabaseTables`), role lists (`StaffRoles`), token decoding. |
 | `exception` | What the user sees when something goes wrong. |
 | `webapp/WEB-INF/jsp` | The pages (JSP). `webapp/assets` holds css, js, images. |
 
@@ -51,7 +51,7 @@ To ADD a column do the same in reverse (`SELECT`, a field in `Lead`, the page, t
 
 ### Change who sees which projects or which statuses exist
 Rules about who may do what: `service/ProjectService.java` (zone access, maker/checker rules) and `service/ProjectWorkflowService.java` (the approval steps).
-Which roles may open a page: the `RoleCheck.require(auth, Roles.XYZ)` line at the top of the controller method; the role lists are in `util/Roles.java`.
+Which roles may open a page: the `StaffRoles.require(auth, StaffRoles.XYZ)` line at the top of the controller method; the role lists are in `util/StaffRoles.java`.
 
 ### Add a field to the project form (example: "Parking slots")
 1. Database: add the column to BOTH tables `realty_projects` and `realty_project_staging` in `db_migrations/01_CREATE_TABLES.sql`
@@ -78,7 +78,7 @@ are fixed in `controller/CatalogPageController.java` (`HOME_LOAN_PATH`). Rebuild
 (in both apps) so Oracle is used. Test employees and what they may do: `TESTING_GUIDE.md`.
 
 ### Add a new page
-1. A method in a controller (`controller/...`) with `@GetMapping("/admin/xyz")` that returns the name of a JSP; first line `RoleCheck.require(auth, Roles....)`.
+1. A method in a controller (`controller/...`) with `@GetMapping("/admin/xyz")` that returns the name of a JSP; first line `StaffRoles.require(auth, StaffRoles....)`.
 2. The JSP in `webapp/WEB-INF/jsp/xyz.jsp` (copy a small one such as `leads.jsp`).
 3. Staff site: `/admin/**` already needs a sign-in. A page outside `/admin` must be listed in `config/StaffSecurityConfig.java`.
    Customer site: add the URL to the list in `config/CustomerSecurityConfig.java`, otherwise it is refused.

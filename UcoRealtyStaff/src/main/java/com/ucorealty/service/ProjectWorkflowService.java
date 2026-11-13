@@ -4,7 +4,6 @@ import com.ucorealty.dto.ProjectRow;
 import com.ucorealty.model.StaffUser;
 import com.ucorealty.model.Project;
 import com.ucorealty.model.ProjectFields;
-import com.ucorealty.model.ProjectForm;
 import com.ucorealty.model.ProjectImage;
 import com.ucorealty.model.ProjectStaging;
 import com.ucorealty.repository.ProjectImageRepository;
@@ -197,7 +196,7 @@ public class ProjectWorkflowService {
 
   /** First save of a NEW project: creates the working copy (staging row) with its project code. */
   @Transactional
-  public ProjectStaging createDraft(ProjectForm form, Set<String> sent, String username) {
+  public ProjectStaging createDraft(ProjectFields.Form form, Set<String> sent, String username) {
     StaffUser user = projectService.requireActiveUser(username);
     ProjectService.requireMakerRole(user);
     ProjectStaging s = new ProjectStaging();
@@ -241,7 +240,7 @@ public class ProjectWorkflowService {
 
   /** Saves the maker's edits into HIS working copy. Only the fields the form sent are updated; the master is not touched. */
   @Transactional
-  public ProjectStaging saveDraft(Long id, ProjectForm form, Set<String> sent, String username) {
+  public ProjectStaging saveDraft(Long id, ProjectFields.Form form, Set<String> sent, String username) {
     ProjectStaging s = ownEditable(id, username);
     boolean update = ProjectStaging.UPDATE.equals(s.requestType);
     StaffUser user = projectService.requireActiveUser(username);
@@ -551,7 +550,7 @@ public class ProjectWorkflowService {
   }
 
   /** Copies the fields the form sent onto the working copy (the zone of an UPDATE never changes). */
-  private void applySent(ProjectForm form, ProjectStaging s, Set<String> sent, boolean keepZone) {
+  private void applySent(ProjectFields.Form form, ProjectStaging s, Set<String> sent, boolean keepZone) {
     for (Field f : ProjectFields.businessFields()) {
       if (keepZone && "zoneName".equals(f.getName())) continue;
       if (sent.contains(f.getName())) ProjectFields.set(s, f, ProjectFields.value(form, f));

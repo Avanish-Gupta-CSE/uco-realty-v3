@@ -44,7 +44,7 @@ public class GlobalExceptionHandler {
     return "error";
   }
 
-  // Keep the real HTTP status (401/403/404/400) of RoleCheck and service rules instead of a 200 error page
+  // Keep the real HTTP status (401/403/404/400) of StaffRoles and service rules instead of a 200 error page
   @ExceptionHandler(ResponseStatusException.class)
   public String handleStatus(ResponseStatusException exc, HttpServletRequest request, HttpServletResponse response, Model model) {
     int code = exc.getStatusCode().value();

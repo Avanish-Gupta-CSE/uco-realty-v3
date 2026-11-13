@@ -4,7 +4,6 @@ import com.ucorealty.dto.ProjectRow;
 import com.ucorealty.model.StaffUser;
 import com.ucorealty.model.Project;
 import com.ucorealty.model.ProjectFields;
-import com.ucorealty.model.ProjectForm;
 import com.ucorealty.model.ProjectImage;
 import com.ucorealty.model.ProjectStaging;
 import com.ucorealty.repository.ProjectImageRepository;
@@ -13,10 +12,8 @@ import com.ucorealty.service.MasterDataService;
 import com.ucorealty.service.ProjectService;
 import com.ucorealty.service.ProjectWorkflowService;
 import com.ucorealty.util.Amenities;
-import com.ucorealty.util.CurrentUser;
+import com.ucorealty.util.StaffRoles;
 import com.ucorealty.util.UploadChecks;
-import com.ucorealty.util.RoleCheck;
-import com.ucorealty.util.Roles;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,7 +70,7 @@ public class ProjectWorkflowController {
                           @RequestParam(defaultValue = "10") int size,
                           Authentication auth, Model model) {
     String username = auth.getName();
-    StaffUser user = CurrentUser.find(username);
+    StaffUser user = StaffRoles.currentUser(username);
     List<ProjectRow> rows = new ArrayList<>(workflow.dashboard(username));
 
     if (zone != null && !zone.trim().isEmpty() && !"ALL".equalsIgnoreCase(zone.trim())) {
@@ -142,9 +139,9 @@ public class ProjectWorkflowController {
   /** Blank form for a NEW project. Nothing is stored until the maker presses Save Draft. */
   @GetMapping("/projects/new")
   public String newProject(Authentication auth, Model model) {
-    RoleCheck.require(auth, Roles.MAKERS);
-    ProjectForm blank = new ProjectForm();
-    StaffUser user = CurrentUser.of(auth);
+    StaffRoles.require(auth, StaffRoles.MAKERS);
+    ProjectFields.Form blank = new ProjectFields.Form();
+    StaffUser user = StaffRoles.userOf(auth);
     if (user != null && "ZO_MAKER".equals(user.role) && user.zone != null) {
       blank.zoneName = user.zone.trim();
       blank.branchName = user.branch;
@@ -155,7 +152,7 @@ public class ProjectWorkflowController {
   /** The maker's own working copy (new project, or a change of a live project) opens again. */
   @GetMapping("/projects/staging/{stagingId}/edit")
   public String editStaging(@PathVariable Long stagingId, Authentication auth, Model model, RedirectAttributes ra) {
-    String user = RoleCheck.require(auth, Roles.MAKERS);
+    String user = StaffRoles.require(auth, StaffRoles.MAKERS);
     ProjectStaging s = workflow.get(stagingId);
     if (!user.equals(s.createdBy)) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the maker who raised this request can edit it");
     if (!ProjectStaging.DRAFT.equals(s.status) && !ProjectStaging.NEEDS_CORRECTION.equals(s.status)) {
@@ -168,7 +165,7 @@ public class ProjectWorkflowController {
   /** Opens (or creates) the maker's working copy of a LIVE project. The live project stays exactly as approved. */
   @GetMapping("/projects/{projectId}/change")
   public String changeLive(@PathVariable String projectId, Authentication auth, Model model, RedirectAttributes ra) {
-    String user = RoleCheck.require(auth, Roles.MAKERS);
+    String user = StaffRoles.require(auth, StaffRoles.MAKERS);
     try {
       ProjectStaging s = workflow.openUpdateDraft(projectId, user);
       return form(model, auth, s, s, null);
@@ -179,7 +176,7 @@ public class ProjectWorkflowController {
   }
 
   @PostMapping("/projects/staging/save")
-  public String save(@ModelAttribute ProjectForm form,
+  public String save(@ModelAttribute("projectForm") ProjectFields.Form form,
                      @RequestParam(required = false) Long stagingId,
                      @RequestParam(defaultValue = "draft") String action,
                      @RequestParam(value = "photo1", required = false) MultipartFile photo1,
@@ -196,7 +193,7 @@ public class ProjectWorkflowController {
                      @RequestParam(value = "floorPlan", required = false) MultipartFile floorPlan,
                      @RequestParam(value = "customCity", required = false) String customCity,
                      HttpServletRequest request, Authentication auth, Model model, RedirectAttributes ra) {
-    String user = RoleCheck.require(auth, Roles.MAKERS);
+    String user = StaffRoles.require(auth, StaffRoles.MAKERS);
     Set<String> sent = new HashSet<>(request.getParameterMap().keySet());
     String amenityFlags = Amenities.fromRequest(request);       // the Yes/No amenity buttons, joined into one value
     if (amenityFlags != null) { form.amenityFlags = amenityFlags; sent.add("amenityFlags"); }
@@ -238,7 +235,7 @@ public class ProjectWorkflowController {
 
   @PostMapping("/projects/staging/{stagingId}/photos/{imageId}/remove")
   public String removePhoto(@PathVariable Long stagingId, @PathVariable Long imageId, Authentication auth, RedirectAttributes ra) {
-    String user = RoleCheck.require(auth, Roles.MAKERS);
+    String user = StaffRoles.require(auth, StaffRoles.MAKERS);
     try {
       workflow.removePhoto(stagingId, imageId, user);
       ra.addFlashAttribute("message", "File removed. A file that is already live disappears only after the checker approves.");
@@ -253,7 +250,7 @@ public class ProjectWorkflowController {
   @PostMapping("/projects/{projectId}/reduce-units")
   public String reduceUnits(@PathVariable String projectId, @RequestParam int units, @RequestParam String reason,
                             Authentication auth, RedirectAttributes ra) {
-    String user = RoleCheck.require(auth, Roles.MAKERS);
+    String user = StaffRoles.require(auth, StaffRoles.MAKERS);
     try {
       workflow.requestUnitReduction(projectId, units, reason, user);
       ra.addFlashAttribute("message", "Unit reduction sent to the checker. The live count changes only after approval.");
@@ -265,7 +262,7 @@ public class ProjectWorkflowController {
 
   @PostMapping("/projects/{projectId}/delete-request")
   public String requestDelete(@PathVariable String projectId, @RequestParam String reason, Authentication auth, RedirectAttributes ra) {
-    String user = RoleCheck.require(auth, Roles.MAKERS);
+    String user = StaffRoles.require(auth, StaffRoles.MAKERS);
     try {
       workflow.requestDelete(projectId, reason, user);
       ra.addFlashAttribute("message", "Deletion sent to the checker. The project stays live until it is approved.");
@@ -278,7 +275,7 @@ public class ProjectWorkflowController {
   /** Sends a saved draft (or a returned request) to the checker straight from the dashboard. */
   @PostMapping("/projects/staging/{stagingId}/submit")
   public String submit(@PathVariable Long stagingId, Authentication auth, RedirectAttributes ra) {
-    String user = RoleCheck.require(auth, Roles.MAKERS);
+    String user = StaffRoles.require(auth, StaffRoles.MAKERS);
     try {
       workflow.submit(stagingId, user);
       ra.addFlashAttribute("message", "Sent to the checker for approval.");
@@ -290,7 +287,7 @@ public class ProjectWorkflowController {
 
   @PostMapping("/projects/staging/{stagingId}/withdraw")
   public String withdraw(@PathVariable Long stagingId, Authentication auth, RedirectAttributes ra) {
-    String user = RoleCheck.require(auth, Roles.MAKERS);
+    String user = StaffRoles.require(auth, StaffRoles.MAKERS);
     try {
       workflow.withdraw(stagingId, user);
       ra.addFlashAttribute("message", "Request withdrawn. Nothing live was changed.");
@@ -304,7 +301,7 @@ public class ProjectWorkflowController {
 
   @GetMapping("/projects/staging/{stagingId}/review")
   public String review(@PathVariable Long stagingId, Authentication auth, Model model, RedirectAttributes ra) {
-    String user = RoleCheck.require(auth, Roles.ALL_STAFF);
+    String user = StaffRoles.require(auth, StaffRoles.ALL_STAFF);
     ProjectStaging s = workflow.get(stagingId);
     if (!ProjectStaging.PENDING.equals(s.status)) {
       ra.addFlashAttribute("error", "This request is not waiting for approval (" + s.status + ").");
@@ -319,7 +316,7 @@ public class ProjectWorkflowController {
     boolean create = ProjectStaging.CREATE.equals(s.requestType);
     boolean delete = ProjectStaging.DELETE.equals(s.requestType);
     Project live = create ? null : projectService.findById(s.projectId);
-    StaffUser me = CurrentUser.find(user);
+    StaffUser me = StaffRoles.currentUser(user);
     boolean checkerRole = me != null && ("ZO_CHECKER".equals(me.role) || "HO_MARKETING".equals(me.role) || "SUPERADMIN_DIT".equals(me.role));
 
     model.addAttribute("staging", s);
@@ -339,7 +336,7 @@ public class ProjectWorkflowController {
   @PostMapping("/projects/staging/{stagingId}/decide")
   public String decide(@PathVariable Long stagingId, @RequestParam String decision,
                        @RequestParam(required = false) String comment, Authentication auth, RedirectAttributes ra) {
-    String user = RoleCheck.require(auth, Roles.CHECKERS);
+    String user = StaffRoles.require(auth, StaffRoles.CHECKERS);
     try {
       ProjectStaging s = workflow.decide(stagingId, decision, comment, user);
       String what = ProjectStaging.CREATE.equals(s.requestType) ? "Project" : ProjectStaging.DELETE.equals(s.requestType) ? "Deletion" : "Change";
@@ -354,7 +351,7 @@ public class ProjectWorkflowController {
   /** The request as a customer would see it (before it is approved), for the maker and for the checker. */
   @GetMapping("/projects/staging/{stagingId}/preview")
   public String preview(@PathVariable Long stagingId, Authentication auth, Model model) {
-    String user = RoleCheck.require(auth, Roles.ALL_STAFF);
+    String user = StaffRoles.require(auth, StaffRoles.ALL_STAFF);
     ProjectStaging s = workflow.get(stagingId);
     workflow.requireCanView(s, user);
     model.addAttribute("project", workflow.previewOf(s));
@@ -370,7 +367,7 @@ public class ProjectWorkflowController {
   // ================================================================================ helpers
 
   private String form(Model model, Authentication auth, ProjectFields shown, ProjectStaging s, String error) {
-    StaffUser user = CurrentUser.of(auth);
+    StaffUser user = StaffRoles.userOf(auth);
     if (user != null && "ZO_MAKER".equals(user.role) && user.zone != null) model.addAttribute("userZone", user.zone.trim());
     List<ProjectImage> photos = s != null ? workflow.photosForForm(s) : Collections.emptyList();
     if (error != null) model.addAttribute("error", error);

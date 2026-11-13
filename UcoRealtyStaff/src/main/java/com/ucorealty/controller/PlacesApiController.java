@@ -1,8 +1,7 @@
 package com.ucorealty.controller;
 
 import com.ucorealty.service.MasterDataService;
-import com.ucorealty.util.RoleCheck;
-import com.ucorealty.util.Roles;
+import com.ucorealty.util.StaffRoles;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,7 +21,7 @@ public class PlacesApiController {
 
   @GetMapping
   public Map<String, Object> geo(Authentication auth) {
-    RoleCheck.require(auth, Roles.ALL_STAFF);
+    StaffRoles.require(auth, StaffRoles.ALL_STAFF);
     Map<String, Object> m = new LinkedHashMap<>();
     m.put("zones", masterData.getZones());
     m.put("states", masterData.getStates());

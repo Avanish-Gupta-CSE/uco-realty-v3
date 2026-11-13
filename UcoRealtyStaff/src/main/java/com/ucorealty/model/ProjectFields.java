@@ -310,4 +310,11 @@ public abstract class ProjectFields {
   public static void set(ProjectFields d, Field f, Object v) {
     try { f.set(d, v); } catch (IllegalAccessException e) { throw new IllegalStateException(e); }
   }
+
+  /**
+   * What the project form is bound to: only the business fields above, so no workflow field (status, approver ...)
+   * can be set from the browser. (Project and ProjectStaging add those fields; this class does not.)
+   */
+  public static class Form extends ProjectFields {
+  }
 }

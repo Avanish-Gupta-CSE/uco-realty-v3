@@ -1,9 +1,15 @@
+/**
+ * The two sign-in pages: login.jsp (shows its notice once) and otp.jsp (the six one-time-password boxes).
+ * The OTP part does nothing on a page without the boxes, so both pages load this one file.
+ */
 document.addEventListener('DOMContentLoaded', function () {
-  // The "wrong OTP" notice comes from the address (/otp?error=otp): show it once, so a reload opens the clean page
+  // The notice (session expired, signed out, wrong employee id, wrong OTP ...) comes from the address, e.g. /login?expired.
+  // Show it once: remove the part after "?" so a reload (even a hard reload) opens the clean page without the banner.
   if (window.location.search && window.history && window.history.replaceState) {
     window.history.replaceState(null, '', window.location.pathname);
   }
 
+  // ---- otp.jsp: six boxes that make one OTP
   const otpFields = document.querySelectorAll('.otp-box');
   const hiddenOtpInput = document.getElementById('hidden-otp-input');
   const otpForm = document.getElementById('otpForm');
@@ -63,4 +69,3 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 });
-

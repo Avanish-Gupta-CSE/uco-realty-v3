@@ -4,7 +4,7 @@ import com.ucorealty.model.StaffUser;
 import com.ucorealty.model.Project;
 import com.ucorealty.model.ProjectFields;
 import com.ucorealty.repository.ProjectRepository;
-import com.ucorealty.util.CurrentUser;
+import com.ucorealty.util.StaffRoles;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -31,7 +31,7 @@ public class ProjectService {
 
   /** The signed-in employee (role and zone were taken from HRMS at login and live in the session). */
   StaffUser requireActiveUser(String username) {
-    StaffUser u = CurrentUser.find(username);
+    StaffUser u = StaffRoles.currentUser(username);
     if (u == null) {
       log.warn("[UCO ACCESS] No signed-in session found for {}: asked to sign in again", username);
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Please sign in again");

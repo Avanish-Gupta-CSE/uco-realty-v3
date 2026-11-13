@@ -84,7 +84,7 @@
 </div>
 
 <script id="bootstrap-bundle-js" src="${pageContext.request.contextPath}/assets/js/bootstrap.bundle.min.js"></script>
-<script id="otp-js" src="${pageContext.request.contextPath}/assets/js/otp.js"></script>
+<script id="login-js" src="${pageContext.request.contextPath}/assets/js/login.js"></script>
 </body>
 </html>
 

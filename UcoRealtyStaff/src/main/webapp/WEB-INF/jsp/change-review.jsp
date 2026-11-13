@@ -165,4 +165,3 @@
 </main>
 
 <jsp:include page="common/footer.jsp"/>
-<script id="change-review-js" src="${pageContext.request.contextPath}/assets/js/change-review.js?v=${assetVersion}"></script>

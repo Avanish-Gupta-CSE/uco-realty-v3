@@ -89,6 +89,6 @@
 </div>
 
 <script id="bootstrap-bundle-js" src="${pageContext.request.contextPath}/assets/js/bootstrap.bundle.min.js"></script>
-<script id="sso-login-js" src="${pageContext.request.contextPath}/assets/js/sso-login.js"></script>
+<script id="login-js" src="${pageContext.request.contextPath}/assets/js/login.js"></script>
 </body>
 </html>

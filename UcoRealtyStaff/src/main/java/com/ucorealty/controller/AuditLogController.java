@@ -3,7 +3,7 @@ package com.ucorealty.controller;
 import com.ucorealty.model.AuditLog;
 import com.ucorealty.model.LoginAudit;
 import com.ucorealty.service.AuditService;
-import com.ucorealty.util.RoleCheck;
+import com.ucorealty.util.StaffRoles;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.Authentication;
@@ -31,7 +31,7 @@ public class AuditLogController {
                               @RequestParam(value = "tab", required = false, defaultValue = "activity") String activeSubTab,
                               Model model,
                               Authentication auth) {
-    RoleCheck.require(auth, "SUPERADMIN_DIT");
+    StaffRoles.require(auth, "SUPERADMIN_DIT");
     log.info("[UCO AUDIT] {} opened the audit logs (tab {})", auth.getName(), activeSubTab);
 
     int pageSize = 15;
