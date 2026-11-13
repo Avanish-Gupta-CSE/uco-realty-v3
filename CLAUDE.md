@@ -9,4 +9,4 @@ This project keeps its memory in `.brain/` (git-ignored, never shipped). **Befor
 
 Short version of the owner's rules: explain in plain words and say where code lives; do not push, merge or delete branches unless asked; commit only when told; no mock data in code, SQL only in repositories; bank CSP rules (no inline CSS/JS, element ids); keep tests and docs in sync. Full list: `.brain/AGENT_RULES.md`.
 
-If `.brain/` is missing (fresh clone), say so and ask the owner for it; use `README.md`, `DEPLOYMENT.md`, `TESTING_GUIDE.md` and `scripts/README.md` meanwhile.
+If `.brain/` is missing (fresh clone), say so and ask the owner for it; use `README.md`, `docs/DEPLOYMENT.md`, `docs/TESTING_GUIDE.md` and `scripts/README.md` meanwhile.

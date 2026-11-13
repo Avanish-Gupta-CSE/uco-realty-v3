@@ -14,3 +14,4 @@ release/
 logs/
 E:/
 .vscode/
+__pycache__/

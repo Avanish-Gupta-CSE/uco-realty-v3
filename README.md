@@ -11,7 +11,7 @@ Project `ucorealty` (package `com.ucorealty`); the WAR file name is the URL path
 | `UcoRealty` | 8080 | Internet customers | Read-only catalog of **approved** projects, photos, an Apply for Home Loan link to the bank's page, JSON API `/api/public/**`. No login, no staff routes. |
 | `UcoRealtyStaff` | 8081 | Bank staff (intranet) | Everything above (staff see all statuses) plus bank SSO login, Maker–Checker `/admin/projects`, leads (read from the bank's LG_ENTRY_REVAMP) + Excel export, DIT-only **Logs** page. |
 
-Both use the same Oracle schema. There are **no local user accounts**: staff sign in through the bank SSO (`/entry?Value=<encrypted token>`), the employee is looked up in the bank HRMS tables, and the role is derived at login (SOL ID + cadre/scale). Details: `DEPLOYMENT.md`.
+Both use the same Oracle schema. There are **no local user accounts**: staff sign in through the bank SSO (`/entry?Value=<encrypted token>`), the employee is looked up in the bank HRMS tables, and the role is derived at login (SOL ID + cadre/scale). Details: `docs/DEPLOYMENT.md`.
 
 ## Run locally
 Needs Java 25 and Maven. Nothing else: the profile in `application.properties` is `h2`, so all tables and test employees are created in memory at start.
@@ -21,9 +21,9 @@ scripts/dev-stop.sh
 scripts/dev-start.sh --oracle   # the same on Oracle in Docker (uat profile); add --reset to wipe it
 ```
 - Customer portal: http://localhost:8080/UcoRealty/projects
-- Staff portal: http://localhost:8081/UcoRealtyStaff/ (real UAT tester numbers such as `55012`, `52260`, `68696`; list in TESTING_GUIDE.md, OTP `123456`)
+- Staff portal: http://localhost:8081/UcoRealtyStaff/ (real UAT tester numbers such as `55012`, `52260`, `68696`; list in docs/TESTING_GUIDE.md, OTP `123456`)
 
-More: `TESTING_GUIDE.md`. Profiles: `DEPLOYMENT.md` section 2. **Want to change something? `MAINTENANCE_GUIDE.md` says which file to open.** Code layout: `config, controller, dto, exception, interceptor, model, repository, service, util`; every SQL is a native `@Query` in `repository`.
+More: `docs/TESTING_GUIDE.md`. Profiles: `docs/DEPLOYMENT.md` section 2. **Want to change something? `docs/MAINTENANCE_GUIDE.md` says which file to open.** Code layout: `config, controller, dto, exception, interceptor, model, repository, service, util`; every SQL is a native `@Query` in `repository`.
 
 ### Raw commands (without the scripts)
 ```bash

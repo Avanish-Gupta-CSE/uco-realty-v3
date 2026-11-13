@@ -22,7 +22,7 @@ import java.util.List;
  * The customer Leads page, its Excel export and the same list as JSON, for Head Office Marketing, Retail Banking and DIT.
  * The leads are NOT stored by us: the bank's Home Loan page keeps them in HRMS table LG_ENTRY_REVAMP (CHANNEL = 'REALTY'),
  * and LgEntryRepository reads them from there. The page itself is leads.jsp.
- * Change this file when: the Leads page or the Excel columns change (see MAINTENANCE_GUIDE.md, "Add or remove a column").
+ * Change this file when: the Leads page or the Excel columns change (see docs/MAINTENANCE_GUIDE.md, "Add or remove a column").
  */
 @Controller
 public class LeadsController {

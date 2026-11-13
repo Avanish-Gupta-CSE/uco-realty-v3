@@ -1,6 +1,6 @@
 # What the scripts do (nothing here is needed on the bank servers)
 
-**Deploying uses none of these scripts.** They only make a laptop easier. Deployment is in `DEPLOYMENT.md` section 2; the plain steps for a database (`uat`, `prod`):
+**Deploying uses none of these scripts.** They only make a laptop easier. Deployment is in `docs/DEPLOYMENT.md` section 2; the plain steps for a database (`uat`, `prod`):
 
 | # | Step | Who | Command / action |
 | :-: | :--- | :--- | :--- |
