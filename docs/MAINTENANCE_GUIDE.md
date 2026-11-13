@@ -17,6 +17,17 @@ Two applications share one database: `UcoRealty` (public site) and `UcoRealtySta
 | `exception` | What the user sees when something goes wrong. |
 | `webapp/WEB-INF/jsp` | The pages (JSP). `webapp/assets` holds css, js, images. |
 
+### Which controller answers which pages (staff site `UcoRealtyStaff`)
+| Class (`controller/`) | Pages it answers |
+|---|---|
+| `HomeController` | sign-in: `/entry` (bank SSO), `/login`, `/otp`, `/logout`, `/error-page` |
+| `ProjectWorkflowController` | the project dashboard, the project form, send for approval, the checker's review, delete and unit-reduction requests |
+| `ProjectCatalogController` | the project catalog `/projects`, one project `/project/{id}`, and every uploaded file `/files/{id}` |
+| `LeadsController` | the Leads page, its Excel export, and the same list as JSON |
+| `AuditLogController` | the Logs page (DIT only) |
+| `PlacesApiController` | the state / district lists used by the form |
+Customer site `UcoRealty`: `CatalogPageController` (catalog, one project, files, Home Loan link) and `CatalogApiController` (the JSON of the same).
+
 How one page works: browser asks for a URL -> a `controller` method runs -> it calls a `service` -> which calls a `repository` (SQL)
 -> the result goes into the `model` -> the controller returns the name of a JSP -> the JSP prints the values with `${...}`.
 
