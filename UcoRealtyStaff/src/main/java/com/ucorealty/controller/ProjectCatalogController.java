@@ -58,22 +58,7 @@ public class ProjectCatalogController {
     List<Project> list;
     if (isStaff) {
       // Authenticated bank staff on the intranet see the live (approved) projects they are allowed to see
-      list = projectService.approvedList(auth.getName());
-      if (state != null && !state.trim().isEmpty()) {
-        list = list.stream().filter(p -> state.equalsIgnoreCase(p.stateName)).collect(Collectors.toList());
-      }
-      if (city != null && !city.trim().isEmpty()) {
-        list = list.stream().filter(p -> city.equalsIgnoreCase(p.cityName)).collect(Collectors.toList());
-      }
-      if (search != null && !search.trim().isEmpty()) {
-        String s = search.toLowerCase();
-        list = list.stream().filter(p ->
-            (p.projectName != null && p.projectName.toLowerCase().contains(s)) ||
-            (p.builderName != null && p.builderName.toLowerCase().contains(s)) ||
-            (p.pinCode != null && p.pinCode.contains(s)) ||
-            (p.reraNo != null && p.reraNo.toLowerCase().contains(s))
-        ).collect(Collectors.toList());
-      }
+      list = ProjectService.filter(projectService.approvedList(auth.getName()), state, city, search);
     } else {
       list = projectService.publicList(state, city, search);
     }
@@ -91,13 +76,13 @@ public class ProjectCatalogController {
     model.addAttribute("isStaff", isStaff);
 
     Set<String> cities = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-    List<Project> allProjects = isStaff ? projectRepo.findAll() : projectService.publicList(null, null, null);
-    for (Project p : allProjects) {
-      if ("DELETED".equals(p.status)) continue;
-      if (p.cityName != null && !p.cityName.trim().isEmpty()) {
-        if (state == null || state.isEmpty() || state.equalsIgnoreCase(p.stateName)) {
-          cities.add(p.cityName.trim());
-        }
+    if (isStaff) {
+      for (ProjectRepository.Place place : projectRepo.findPlaces()) {
+        addCity(cities, state, place.getStateName(), place.getCityName());
+      }
+    } else {
+      for (Project p : projectService.publicList(null, null, null)) {
+        addCity(cities, state, p.stateName, p.cityName);
       }
     }
     model.addAttribute("cities", cities);
@@ -162,5 +147,13 @@ public class ProjectCatalogController {
     headers.setContentLength(img.fileData.length);
     headers.setCacheControl("max-age=86400, public");
     return new ResponseEntity<>(img.fileData, headers, HttpStatus.OK);
+  }
+
+  /** Adds a city to the drop-down when it has a name and belongs to the chosen state (no state chosen = every state). */
+  private static void addCity(Set<String> cities, String chosenState, String stateOfProject, String city) {
+    if (city == null || city.trim().isEmpty()) return;
+    if (chosenState == null || chosenState.isEmpty() || chosenState.equalsIgnoreCase(stateOfProject)) {
+      cities.add(city.trim());
+    }
   }
 }

@@ -49,7 +49,8 @@ public class CatalogPageController {
                              @RequestParam(required = false) String search,
                              @RequestParam(defaultValue = "1") int pageNo,
                              Model model) {
-    List<Project> list = projectService.publicList(state, city, search);
+    List<Project> allPublic = projectService.allPublic();   // read once: the list and the city drop-down both come from it
+    List<Project> list = ProjectService.filter(allPublic, state, city, search);
 
     // 12 cards per page
     int total = list.size();
@@ -63,7 +64,7 @@ public class CatalogPageController {
     model.addAttribute("states", masterDataService.getStates());
 
     Set<String> cities = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-    for (Project p : projectService.publicList(null, null, null)) {
+    for (Project p : allPublic) {
       if (p.cityName != null && !p.cityName.trim().isEmpty()) {
         if (state == null || state.isEmpty() || state.equalsIgnoreCase(p.stateName)) {
           cities.add(p.cityName.trim());

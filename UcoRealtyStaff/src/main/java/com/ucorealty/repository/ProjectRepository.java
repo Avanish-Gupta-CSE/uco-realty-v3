@@ -31,4 +31,19 @@ public interface ProjectRepository extends JpaRepository<Project, String> {
       WHERE UPPER(zone_name) = UPPER(:zoneName)
       """)
   List<Project> findByZoneNameIgnoreCase(@Param("zoneName") String zoneName);
+
+  /** One state + city pair of a project that is not deleted (only the two names, no other column). */
+  interface Place {
+    String getStateName();
+    String getCityName();
+  }
+
+  /** Every different state + city that has a project (not deleted), for the city drop-down of the catalog. */
+  @Query(nativeQuery = true, value = """
+      SELECT DISTINCT state_name AS "stateName", city_name AS "cityName"
+      FROM realty_projects
+      WHERE (status IS NULL OR status <> 'DELETED')
+        AND city_name IS NOT NULL
+      """)
+  List<Place> findPlaces();
 }

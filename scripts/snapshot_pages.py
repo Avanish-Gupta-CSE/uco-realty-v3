@@ -136,7 +136,8 @@ def save(folder):
         if not client.dev_login(emp):
             write("staff-" + role, "/admin/projects", "LOGIN REFUSED", "")
             continue
-        first = ["/admin/projects", "/admin/projects/new", "/projects", "/api/admin/geo",
+        first = ["/admin/projects", "/admin/projects/new", "/projects", "/projects?state=Chhattisgarh", "/projects?state=West+Bengal&city=Durgapur",
+                 "/projects?search=Green", "/projects?pageNo=2", "/api/admin/geo",
                  "/admin/leads", "/admin/leads?pageNo=2", "/admin/leads?pageNo=3", "/admin/leads?pageNo=99",
                  "/admin/leads?search=Rohit", "/admin/leads?search=9811100002", "/admin/leads?from=2020-01-01&to=2099-12-31",
                  "/admin/leads?from=not-a-date", "/admin/leads/export.xlsx", "/admin/leads/export.xlsx?search=Imran",
