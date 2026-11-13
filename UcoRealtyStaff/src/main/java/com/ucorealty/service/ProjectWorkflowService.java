@@ -155,27 +155,27 @@ public class ProjectWorkflowService {
   public List<ProjectImage> newImages(ProjectStaging s) { return images.findByStagingId(s.id); }
 
   /** Every uploaded file the maker sees for this request: live ones not marked for removal (UPDATE), plus those added in this request. */
-  private List<ProjectImage> filesForForm(ProjectStaging s) {
-    List<ProjectImage> out = new ArrayList<>();
+  private List<ProjectImageRepository.FileInfo> filesForForm(ProjectStaging s) {
+    List<ProjectImageRepository.FileInfo> out = new ArrayList<>();
     if (ProjectStaging.UPDATE.equals(s.requestType)) {
       Set<Long> removed = removedImageIds(s);
-      for (ProjectImage i : images.findByProjectId(s.projectId)) if (!removed.contains(i.id)) out.add(i);
+      for (ProjectImageRepository.FileInfo i : images.findFilesOfProject(s.projectId)) if (!removed.contains(i.getId())) out.add(i);
     }
-    out.addAll(images.findByStagingId(s.id));
+    out.addAll(images.findFilesOfStaging(s.id));
     return out;
   }
 
   /** The photos (gallery pictures) of this request. */
-  public List<ProjectImage> photosForForm(ProjectStaging s) {
-    List<ProjectImage> out = new ArrayList<>();
-    for (ProjectImage i : filesForForm(s)) if (i.isPhoto()) out.add(i);
+  public List<ProjectImageRepository.FileInfo> photosForForm(ProjectStaging s) {
+    List<ProjectImageRepository.FileInfo> out = new ArrayList<>();
+    for (ProjectImageRepository.FileInfo i : filesForForm(s)) if (i.isPhoto()) out.add(i);
     return out;
   }
 
   /** The PDF documents (brochure, floor plan) of this request. */
-  public List<ProjectImage> documentsForForm(ProjectStaging s) {
-    List<ProjectImage> out = new ArrayList<>();
-    for (ProjectImage i : filesForForm(s)) if (!i.isPhoto()) out.add(i);
+  public List<ProjectImageRepository.FileInfo> documentsForForm(ProjectStaging s) {
+    List<ProjectImageRepository.FileInfo> out = new ArrayList<>();
+    for (ProjectImageRepository.FileInfo i : filesForForm(s)) if (!i.isPhoto()) out.add(i);
     return out;
   }
 
@@ -482,7 +482,7 @@ public class ProjectWorkflowService {
       images.save(img);
     }
     images.flush();
-    p.totalImgCount = (int) images.findByProjectId(p.id).stream().filter(ProjectImage::isPhoto).count();
+    p.totalImgCount = (int) images.countPhotos(p.id);
     projects.save(p);
   }
 

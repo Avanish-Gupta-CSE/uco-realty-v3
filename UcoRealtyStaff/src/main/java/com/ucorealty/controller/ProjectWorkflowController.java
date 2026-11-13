@@ -369,7 +369,7 @@ public class ProjectWorkflowController {
   private String form(Model model, Authentication auth, ProjectFields shown, ProjectStaging s, String error) {
     StaffUser user = StaffRoles.userOf(auth);
     if (user != null && "ZO_MAKER".equals(user.role) && user.zone != null) model.addAttribute("userZone", user.zone.trim());
-    List<ProjectImage> photos = s != null ? workflow.photosForForm(s) : Collections.emptyList();
+    List<ProjectImageRepository.FileInfo> photos = s != null ? workflow.photosForForm(s) : Collections.emptyList();
     if (error != null) model.addAttribute("error", error);
     model.addAttribute("project", shown);
     model.addAttribute("staging", s);
@@ -377,9 +377,9 @@ public class ProjectWorkflowController {
     model.addAttribute("zones", masterData.getZones());
     model.addAttribute("states", masterData.getStates());
     model.addAttribute("existingImages", photos);
-    List<ProjectImage> docs = s != null ? workflow.documentsForForm(s) : Collections.emptyList();
-    for (ProjectImage d : docs) {
-      model.addAttribute(ProjectImage.BROCHURE.equals(d.fileKind) ? "existingBrochure" : "existingFloorPlan", d);
+    List<ProjectImageRepository.FileInfo> docs = s != null ? workflow.documentsForForm(s) : Collections.emptyList();
+    for (ProjectImageRepository.FileInfo d : docs) {
+      model.addAttribute(ProjectImage.BROCHURE.equals(d.getFileKind()) ? "existingBrochure" : "existingFloorPlan", d);
     }
     model.addAttribute("amenityList", Amenities.LIST);
     model.addAttribute("amenityAnswers", Amenities.parse(shown != null ? shown.amenityFlags : null));
@@ -389,9 +389,9 @@ public class ProjectWorkflowController {
   }
 
   /** Puts the ids of the brochure / floor plan PDFs into the page model (the detail page shows them as buttons). */
-  static void addDocumentLinks(Model model, List<ProjectImage> docs) {
-    for (ProjectImage d : docs) {
-      model.addAttribute(ProjectImage.BROCHURE.equals(d.fileKind) ? "brochureId" : "floorPlanId", d.id);
+  static void addDocumentLinks(Model model, List<ProjectImageRepository.FileInfo> docs) {
+    for (ProjectImageRepository.FileInfo d : docs) {
+      model.addAttribute(ProjectImage.BROCHURE.equals(d.getFileKind()) ? "brochureId" : "floorPlanId", d.getId());
     }
   }
 
@@ -404,8 +404,8 @@ public class ProjectWorkflowController {
     if (file.getSize() > MAX_DOC_BYTES || !pdfName || !UploadChecks.isPdf(bytes)) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, label + " must be a PDF file of at most 3 MB.");
     }
-    for (ProjectImage old : workflow.documentsForForm(s)) {
-      if (kind.equals(old.fileKind)) workflow.removePhoto(s.id, old.id, username);
+    for (ProjectImageRepository.FileInfo old : workflow.documentsForForm(s)) {
+      if (kind.equals(old.getFileKind())) workflow.removePhoto(s.id, old.getId(), username);
     }
     ProjectImage doc = new ProjectImage();
     doc.stagingId = s.id;

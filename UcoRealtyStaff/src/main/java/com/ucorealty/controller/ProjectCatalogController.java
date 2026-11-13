@@ -107,8 +107,8 @@ public class ProjectCatalogController {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Project not found or not published");
     }
 
-    List<ProjectImage> all = imageRepo.findByProjectId(id);
-    List<ProjectImage> imgs = all.stream().filter(ProjectImage::isPhoto).collect(Collectors.toList());
+    List<ProjectImageRepository.FileInfo> all = imageRepo.findFilesOfProject(id);
+    List<ProjectImageRepository.FileInfo> imgs = all.stream().filter(ProjectImageRepository.FileInfo::isPhoto).collect(Collectors.toList());
     ProjectWorkflowController.addDocumentLinks(model, all.stream().filter(i -> !i.isPhoto()).collect(Collectors.toList()));
     model.addAttribute("amenityRows", com.ucorealty.util.Amenities.parse(p.amenityFlags));
     model.addAttribute("project", p);

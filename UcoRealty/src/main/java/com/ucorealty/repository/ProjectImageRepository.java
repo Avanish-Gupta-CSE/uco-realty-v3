@@ -34,12 +34,15 @@ public interface ProjectImageRepository extends JpaRepository<ProjectImage, Long
     String getFileKind();
   }
 
-  /** Every file (photos and documents) of a live project, whole rows. */
+  /** The ids of the files of a project whose type is an image (the JSON detail), oldest first. No bytes are read. */
   @Query(nativeQuery = true, value = """
-      SELECT * FROM realty_project_images
+      SELECT id AS "imageId"
+      FROM realty_project_images
       WHERE project_id = :projectId
+        AND mime_type LIKE 'image/%'
+      ORDER BY id
       """)
-  List<ProjectImage> findByProjectId(@Param("projectId") String projectId);
+  List<PhotoId> findImageIds(@Param("projectId") String projectId);
 
   /** For each of these projects, the id of its first photo (oldest id). */
   @Query(nativeQuery = true, value = """
