@@ -45,16 +45,16 @@ public class ProjectWorkflowService {
   private final ProjectRepository projects;
   private final ProjectStagingRepository staging;
   private final ProjectImageRepository images;
-  private final ProjectService projectService;
+  private final ProjectAccessService projectAccess;
   private final MasterDataService masterData;
   private final AuditService audit;
 
   public ProjectWorkflowService(ProjectRepository projects, ProjectStagingRepository staging, ProjectImageRepository images,
-                                ProjectService projectService, MasterDataService masterData, AuditService audit) {
+                                ProjectAccessService projectAccess, MasterDataService masterData, AuditService audit) {
     this.projects = projects;
     this.staging = staging;
     this.images = images;
-    this.projectService = projectService;
+    this.projectAccess = projectAccess;
     this.masterData = masterData;
     this.audit = audit;
   }
@@ -76,13 +76,13 @@ public class ProjectWorkflowService {
     if (u.username.equals(s.createdBy)) return true;
     if (ProjectStaging.DRAFT.equals(s.status) || ProjectStaging.NEEDS_CORRECTION.equals(s.status)) return false;
     if (!ProjectStaging.PENDING.equals(s.status) && !ProjectStaging.REJECTED.equals(s.status)) return false;
-    return ProjectService.isNational(u) || ProjectService.sameText(u.zone, s.zoneName);
+    return ProjectAccessService.isNational(u) || ProjectAccessService.sameText(u.zone, s.zoneName);
   }
 
   /** The dashboard of one user: live projects (with their open request) and the maker's unapproved new projects. */
   public List<ProjectRow> dashboard(String username) {
-    StaffUser u = projectService.requireActiveUser(username);
-    List<Project> masters = projectService.approvedList(username);
+    StaffUser u = projectAccess.requireActiveUser(username);
+    List<Project> masters = projectAccess.approvedList(username);
     Map<String, ProjectStaging> openByProject = new HashMap<>();
     if (!masters.isEmpty()) {
       for (ProjectStaging s : staging.findForProjects(masters.stream().map(p -> p.id).collect(Collectors.toList()), OPEN)) {
@@ -95,7 +95,7 @@ public class ProjectWorkflowService {
     boolean zonal = "ZO_MAKER".equals(u.role) || "ZO_CHECKER".equals(u.role);
     for (ProjectStaging s : staging.findByRequestTypeAndStatusIn(ProjectStaging.CREATE, NEW_PROJECT_ROWS)) {
       if (!canSee(u, s)) continue;
-      if (zonal && !u.username.equals(s.createdBy) && !ProjectService.sameText(u.zone, s.zoneName)) continue;
+      if (zonal && !u.username.equals(s.createdBy) && !ProjectAccessService.sameText(u.zone, s.zoneName)) continue;
       rows.add(ProjectRow.ofStaging(s));
     }
     return rows;
@@ -182,12 +182,12 @@ public class ProjectWorkflowService {
   /** The maker; or, while the request waits for approval, staff of the right zone who are not makers. */
   public void requireCanView(ProjectStaging s, String username) {
     if (username.equals(s.createdBy)) return;
-    StaffUser u = projectService.requireActiveUser(username);
+    StaffUser u = projectAccess.requireActiveUser(username);
     if (!ProjectStaging.PENDING.equals(s.status))
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "This request is not waiting for approval");
     if ("ZO_MAKER".equals(u.role))
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the maker who raised this request can open it");
-    ProjectService.requireZoneAccess(u, zoneOf(s));
+    ProjectAccessService.requireZoneAccess(u, zoneOf(s));
   }
 
   // =====================================================================================================
@@ -197,8 +197,8 @@ public class ProjectWorkflowService {
   /** First save of a NEW project: creates the working copy (staging row) with its project code. */
   @Transactional
   public ProjectStaging createDraft(ProjectFields.Form form, Set<String> sent, String username) {
-    StaffUser user = projectService.requireActiveUser(username);
-    ProjectService.requireMakerRole(user);
+    StaffUser user = projectAccess.requireActiveUser(username);
+    ProjectAccessService.requireMakerRole(user);
     ProjectStaging s = new ProjectStaging();
     s.requestType = ProjectStaging.CREATE;
     s.status = ProjectStaging.DRAFT;
@@ -206,7 +206,7 @@ public class ProjectWorkflowService {
     s.projectId = newProjectCode();
     applySent(form, s, sent, false);
     pinZone(user, s);
-    ProjectService.validateDetails(s);
+    ProjectAccessService.validateDetails(s);
     s = staging.save(s);
     audit.logActivity(username, "CREATE_DRAFT", "PROJECT", s.projectId, null, s.projectName);
     log.info("[UCO WORKFLOW] {} saved a first draft of new project {} (request {})", username, s.projectId, s.id);
@@ -216,10 +216,10 @@ public class ProjectWorkflowService {
   /** Opens the maker's working copy of a LIVE project (created from the approved values). */
   @Transactional
   public ProjectStaging openUpdateDraft(String projectId, String username) {
-    StaffUser user = projectService.requireActiveUser(username);
-    ProjectService.requireMakerRole(user);
+    StaffUser user = projectAccess.requireActiveUser(username);
+    ProjectAccessService.requireMakerRole(user);
     Project p = liveProject(projectId);
-    ProjectService.requireZoneAccess(user, p.zoneName);
+    ProjectAccessService.requireZoneAccess(user, p.zoneName);
 
     ProjectStaging open = findOpen(projectId);
     if (open != null) {
@@ -243,10 +243,10 @@ public class ProjectWorkflowService {
   public ProjectStaging saveDraft(Long id, ProjectFields.Form form, Set<String> sent, String username) {
     ProjectStaging s = ownEditable(id, username);
     boolean update = ProjectStaging.UPDATE.equals(s.requestType);
-    StaffUser user = projectService.requireActiveUser(username);
+    StaffUser user = projectAccess.requireActiveUser(username);
     applySent(form, s, sent, update);
     if (!update) pinZone(user, s);
-    ProjectService.validateDetails(s);
+    ProjectAccessService.validateDetails(s);
     s = staging.save(s);
     audit.logActivity(username, update ? "CHANGE_DRAFT_SAVED" : "EDIT_DRAFT", "PROJECT", s.projectId, null,
         update ? "Saved a draft change of the approved project (not sent for approval)" : s.projectName);
@@ -275,8 +275,8 @@ public class ProjectWorkflowService {
   @Transactional
   public ProjectStaging submit(Long id, String username) {
     ProjectStaging s = ownEditable(id, username);
-    ProjectService.validateDetails(s);
-    ProjectService.requireSubmittable(s);
+    ProjectAccessService.validateDetails(s);
+    ProjectAccessService.requireSubmittable(s);
     boolean update = ProjectStaging.UPDATE.equals(s.requestType);
     if (update) {
       Project live = liveProject(s.projectId);
@@ -299,14 +299,14 @@ public class ProjectWorkflowService {
   /** Unit reduction is an edit of a live project: a one-step request that waits for a checker. */
   @Transactional
   public ProjectStaging requestUnitReduction(String projectId, int units, String reason, String username) {
-    StaffUser user = projectService.requireActiveUser(username);
-    ProjectService.requireMakerRole(user);
+    StaffUser user = projectAccess.requireActiveUser(username);
+    ProjectAccessService.requireMakerRole(user);
     Project p = liveProject(projectId);
-    ProjectService.requireZoneAccess(user, p.zoneName);
+    ProjectAccessService.requireZoneAccess(user, p.zoneName);
     requireNoOpen(projectId);
     if (units < 1) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Units to reduce must be at least 1");
     if (reason == null || reason.trim().isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A reason is required");
-    ProjectService.requireNoMarkup("The reason", reason);
+    ProjectAccessService.requireNoMarkup("The reason", reason);
     if (p.unsoldInventory == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No available-unit count is recorded for this project");
     if (units > p.unsoldInventory)
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot reduce by " + units + ": only " + p.unsoldInventory + " units are available");
@@ -325,13 +325,13 @@ public class ProjectWorkflowService {
 
   @Transactional
   public ProjectStaging requestDelete(String projectId, String reason, String username) {
-    StaffUser user = projectService.requireActiveUser(username);
-    ProjectService.requireMakerRole(user);
+    StaffUser user = projectAccess.requireActiveUser(username);
+    ProjectAccessService.requireMakerRole(user);
     Project p = liveProject(projectId);
-    ProjectService.requireZoneAccess(user, p.zoneName);
+    ProjectAccessService.requireZoneAccess(user, p.zoneName);
     requireNoOpen(projectId);
     if (reason == null || reason.trim().isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A reason for the deletion is required");
-    ProjectService.requireNoMarkup("The reason", reason);
+    ProjectAccessService.requireNoMarkup("The reason", reason);
 
     ProjectStaging s = fromLive(p, ProjectStaging.DELETE, ProjectStaging.PENDING, username);
     s.reason = trim(reason.trim(), 1000);
@@ -367,19 +367,19 @@ public class ProjectWorkflowService {
     ProjectStaging s = get(id);
     if (!ProjectStaging.PENDING.equals(s.status))
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only a request waiting for approval can be decided (current: " + s.status + ")");
-    StaffUser checker = projectService.requireActiveUser(checkerUsername);
-    ProjectService.requireCheckerRole(checker);
+    StaffUser checker = projectAccess.requireActiveUser(checkerUsername);
+    ProjectAccessService.requireCheckerRole(checker);
     if (checkerUsername.equals(s.createdBy)) {
       log.warn("[UCO WORKFLOW] REFUSED: {} tried to decide on their own request {} of project {}", checkerUsername, s.id, s.projectId);
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "A maker cannot decide on his own request");
     }
-    if ("ZO_CHECKER".equals(checker.role) && !ProjectService.sameText(checker.zone, zoneOf(s))) {
+    if ("ZO_CHECKER".equals(checker.role) && !ProjectAccessService.sameText(checker.zone, zoneOf(s))) {
       log.warn("[UCO WORKFLOW] REFUSED: checker {} (zone {}) tried to decide on request {} of zone {}", checkerUsername, checker.zone, s.id, zoneOf(s));
       throw new ResponseStatusException(HttpStatus.FORBIDDEN,
           "ZO Checker (" + checker.zone + ") can only review projects from their own zone (" + zoneOf(s) + ")");
     }
 
-    ProjectService.requireNoMarkup("The remark", comment);
+    ProjectAccessService.requireNoMarkup("The remark", comment);
     String d = decision == null ? "" : decision.toLowerCase();
     String type = s.requestType;
     try {
@@ -393,7 +393,7 @@ public class ProjectWorkflowService {
               "PROJECT", s.projectId, null, trim(s.summary, 1000));
           break;
         case "reject":
-          ProjectService.requireComment(comment);
+          ProjectAccessService.requireComment(comment);
           s.status = ProjectStaging.REJECTED;
           if (!ProjectStaging.CREATE.equals(type)) images.deleteAll(images.findByStagingId(s.id));   // they will never go live
           audit.logActivity(checkerUsername, ProjectStaging.CREATE.equals(type) ? "CHECKER_REJECT" : ProjectStaging.UPDATE.equals(type) ? "CHANGE_REJECTED" : "DELETE_REJECTED",
@@ -401,7 +401,7 @@ public class ProjectWorkflowService {
           break;
         case "needs-correction":
           if (ProjectStaging.DELETE.equals(type)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A deletion request can only be approved or rejected");
-          ProjectService.requireComment(comment);
+          ProjectAccessService.requireComment(comment);
           s.status = ProjectStaging.NEEDS_CORRECTION;
           audit.logActivity(checkerUsername, ProjectStaging.CREATE.equals(type) ? "CHECKER_NEEDS_CORRECTION" : "CHANGE_RETURNED", "PROJECT", s.projectId, null, trim(comment, 1000));
           break;
@@ -425,8 +425,8 @@ public class ProjectWorkflowService {
   private void applyCreate(ProjectStaging s, String checker, String comment) {
     if (projects.existsById(s.projectId))
       throw new ResponseStatusException(HttpStatus.CONFLICT, "A project with this code already exists");
-    ProjectService.validateDetails(s);
-    ProjectService.requireSubmittable(s);
+    ProjectAccessService.validateDetails(s);
+    ProjectAccessService.requireSubmittable(s);
     Project p = new Project();
     ProjectFields.copyBusinessFields(s, p, false);
     p.id = s.projectId;
@@ -446,7 +446,7 @@ public class ProjectWorkflowService {
       log.warn("[UCO WORKFLOW] Cannot apply {} request {}: live project {} changed after the request was opened", s.requestType, s.id, s.projectId);
       throw new ResponseStatusException(HttpStatus.CONFLICT, "The live project changed after this request was opened. Return it to the maker");
     }
-    ProjectService.validateDetails(s);
+    ProjectAccessService.validateDetails(s);
     ProjectFields.copyBusinessFields(s, p, true);          // the zone never changes
     for (Long imageId : removedImageIds(s)) {
       images.findById(imageId).filter(i -> p.id.equals(i.projectId)).ifPresent(images::delete);
@@ -500,12 +500,12 @@ public class ProjectWorkflowService {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A deletion request has nothing to edit");
     if (!ProjectStaging.DRAFT.equals(s.status) && !ProjectStaging.NEEDS_CORRECTION.equals(s.status))
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "It can be edited only while it is a draft or returned for correction (current: " + s.status + ")");
-    StaffUser user = projectService.requireActiveUser(username);
-    ProjectService.requireMakerRole(user);
+    StaffUser user = projectAccess.requireActiveUser(username);
+    ProjectAccessService.requireMakerRole(user);
     if (ProjectStaging.UPDATE.equals(s.requestType)) {
       liveProject(s.projectId);
     }
-    ProjectService.requireZoneAccess(user, zoneOf(s));
+    ProjectAccessService.requireZoneAccess(user, zoneOf(s));
     return s;
   }
 

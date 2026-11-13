@@ -14,10 +14,10 @@ import java.util.stream.Collectors;
  * returned; everything else behaves as "not found". Project authoring/approval lives in UcoRealtyStaff.
  */
 @Service
-public class ProjectService {
+public class CatalogService {
   private final ProjectRepository repo;
 
-  public ProjectService(ProjectRepository repo) {
+  public CatalogService(ProjectRepository repo) {
     this.repo = repo;
   }
 
@@ -28,7 +28,7 @@ public class ProjectService {
   }
 
   public Project publicById(String id) {
-    return repo.findById(id).filter(ProjectService::isVisibleToPublic)
+    return repo.findById(id).filter(CatalogService::isVisibleToPublic)
       .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Project not found or not published"));
   }
 

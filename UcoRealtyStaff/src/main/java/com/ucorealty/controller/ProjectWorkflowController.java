@@ -9,7 +9,7 @@ import com.ucorealty.model.ProjectStaging;
 import com.ucorealty.repository.ProjectImageRepository;
 import com.ucorealty.service.HrmsService;
 import com.ucorealty.service.MasterDataService;
-import com.ucorealty.service.ProjectService;
+import com.ucorealty.service.ProjectAccessService;
 import com.ucorealty.service.ProjectWorkflowService;
 import com.ucorealty.util.Amenities;
 import com.ucorealty.util.StaffRoles;
@@ -45,17 +45,17 @@ public class ProjectWorkflowController {
   private static final long MAX_DOC_BYTES = 3L * 1024 * 1024;     // brochure / floor plan PDF: 3 MB at most
 
   private final ProjectWorkflowService workflow;
-  private final ProjectService projectService;
+  private final ProjectAccessService projectAccess;
   private final ProjectImageRepository imageRepo;
   private final MasterDataService masterData;
   private final HrmsService hrms;
 
-  public ProjectWorkflowController(ProjectWorkflowService workflow, ProjectService projectService,
+  public ProjectWorkflowController(ProjectWorkflowService workflow, ProjectAccessService projectAccess,
                                    ProjectImageRepository imageRepo, MasterDataService masterData,
                                    HrmsService hrms) {
     this.hrms = hrms;
     this.workflow = workflow;
-    this.projectService = projectService;
+    this.projectAccess = projectAccess;
     this.imageRepo = imageRepo;
     this.masterData = masterData;
   }
@@ -315,7 +315,7 @@ public class ProjectWorkflowController {
     }
     boolean create = ProjectStaging.CREATE.equals(s.requestType);
     boolean delete = ProjectStaging.DELETE.equals(s.requestType);
-    Project live = create ? null : projectService.findById(s.projectId);
+    Project live = create ? null : projectAccess.findById(s.projectId);
     StaffUser me = StaffRoles.currentUser(user);
     boolean checkerRole = me != null && ("ZO_CHECKER".equals(me.role) || "HO_MARKETING".equals(me.role) || "SUPERADMIN_DIT".equals(me.role));
 

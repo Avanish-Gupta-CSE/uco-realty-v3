@@ -4,7 +4,7 @@ import com.ucorealty.model.Project;
 import com.ucorealty.model.ProjectImage;
 import com.ucorealty.repository.ProjectImageRepository;
 import com.ucorealty.service.MasterDataService;
-import com.ucorealty.service.ProjectService;
+import com.ucorealty.service.CatalogService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 public class CatalogPageController {
   private static final int PAGE_SIZE = 12;
 
-  private final ProjectService projectService;
+  private final CatalogService catalogService;
   private final MasterDataService masterDataService;
   private final ProjectImageRepository imageRepo;
 
@@ -34,11 +34,11 @@ public class CatalogPageController {
   private static final String HOME_LOAN_PATH = "/Lead_App/lead_web.jsp?utm=REALTY";
   private final String homeLoanUrl;
 
-  public CatalogPageController(ProjectService projectService, MasterDataService masterDataService,
+  public CatalogPageController(CatalogService catalogService, MasterDataService masterDataService,
                              ProjectImageRepository imageRepo,
                              @Value("${uco.homeloan.base-url}") String homeLoanBaseUrl) {
     this.homeLoanUrl = homeLoanBaseUrl.replaceAll("/+$", "") + HOME_LOAN_PATH;
-    this.projectService = projectService;
+    this.catalogService = catalogService;
     this.masterDataService = masterDataService;
     this.imageRepo = imageRepo;
   }
@@ -49,8 +49,8 @@ public class CatalogPageController {
                              @RequestParam(required = false) String search,
                              @RequestParam(defaultValue = "1") int pageNo,
                              Model model) {
-    List<Project> allPublic = projectService.allPublic();   // read once: the list and the city drop-down both come from it
-    List<Project> list = ProjectService.filter(allPublic, state, city, search);
+    List<Project> allPublic = catalogService.allPublic();   // read once: the list and the city drop-down both come from it
+    List<Project> list = CatalogService.filter(allPublic, state, city, search);
 
     // 12 cards per page
     int total = list.size();
@@ -86,7 +86,7 @@ public class CatalogPageController {
 
   @GetMapping("/project/{id}")
   public String projectDetail(@PathVariable String id, Model model) {
-    Project p = projectService.publicById(id);
+    Project p = catalogService.publicById(id);
     if (p == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Project not found or not published");
     }
@@ -113,7 +113,7 @@ public class CatalogPageController {
     if (img.projectId == null) {                      // belongs to a maker's unapproved work: not live
       throw new ResponseStatusException(HttpStatus.NOT_FOUND);
     }
-    Project p = projectService.publicById(img.projectId);
+    Project p = catalogService.publicById(img.projectId);
     if (p == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND);
     }

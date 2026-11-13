@@ -61,7 +61,7 @@ The Leads page reads the bank table `LG_ENTRY_REVAMP`. Four places mention a col
 To ADD a column do the same in reverse (`SELECT`, a field in `Lead`, the page, the Excel).
 
 ### Change who sees which projects or which statuses exist
-Rules about who may do what: `service/ProjectService.java` (zone access, maker/checker rules) and `service/ProjectWorkflowService.java` (the approval steps).
+Rules about who may do what: `service/ProjectAccessService.java` (zone access, maker/checker rules) and `service/ProjectWorkflowService.java` (the approval steps).
 Which roles may open a page: the `StaffRoles.require(auth, StaffRoles.XYZ)` line at the top of the controller method; the role lists are in `util/StaffRoles.java`.
 
 ### Add a field to the project form (example: "Parking slots")

@@ -19,11 +19,11 @@ import java.util.stream.Collectors;
  * Everything a maker creates or changes goes through ProjectWorkflowService (staging table) instead.
  */
 @Service
-public class ProjectService {
-  private static final Logger log = LoggerFactory.getLogger(ProjectService.class);
+public class ProjectAccessService {
+  private static final Logger log = LoggerFactory.getLogger(ProjectAccessService.class);
   private final ProjectRepository repo;
 
-  public ProjectService(ProjectRepository repo) {
+  public ProjectAccessService(ProjectRepository repo) {
     this.repo = repo;
   }
 
@@ -125,7 +125,7 @@ public class ProjectService {
   }
 
   public Project publicById(String id) {
-    return repo.findById(id).filter(ProjectService::isVisibleToPublic)
+    return repo.findById(id).filter(ProjectAccessService::isVisibleToPublic)
       .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Project not found or not published"));
   }
 

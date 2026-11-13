@@ -2,7 +2,7 @@ package com.ucorealty.controller;
 
 import com.ucorealty.model.Project;
 import com.ucorealty.repository.ProjectImageRepository;
-import com.ucorealty.service.ProjectService;
+import com.ucorealty.service.CatalogService;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,10 +17,10 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/public")
 public class CatalogApiController {
 
-  private final ProjectService projects;
+  private final CatalogService projects;
   private final ProjectImageRepository imageRepo;
 
-  public CatalogApiController(ProjectService projects, ProjectImageRepository imageRepo) {
+  public CatalogApiController(CatalogService projects, ProjectImageRepository imageRepo) {
     this.projects = projects;
     this.imageRepo = imageRepo;
   }

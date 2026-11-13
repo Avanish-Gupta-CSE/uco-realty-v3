@@ -6,7 +6,7 @@ import com.ucorealty.repository.ProjectImageRepository;
 import com.ucorealty.repository.ProjectRepository;
 import com.ucorealty.service.MasterDataService;
 import com.ucorealty.model.ProjectStaging;
-import com.ucorealty.service.ProjectService;
+import com.ucorealty.service.ProjectAccessService;
 import com.ucorealty.service.ProjectWorkflowService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -30,16 +30,16 @@ import java.util.stream.Collectors;
 public class ProjectCatalogController {
   private static final int PAGE_SIZE = 12;
 
-  private final ProjectService projectService;
+  private final ProjectAccessService projectAccess;
   private final MasterDataService masterDataService;
   private final ProjectImageRepository imageRepo;
   private final ProjectRepository projectRepo;
   private final ProjectWorkflowService workflow;
 
-  public ProjectCatalogController(ProjectService projectService, MasterDataService masterDataService,
+  public ProjectCatalogController(ProjectAccessService projectAccess, MasterDataService masterDataService,
                              ProjectImageRepository imageRepo, ProjectRepository projectRepo,
                              ProjectWorkflowService workflow) {
-    this.projectService = projectService;
+    this.projectAccess = projectAccess;
     this.masterDataService = masterDataService;
     this.imageRepo = imageRepo;
     this.projectRepo = projectRepo;
@@ -58,9 +58,9 @@ public class ProjectCatalogController {
     List<Project> list;
     if (isStaff) {
       // Authenticated bank staff on the intranet see the live (approved) projects they are allowed to see
-      list = ProjectService.filter(projectService.approvedList(auth.getName()), state, city, search);
+      list = ProjectAccessService.filter(projectAccess.approvedList(auth.getName()), state, city, search);
     } else {
-      list = projectService.publicList(state, city, search);
+      list = projectAccess.publicList(state, city, search);
     }
 
     // 12 cards per page
@@ -81,7 +81,7 @@ public class ProjectCatalogController {
         addCity(cities, state, place.getStateName(), place.getCityName());
       }
     } else {
-      for (Project p : projectService.publicList(null, null, null)) {
+      for (Project p : projectAccess.publicList(null, null, null)) {
         addCity(cities, state, p.stateName, p.cityName);
       }
     }
@@ -102,7 +102,7 @@ public class ProjectCatalogController {
   public String projectDetail(@PathVariable String id, Authentication auth, Model model) {
     boolean isStaff = (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getName()));
 
-    Project p = isStaff ? projectService.findById(id) : projectService.publicById(id);
+    Project p = isStaff ? projectAccess.findById(id) : projectAccess.publicById(id);
     if (p == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Project not found or not published");
     }
@@ -127,7 +127,7 @@ public class ProjectCatalogController {
       if (img.projectId == null) {                      // belongs to a maker's unapproved work: customers must not see it
         throw new ResponseStatusException(HttpStatus.NOT_FOUND);
       }
-      Project p = projectService.publicById(img.projectId);
+      Project p = projectAccess.publicById(img.projectId);
       if (p == null) {
         throw new ResponseStatusException(HttpStatus.NOT_FOUND);
       }
