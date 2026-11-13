@@ -65,7 +65,7 @@
                             <div class="project-gallery-scroller" id="project-gallery-scroller">
                                 <c:forEach var="img" items="${images}" varStatus="loop">
                                     <img src="${pageContext.request.contextPath}/files/<c:out value="${img}"/>"
-                                        alt="Project Photo ${loop.count}" class="gallery-img"
+                                        alt="Project Photo ${loop.count}" class="gallery-img" loading="lazy"
                                         id="gallery-photo-${img}">
                                 </c:forEach>
                             </div>

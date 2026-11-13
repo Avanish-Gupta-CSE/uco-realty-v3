@@ -69,7 +69,7 @@
                         <div class="card h-100 project-card shadow-sm" id="project-card-${p.id}">
                             <c:choose>
                                 <c:when test="${projectThumbnails[p.id] != null}">
-                                    <img src="${pageContext.request.contextPath}/files/<c:out value="${projectThumbnails[p.id]}"/>" alt="<c:out value="${p.projectName}"/>" class="project-card-img" id="project-thumb-${p.id}">
+                                    <img src="${pageContext.request.contextPath}/files/<c:out value="${projectThumbnails[p.id]}"/>" alt="<c:out value="${p.projectName}"/>" class="project-card-img" loading="lazy" id="project-thumb-${p.id}">
                                 </c:when>
                                 <c:otherwise>
                                     <div class="project-card-img-placeholder" id="project-thumb-placeholder-${p.id}">
