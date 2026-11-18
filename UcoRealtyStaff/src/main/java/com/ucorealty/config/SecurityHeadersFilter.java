@@ -28,6 +28,10 @@ public class SecurityHeadersFilter extends OncePerRequestFilter {
     response.setHeader("X-Content-Type-Options", "nosniff");
     response.setHeader("Referrer-Policy", "same-origin");
     response.setHeader("Permissions-Policy", "geolocation=(), microphone=(), camera=()");
+    // isolate the pages from other sites: no cross-site window access, no cross-site embedding of our files
+    response.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+    response.setHeader("Cross-Origin-Resource-Policy", "same-origin");
+    response.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
     if (request.isSecure() || "https".equalsIgnoreCase(request.getHeader("X-Forwarded-Proto"))) {
       response.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
     }

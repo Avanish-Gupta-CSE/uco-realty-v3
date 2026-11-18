@@ -34,14 +34,14 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(IllegalArgumentException.class)
   public String handleIllegalArgument(IllegalArgumentException exc, Model model) {
     log.error("Invalid argument exception: {}", exc.getMessage());
-    model.addAttribute("errorMessage", exc.getMessage());
+    model.addAttribute("errorMessage", "The request was not valid. Please go back and try again.");
     return "error";
   }
 
   @ExceptionHandler(SecurityException.class)
   public String handleSecurityException(SecurityException exc, Model model) {
     log.error("Security exception: {}", exc.getMessage());
-    model.addAttribute("errorMessage", "Access Denied: " + exc.getMessage());
+    model.addAttribute("errorMessage", "Access Denied.");
     return "error";
   }
 

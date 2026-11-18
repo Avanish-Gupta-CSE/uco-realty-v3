@@ -7,7 +7,7 @@
 <jsp:include page="common/header.jsp"/>
 
 <main class="container-xxl py-4" id="main-audit-logs">
-    <!-- Breadcrumb & Header Row -->
+    <%-- Breadcrumb & Header Row --%>
     <div class="mb-4" id="audit-header-row">
         <nav aria-label="breadcrumb" id="audit-breadcrumb-nav">
             <ol class="breadcrumb mb-2" id="audit-breadcrumb-list">
@@ -25,7 +25,7 @@
         </div>
     </div>
 
-    <!-- Dual Tab Navigation -->
+    <%-- Dual Tab Navigation --%>
     <ul class="nav nav-tabs mb-4" id="audit-tabs" role="tablist">
         <li class="nav-item" role="presentation" id="tab-item-activity">
             <button class="nav-link ${activeSubTab != 'login' ? 'active' : ''} fw-semibold"
@@ -59,10 +59,10 @@
         </li>
     </ul>
 
-    <!-- Tab Contents -->
+    <%-- Tab Contents --%>
     <div class="tab-content" id="audit-tab-content">
 
-        <!-- Tab Pane 1: User & Workflow Activities -->
+        <%-- Tab Pane 1: User & Workflow Activities --%>
         <div class="tab-pane fade ${activeSubTab != 'login' ? 'show active' : ''}"
              id="tab-pane-activity"
              role="tabpanel"
@@ -142,7 +142,7 @@
                     </div>
                 </div>
 
-                <!-- Activity Pagination Footer -->
+                <%-- Activity Pagination Footer --%>
                 <c:if test="${activityLogs.totalPages > 1}">
                     <div class="card-footer bg-white border-top d-flex justify-content-between align-items-center py-3" id="footer-activity-pagination">
                         <small class="text-muted" id="text-activity-page-info">
@@ -168,7 +168,7 @@
             </div>
         </div>
 
-        <!-- Tab Pane 2: Login Security History -->
+        <%-- Tab Pane 2: Login Security History --%>
         <div class="tab-pane fade ${activeSubTab == 'login' ? 'show active' : ''}"
              id="tab-pane-login"
              role="tabpanel"
@@ -239,7 +239,7 @@
                     </div>
                 </div>
 
-                <!-- Login Pagination Footer -->
+                <%-- Login Pagination Footer --%>
                 <c:if test="${loginAudits.totalPages > 1}">
                     <div class="card-footer bg-white border-top d-flex justify-content-between align-items-center py-3" id="footer-login-pagination">
                         <small class="text-muted" id="text-login-page-info">

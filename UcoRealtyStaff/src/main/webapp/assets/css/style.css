@@ -601,7 +601,11 @@ a:hover {
   margin-bottom: 20px;
 }
 .login-logo img {
-  height: 60px;
+  height: 68px;
+  max-width: 100%;
+}
+#login-title {
+  font-size: 2rem;
 }
 
 .login-back-link {
@@ -874,9 +878,9 @@ h1, h2, h3, h4 { letter-spacing: -.01em; }
 /* header */
 .header { box-shadow: 0 1px 0 var(--ui-border); }
 .header-top { gap: .75rem 1.5rem; flex-wrap: wrap; padding-top: .6rem; padding-bottom: .6rem; }
-.logo-img { height: 46px; width: auto; border-radius: 4px; }
-.logo-text h1 { font-size: 1.15rem; margin-bottom: 0; }
-.logo-text p { font-size: .78rem; margin-bottom: 0; color: var(--ui-muted); }
+.logo-img { height: 64px; width: auto; border-radius: 4px; }
+.logo-text h1 { font-size: 1.65rem; margin-bottom: 0; }
+.logo-text p { font-size: .9rem; margin-bottom: 0; color: var(--ui-muted); }
 .user-menu { gap: .5rem; flex-wrap: wrap; align-items: center; }
 .user-pill { display: inline-flex; gap: .3rem; align-items: center; padding: .22rem .65rem; border: 1px solid var(--ui-border); border-radius: 999px; background: #f8fafc; font-size: .78rem; color: var(--ui-muted); white-space: nowrap; }
 .user-pill strong { color: var(--ui-text); font-weight: 600; }
@@ -947,8 +951,8 @@ h1, h2, h3, h4 { letter-spacing: -.01em; }
 
 /* phone and small tablet */
 @media (max-width: 767.98px) {
-  .logo-img { height: 36px; }
-  .logo-text h1 { font-size: .98rem; }
+  .logo-img { height: 44px; }
+  .logo-text h1 { font-size: 1.2rem; }
   .logo-text p { display: none; }
   .header-top { justify-content: space-between; }
   .user-menu { width: 100%; }

@@ -1,5 +1,5 @@
 /**
- * UCO Bank Realty - Admin Project Directory JavaScript
+ * UCO Bank Realty - project dashboard JavaScript
  * Unit-reduction and deletion requests (Bootstrap 5 modals). The checker reviews on its own page (change-review.jsp).
  * Compliance: Zero inline JS (Strict CSP compliance for bank audits)
  */

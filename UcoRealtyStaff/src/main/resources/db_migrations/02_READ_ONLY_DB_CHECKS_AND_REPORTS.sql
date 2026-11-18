@@ -1,9 +1,10 @@
 -- ============================================================================
--- UCO Realty: queries to run in SQL Developer on the server (UAT / production)
+-- UCO Realty: read-only database checks and reports, to run in SQL Developer on the server (UAT / production)
+--   A before creating the tables, B after creating them, C finding real employees to test with, D who did what / how much space
 -- Travels inside the staff WAR: WEB-INF/classes/db_migrations/
 -- Every statement below is a READ-ONLY SELECT. Nothing here creates, changes or deletes anything.
 -- Run one statement at a time (select it, Ctrl+Enter), connected as the application schema user
--- (UAT: HRMS_DBA). The table script itself is 01_CREATE_TABLES.sql (next to this file in the WAR);
+-- (the user in application.properties; it owns our realty_* tables and only reads the HRMS tables). The table script itself is 01_CREATE_TABLES.sql (next to this file in the WAR);
 -- never run 03, 05, 06, 07 on UAT or production (see README_DBA_DEPLOYMENT.md).
 -- ============================================================================
 
@@ -12,7 +13,7 @@
 -- A. BEFORE creating the tables
 -- ============================================================================
 
--- A1. Am I connected as the right user? (UAT: must say HRMS_DBA)
+-- A1. Am I connected as the right user? (must say the application user, the same name as in application.properties)
 SELECT USER FROM dual;
 
 -- A2. Are our six table names free? Must return NO rows. If rows come back, STOP and ask the senior.

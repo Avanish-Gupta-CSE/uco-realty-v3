@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""End-to-end test of the maker-checker workflow (STAGING model) on a RUNNING local setup (h2 or uat profile).
+"""End-to-end test of the maker-checker workflow (STAGING model) on a RUNNING local setup (local Docker Oracle (scripts/dev-start.sh)).
 
     python3 scripts/workflow_test.py
     PUBLIC_URL=http://localhost:8080/UcoRealty INTERNAL_URL=http://localhost:8081/UcoRealtyStaff python3 scripts/workflow_test.py
@@ -8,7 +8,7 @@ The model under test: the master table holds only APPROVED projects; everything 
 reduction, deletion) is a row in the STAGING table that he edits until he sends it for approval, and only a checker's
 approval applies it to the master. The test creates two projects named "ZZ Workflow ..." and walks them through every
 path, checking at each step what the maker, the checker, other roles and the public customer site can see.
-Only for the h2 or uat profile. Exit code 0 only when every check passes.
+Only for the local Docker Oracle (scripts/dev-start.sh). Exit code 0 only when every check passes.
 """
 import os
 import re
@@ -34,7 +34,7 @@ def check(name, ok, detail=""):
 def login(emp):
     c = Client(INTERNAL)
     if not c.dev_login(emp):
-        sys.exit(f"Cannot sign in {emp}: run this against the h2 or uat profile (scripts/dev-start.sh)")
+        sys.exit(f"Cannot sign in {emp}: run this against the local Docker Oracle (scripts/dev-start.sh) (scripts/dev-start.sh)")
     return c
 
 
@@ -70,6 +70,11 @@ def save(c, fields, stagingId=None, action="draft", files=()):
     if stagingId:
         fl["stagingId"] = str(stagingId)
     return c.multipart_post("/admin/projects/staging/save", fl, files)
+
+
+def change(c, pid):
+    """Opens (creates) the maker's working copy of a live project: a POST, like the Edit button."""
+    return c.post(f"/admin/projects/{pid}/change", {"_csrf": c.csrf("/admin/projects")})
 
 
 def decide(c, staging_id, decision, comment=""):
@@ -146,14 +151,17 @@ check("a discarded draft disappears", row(maker, pid3) is None and public(pid3)[
 print("\n== 6. Edit of an APPROVED project: private draft, pending, return, approve, reject")
 check("maker sees Edit / Units / Delete on the live project", all(k in (row(maker, pid) or "") for k in ("link-change-project-", "btn-reduce-units-", "btn-delete-project-")))
 check("retail has no change buttons", not any(k in (row(c, pid) or "") for c in (retail,) for k in ("btn-reduce-units-", "link-change-project-", "btn-delete-project-")))
-check("opening the change form works (200)", maker.get(f"/admin/projects/{pid}/change")[0] == 200)
+s_, h_, _ = change(maker, pid)
+check("opening a change is a POST that redirects to the form (302)", s_ == 302 and "/staging/" in location(h_))
+check("the change form opens (200)", maker.get("/admin/" + location(h_).split("/admin/", 1)[1])[0] == 200)
+check("a GET on the old change address no longer opens or creates anything (405)", maker.get(f"/admin/projects/{pid}/change")[0] == 405)
 cs = sid(maker, pid); check("a working copy (UPDATE) exists", cs is not None)
 s, h, _ = save(maker, {"amenities": "DRAFT-ONLY amenities", "unsoldInventory": "55"}, stagingId=cs)
 check("save the change as a draft", s == 302)
 check("live project unchanged for customers", "Corrected amenities" in public(pid)[1] and "DRAFT-ONLY" not in public(pid)[1])
 check("checker sees the old units (60) and no pending tag", units(checker, pid) == 60 and "badge-change-" not in (row(checker, pid) or ""))
 check("maker sees 'Your change: draft'", "Your change: draft" in (row(maker, pid) or ""))
-s_, h_, _ = dit.get(f"/admin/projects/{pid}/change")
+s_, h_, _ = change(dit, pid)
 check("only ONE open request per project: another maker is refused", s_ == 302 and location(h_).endswith("/admin/projects"))
 check("checker cannot review a draft (private)", checker.get(f"/admin/projects/staging/{cs}/review")[0] == 302)
 save(maker, {"amenities": "DRAFT-ONLY amenities", "unsoldInventory": "55"}, stagingId=cs, action="submit")
@@ -165,14 +173,14 @@ check("maker cannot approve his change (403)", decide(maker, cs, "approve")[0] =
 check("retail cannot approve (403)", decide(retail, cs, "approve")[0] == 403)
 decide(other_checker, cs, "approve")
 check("another zone's checker cannot approve", "Change pending approval" in (row(checker, pid) or ""))
-check("maker cannot edit while it is pending", maker.get(f"/admin/projects/{pid}/change")[0] == 302)
+check("maker cannot edit while it is pending", change(maker, pid)[0] == 302)
 decide(checker, cs, "needs-correction", "Add the full list")
 check("returned: maker sees 'returned' + remark, live data unchanged", "Your change: returned" in (row(maker, pid) or "") and "Corrected amenities" in public(pid)[1])
-maker.get(f"/admin/projects/{pid}/change")
+change(maker, pid)
 save(maker, {"amenities": "Final amenities list", "unsoldInventory": "55"}, stagingId=cs, action="submit")
 decide(checker, cs, "approve", "ok")
 check("approved change is live", "Final amenities list" in public(pid)[1] and units(checker, pid) == 55)
-maker.get(f"/admin/projects/{pid}/change"); cs = sid(maker, pid)
+change(maker, pid); cs = sid(maker, pid)
 save(maker, {"amenities": "REJECT-ME"}, stagingId=cs, action="submit")
 decide(checker, cs, "reject", "No")
 check("rejected change leaves the live project as it was", "REJECT-ME" not in public(pid)[1] and "Final amenities list" in public(pid)[1] and "Your change" not in (row(maker, pid) or ""))
@@ -182,7 +190,7 @@ before = units(checker, pid)
 other_maker.post(f"/admin/projects/{pid}/reduce-units", {"units": "1", "reason": "x", "_csrf": other_maker.csrf("/admin/projects")})
 other_maker.post(f"/admin/projects/{pid}/delete-request", {"reason": "x", "_csrf": other_maker.csrf("/admin/projects")})
 check("no unit reduction or deletion request was created by the other zone", units(checker, pid) == before and "pending" not in (row(checker, pid) or "").lower())
-s_, h_, _ = other_maker.get(f"/admin/projects/{pid}/change")
+s_, h_, _ = change(other_maker, pid)
 check("the other zone cannot open a change form either", s_ == 302 and location(h_).endswith("/admin/projects") and row(checker, pid) is not None and "Your change" not in (row(other_maker, pid) or ""))
 check("the other zone's maker does not even see the project", row(other_maker, pid) is None)
 
@@ -199,7 +207,7 @@ maker.post(f"/admin/projects/{pid}/reduce-units", {"units": "500", "reason": "to
 check("cannot reduce by more than available", units(checker, pid) == 50 and "Change pending" not in (row(checker, pid) or ""))
 
 print("\n== 8. Photos of a change stay hidden until approved")
-maker.get(f"/admin/projects/{pid}/change"); cs = sid(maker, pid)
+change(maker, pid); cs = sid(maker, pid)
 live_ids = set(re.findall(r'/files/(\d+)', public(pid)[1]))
 save(maker, {}, stagingId=cs, files=[("photo1", PHOTO[1].name, PHOTO[1].read_bytes(), "image/jpeg")])
 form_ids = set(re.findall(r'/files/(\d+)"', maker.get(f"/admin/projects/staging/{cs}/edit")[2].decode()))
@@ -208,7 +216,7 @@ check("maker sees the new photo on the form, customers do not", len(new_ids) == 
 check("its URL is 404 for customers", all(Client(PUBLIC).get(f"/files/{i}")[0] == 404 for i in new_ids))
 save(maker, {}, stagingId=cs, action="submit"); decide(checker, cs, "approve", "")
 check("after approval the photo is public", all(Client(PUBLIC).get(f"/files/{i}")[0] == 200 for i in new_ids))
-maker.get(f"/admin/projects/{pid}/change"); cs = sid(maker, pid); victim = next(iter(new_ids))
+change(maker, pid); cs = sid(maker, pid); victim = next(iter(new_ids))
 maker.post(f"/admin/projects/staging/{cs}/photos/{victim}/remove", {"_csrf": maker.csrf("/admin/projects")})
 check("a live photo stays live until the removal is approved", Client(PUBLIC).get(f"/files/{victim}")[0] == 200)
 save(maker, {}, stagingId=cs, action="submit"); decide(checker, cs, "approve", "")
@@ -225,7 +233,7 @@ check("a deletion can only be approved or rejected", "Deletion pending approval"
 decide(checker, cs, "approve", "")
 check("deleted: gone from every dashboard", all(row(c, pid) is None for c in (maker, checker, dit, retail, marketing)))
 check("deleted: gone from the customer site", public(pid)[0] == 404)
-check("deleted: staff cannot open or change it", maker.get(f"/project/{pid}")[0] == 404 and maker.get(f"/admin/projects/{pid}/change")[0] == 302)
+check("deleted: staff cannot open or change it", maker.get(f"/project/{pid}")[0] == 404 and change(maker, pid)[0] == 302)
 
 print("\n== 10. Roles")
 check("HO marketing (national maker) can open the new-project form", marketing.get("/admin/projects/new")[0] == 200)
@@ -322,7 +330,7 @@ r = Client(PUBLIC).get(f"/attachments/{next(iter(pub))}")
 check("a live attachment opens for customers as a PDF", r[0] == 200 and "pdf" in (r[1].get("Content-Type") or "").lower() and r[2].startswith(b"%PDF"))
 check("the staff catalog page lists them too", len(set(re.findall(r'id="link-attachment-(\d+)"', maker.get(f"/project/{pid7}")[2].decode("utf-8", "replace")))) == 12)
 
-maker.get(f"/admin/projects/{pid7}/change"); cs7 = sid(maker, pid7)
+change(maker, pid7); cs7 = sid(maker, pid7)
 victim = sorted(ids12)[0]
 maker.post(f"/admin/projects/staging/{cs7}/attachments/{victim}/remove", {"_csrf": maker.csrf("/admin/projects")})
 save(maker, {}, stagingId=cs7, files=pdfs(2, "extra"))
@@ -336,7 +344,7 @@ decide(checker, cs7, "approve", "")
 pub2 = attachment_ids_public(pid7)
 check("after approval: 13 attachments are live, the removed one is gone (404)", len(pub2) == 13 and victim not in pub2 and Client(PUBLIC).get(f"/attachments/{victim}")[0] == 404)
 
-maker.get(f"/admin/projects/{pid7}/change"); cs8 = sid(maker, pid7)
+change(maker, pid7); cs8 = sid(maker, pid7)
 save(maker, {}, stagingId=cs8, files=pdfs(1, "never-live"))
 never = attachment_ids_on_form(maker, cs8) - pub2
 save(maker, {}, stagingId=cs8, action="submit"); decide(checker, cs8, "reject", "not needed")

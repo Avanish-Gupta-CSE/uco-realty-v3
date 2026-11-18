@@ -52,8 +52,8 @@ public class StaffSecurityConfig {
       .addFilterBefore(new SecurityHeadersFilter(), DisableEncodeUrlFilter.class)
       .authorizeHttpRequests(auth -> auth
         .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.ERROR, DispatcherType.INCLUDE).permitAll()   // INCLUDE: the shared header/footer of every JSP
-        // Open pages: the catalog, the login steps, static files. Everything else needs a login.
-        .requestMatchers("/", "/home", "/entry", "/projects", "/project/**", "/files/**", "/attachments/**",
+        // Open pages: only the login steps and static files. Everything else, the project catalog and every file too, needs a login (secure coding order, point 3).
+        .requestMatchers("/", "/home", "/entry",
                          "/login", "/sso/generate-otp", "/otp", "/otp-verify", "/error-page", "/error",
                          "/assets/**", "/css/**", "/images/**", "/js/**").permitAll()
         // Superadmin DIT audit logs strictly restricted:

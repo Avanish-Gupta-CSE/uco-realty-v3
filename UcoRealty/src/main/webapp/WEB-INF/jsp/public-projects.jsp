@@ -1,4 +1,4 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" session="false"%>
 <%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions"%>
 
@@ -14,7 +14,7 @@
         </p>
     </div>
 
-    <!-- Filter Bar -->
+    <%-- Filter Bar --%>
     <div class="filter-bar mb-4" id="public-filter-container">
         <form action="${pageContext.request.contextPath}/projects" method="get" class="row g-3 align-items-end" id="form-public-filter">
             <div class="col-md-3">
@@ -49,7 +49,7 @@
         </form>
     </div>
 
-    <!-- Projects Grid -->
+    <%-- Projects Grid --%>
     <c:choose>
         <c:when test="${empty projects}">
             <div class="card-custom text-center py-5" id="card-no-projects">

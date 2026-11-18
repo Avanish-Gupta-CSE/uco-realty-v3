@@ -1,9 +1,9 @@
 /**
- * The two sign-in pages: login.jsp (shows its notice once) and otp.jsp (the six one-time-password boxes).
+ * The two sign-in pages: login.jsp (shows its notice once) and otp.jsp (the six one-time-code boxes).
  * The OTP part does nothing on a page without the boxes, so both pages load this one file.
  */
 document.addEventListener('DOMContentLoaded', function () {
-  // The notice (session expired, signed out, wrong employee id, wrong OTP ...) comes from the address, e.g. /login?expired.
+  // The notice (session expired, signed out, wrong employee id, wrong OTP ...) is read out of the address, e.g. /login?expired.
   // Show it once: remove the part after "?" so a reload (even a hard reload) opens the clean page without the banner.
   if (window.location.search && window.history && window.history.replaceState) {
     window.history.replaceState(null, '', window.location.pathname);

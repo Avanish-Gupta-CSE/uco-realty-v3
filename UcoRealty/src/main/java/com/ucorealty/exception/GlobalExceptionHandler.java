@@ -24,7 +24,7 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(IllegalArgumentException.class)
   public String handleIllegalArgument(IllegalArgumentException exc, Model model) {
     log.error("Invalid public portal request: {}", exc.getMessage());
-    model.addAttribute("errorMessage", exc.getMessage());
+    model.addAttribute("errorMessage", "The request was not valid. Please go back and try again.");
     return "public-projects";
   }
 

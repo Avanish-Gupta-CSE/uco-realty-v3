@@ -8,11 +8,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><c:out value="${pageTitle != null ? pageTitle : 'UCO Bank - Approved Housing Projects'}"/></title>
     <link rel="icon" type="image/png" id="favicon-link" href="${pageContext.request.contextPath}/assets/images/favicon.png">
-    <!-- Bootstrap 5.3.2 CSS (Bank Standard) -->
+    <%-- Bootstrap 5.3.2 CSS (Bank Standard) --%>
     <link rel="stylesheet" id="bootstrap-css" href="${pageContext.request.contextPath}/assets/css/bootstrap.min.css">
-    <!-- UCO Bank Theme Stylesheet -->
+    <%-- UCO Bank Theme Stylesheet --%>
     <%-- bump assetVersion whenever CSS/JS change, so browsers do not keep showing the old design --%>
-    <c:set var="assetVersion" value="20261107a" scope="request" />
+    <c:set var="assetVersion" value="20261118d" scope="request" />
     <link rel="stylesheet" id="uco-theme-css" href="${pageContext.request.contextPath}/assets/css/style.css?v=${assetVersion}">
 </head>
 <body>

@@ -47,7 +47,7 @@
                 <input type="hidden" id="hidden-staging-id" name="stagingId" value="<c:out value="${staging.id}"/>">
             </c:if>
 
-            <!-- 1. Location & Identity -->
+            <%-- 1. Location & Identity --%>
             <h3 class="form-section-title" id="section-identity">
                 1. Project Identity &amp; Location
             </h3>
@@ -61,13 +61,13 @@
                     <label for="zoneName" class="form-label fw-semibold small">Zone Name *</label>
                     <c:choose>
                         <c:when test="${userZone != null && !userZone.isEmpty()}">
-                            <input type="text" id="zoneName" name="zoneName" class="form-control bg-light" value="${userZone}" readonly required>
+                            <input type="text" id="zoneName" name="zoneName" class="form-control bg-light" value="<c:out value="${userZone}"/>" readonly required>
                         </c:when>
                         <c:otherwise>
                             <select id="zoneName" name="zoneName" class="form-select" required>
                                 <option value="">-- Select Zone --</option>
                                 <c:forEach var="z" items="${zones}">
-                                    <option value="${z}" <c:out value="${project.zoneName == z ? 'selected' : ''}"/>>${z}</option>
+                                    <option value="<c:out value="${z}"/>" <c:out value="${project.zoneName == z ? 'selected' : ''}"/>><c:out value="${z}"/></option>
                                 </c:forEach>
                             </select>
                         </c:otherwise>
@@ -138,7 +138,7 @@
                 </div>
             </div>
 
-            <!-- 2. Validity & Milestone Dates (Date Pickers) -->
+            <%-- 2. Validity & Milestone Dates (Date Pickers) --%>
             <h3 class="form-section-title" id="section-dates">
                 2. Project Validity &amp; Approval Dates
             </h3>
@@ -183,7 +183,7 @@
                 </div>
             </div>
 
-            <!-- 3. Inventory & Pricing -->
+            <%-- 3. Inventory & Pricing --%>
             <h3 class="form-section-title" id="section-inventory">
                 3. Inventory &amp; Pricing
             </h3>
@@ -286,7 +286,7 @@
                 </div>
             </div>
 
-            <!-- 4. Builder & Promoters Information -->
+            <%-- 4. Builder & Promoters Information --%>
             <h3 class="form-section-title" id="section-builder">
                 4. Builder &amp; Promoters Information
             </h3>
@@ -316,7 +316,7 @@
                 </div>
             </div>
 
-            <!-- 5. Sales & Bank Contact Personnel -->
+            <%-- 5. Sales & Bank Contact Personnel --%>
             <h3 class="form-section-title" id="section-contacts">
                 5. Sales &amp; Bank Contact Personnel
             </h3>
@@ -357,7 +357,7 @@
                 </div>
             </div>
 
-            <!-- 6. Project Photographs (10 Dedicated Upload Slots) -->
+            <%-- 6. Project Photographs (10 Dedicated Upload Slots) --%>
             <h3 class="form-section-title" id="section-photos">
                 6. Project Photographs (Upload up to 10 Photos — Max 1MB each)
             </h3>
@@ -443,7 +443,7 @@
                 </c:forEach>
             </div>
 
-            <!-- Dynamic Slot Controller (+ Add More Photos) -->
+            <%-- Dynamic Slot Controller (+ Add More Photos) --%>
             <div class="d-flex align-items-center justify-content-between p-3 bg-light border rounded mb-4 flex-wrap gap-2" id="slot-controller-bar">
                 <div class="d-flex align-items-center gap-3" id="add-more-photos-wrap">
                     <button type="button" id="addMorePhotosBtn" class="add-photos-btn ${initialVisible >= 10 ? 'd-none' : ''}">
@@ -456,7 +456,7 @@
                 </div>
             </div>
 
-            <!-- 7. PDF attachments (any number) -->
+            <%-- 7. PDF attachments (any number) --%>
             <h3 class="form-section-title" id="section-attachments">
                 7. Attachments (PDF files, max 3MB each, as many as you need)
             </h3>
@@ -488,7 +488,7 @@
                 </button>
             </div>
 
-            <!-- Submission Actions -->
+            <%-- Submission Actions --%>
             <div class="d-flex gap-2 flex-wrap sticky-actions" id="form-action-buttons">
                 <button type="submit" name="action" value="draft" formnovalidate class="btn btn-secondary px-4" id="btn-save-draft">
                     Save as Draft
@@ -504,7 +504,7 @@
     </div>
 </main>
 
-<!-- Project Form Script -->
+<%-- Project Form Script --%>
 <script id="project-form-js" src="${pageContext.request.contextPath}/assets/js/project-form.js?v=${assetVersion}"></script>
 
 <jsp:include page="common/footer.jsp"/>

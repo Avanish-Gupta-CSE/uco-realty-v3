@@ -8,7 +8,7 @@
     <title>OTP Verification - UCO Bank Realty Portal</title>
     <link rel="icon" type="image/png" id="favicon-link" href="${pageContext.request.contextPath}/assets/images/favicon.png">
     <link rel="stylesheet" id="bootstrap-css" href="${pageContext.request.contextPath}/assets/css/bootstrap.min.css">
-    <link rel="stylesheet" id="uco-theme-css" href="${pageContext.request.contextPath}/assets/css/style.css?v=20261106a">
+    <link rel="stylesheet" id="uco-theme-css" href="${pageContext.request.contextPath}/assets/css/style.css?v=20261118a">
 </head>
 <body class="login-bg" id="otp-page-body">
 
@@ -22,7 +22,7 @@
     <h2 id="otp-title">Security Verification</h2>
     <p id="otp-subtitle">Enter One-Time Password sent to your registered UCO mobile</p>
 
-    <!-- Verified Employee Card -->
+    <%-- Verified Employee Card --%>
     <div class="card bg-light border-0 mb-3" id="emp-info-card">
         <div class="card-body p-3 small">
             <div class="row g-1">
@@ -58,10 +58,10 @@
 
     <form action="${pageContext.request.contextPath}/otp-verify" method="post" id="otpForm">
 <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
-        <!-- Hidden combined OTP value -->
+        <%-- Hidden combined OTP value --%>
         <input type="hidden" id="hidden-otp-input" name="otp" required>
 
-        <!-- 6 Individual Box Inputs -->
+        <%-- 6 Individual Box Inputs --%>
         <div class="otp-input-group" id="otp-input-boxes">
             <input type="text" class="otp-box form-control" maxlength="1" required autocomplete="off" autofocus id="otp-box-1">
             <input type="text" class="otp-box form-control" maxlength="1" required autocomplete="off" id="otp-box-2">

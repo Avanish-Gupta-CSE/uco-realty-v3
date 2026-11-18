@@ -5,7 +5,7 @@
     PUBLIC_URL=http://localhost:8080/UcoRealty INTERNAL_URL=http://localhost:8081/UcoRealtyStaff python3 scripts/smoke_test.py
 
 Checks the customer lockdown, security headers, SSO error paths, CSRF, role isolation and logout. The role checks
-need the h2 or uat profile (employee-id + OTP form with the test employees from db_migrations/05); against a UAT/prod build it runs
+need the local Docker Oracle (scripts/dev-start.sh) (employee-id + OTP form with the test employees from db_migrations/05); against a UAT/prod build it runs
 the checks that do not need a login and says what it skipped. It never creates projects.
 Exit code is 0 only when every check passes.
 """
@@ -32,6 +32,8 @@ s, h, b = pub.get("/projects")
 check("catalog loads", s == 200, s)
 hl = {k.lower() for k in h}
 check("security headers present", {"content-security-policy", "x-frame-options", "x-content-type-options"} <= hl, sorted(hl))
+check("cross-origin isolation headers present (COOP, CORP, COEP)", {"cross-origin-opener-policy", "cross-origin-resource-policy", "cross-origin-embedder-policy"} <= hl, sorted(hl))
+check("the public site sets no cookie (no session)", "set-cookie" not in hl, h.get("Set-Cookie"))
 for path in ("/login", "/admin/projects", "/entry", "/api/admin/geo"):
     check(f"{path} is refused", pub.get(path)[0] == 403, pub.get(path)[0])
 check("unknown project is 404", pub.get("/project/UCR-PROJ-NOPE")[0] == 404)
@@ -43,9 +45,12 @@ internal = Client(INTERNAL)
 s, h, b = internal.get("/login")
 check("login page loads", s == 200, s)
 dev_login = b"ssoOtpForm" in b
-check("security headers present", "content-security-policy" in {k.lower() for k in h})
+check("security headers present", {"content-security-policy", "cross-origin-opener-policy", "cross-origin-resource-policy", "cross-origin-embedder-policy"} <= {k.lower() for k in h})
 s, h, _ = internal.get("/admin/projects")
 check("anonymous /admin/projects redirects to /login", s == 302 and location(h).endswith("/login"), (s, location(h)))
+for path in ("/projects", "/project/UCR-PROJ-NOPE", "/files/1", "/attachments/1"):
+    s, h, _ = internal.get(path)
+    check(f"anonymous {path} on the staff site redirects to /login (every page needs a session)", s == 302 and "/login" in location(h), (s, location(h)))
 s, h, _ = internal.get("/entry?Value=not-a-real-token")
 check("bad SSO token is refused", s == 302 and "reason=unauthorized" in location(h), (s, location(h)))
 st_, h_, _ = internal.post("/sso/generate-otp", {"empId": "55012"})
@@ -54,7 +59,7 @@ check("POST without CSRF token is refused and sent to the login page (session ex
 if not dev_login:
     print("\n  (dev login form not present: this looks like a UAT/prod build, role checks skipped)")
 else:
-    print("\n== Roles (h2 or uat profile test employees)")
+    print("\n== Roles (local Docker Oracle (scripts/dev-start.sh) test employees)")
     dit, maker, checker, retail = Client(INTERNAL), Client(INTERNAL), Client(INTERNAL), Client(INTERNAL)
     check("DIT 55012 (SOL 7115) signs in", dit.dev_login("55012"))
     check("Maker 68696 signs in", maker.dev_login("68696"))
@@ -62,10 +67,23 @@ else:
     check("Durgapur maker 52260 (SOL 7010) signs in", Client(INTERNAL).dev_login("52260"))
     check("HO retail 58382 signs in", retail.dev_login("58382"))
     check("HO retail can open Customer Leads", retail.get("/admin/leads")[0] == 200)
-    s, h, _ = retail.get("/admin/leads/export.xlsx")
+    s, h, _ = retail.post("/admin/leads/export", {"_csrf": retail.csrf("/admin/leads")})
     disp = h.get("Content-Disposition") or h.get("content-disposition") or ""
     check("Leads Excel downloads as uco-realty-leads_<date>.xlsx", s == 200 and
           re.search(r'filename="uco-realty-leads_\d{4}-\d{2}-\d{2}\.xlsx"', disp) is not None, disp)
+    check("The old GET export and the leads JSON addresses are gone (404)", retail.get("/admin/leads/export.xlsx")[0] == 404
+          and retail.get("/api/admin/leads")[0] == 404 and retail.get("/api/admin/leads/export.xlsx")[0] == 404)
+    check("Export is a POST only (GET answers 405) and needs the security token",
+          retail.get("/admin/leads/export")[0] == 405 and retail.post("/admin/leads/export", {})[0] in (302, 403))
+    page = retail.get("/admin/leads")[2].decode("utf-8", "replace")
+    check("Leads page shows customer mobile numbers masked", re.search(r'id="lead-phone-0"[^>]*>[0-9]{2}X+[0-9]{2}<', page) is not None
+          and not re.search(r"\b[0-9]{10}\b", re.sub(r'id="lead-[a-z-]*-?\d*"', "", page.split("<tbody", 1)[-1])))
+    check("Leads page shows names and e-mail masked", "*" in re.search(r'id="lead-name-0"[^>]*>([^<]*)<', page).group(1) and "****@" in page.split("lead-email-0", 1)[-1][:80])
+    s, h, _ = retail.post("/admin/leads/filter", {"search": "Rohit", "_csrf": retail.csrf("/admin/leads")})
+    page = retail.get("/admin/leads")[2].decode("utf-8", "replace")
+    check("Leads filter is a POST kept in the session (the address stays clean)", s == 302 and h.get("Location", "").endswith("/admin/leads")
+          and 'value="Rohit"' in page and 'id="row-lead-0"' in page and 'id="row-lead-1"' not in page)
+    retail.post("/admin/leads/filter", {"clear": "1", "_csrf": retail.csrf("/admin/leads")})
     check("Maker cannot open Customer Leads (403)", maker.get("/admin/leads")[0] == 403)
     check("Checker cannot open Customer Leads (403)", checker.get("/admin/leads")[0] == 403)
     check("DIT can open Customer Leads", dit.get("/admin/leads")[0] == 200)
@@ -83,6 +101,27 @@ else:
     check("POST /logout with token works", s == 302 and "logout" in location(h), (s, location(h)))
     check("session is gone after logout", dit.get("/admin/projects")[0] == 302)
     check("unauthorised employee id is refused", not Client(INTERNAL).dev_login("999999"))
+
+    print("\n== Rate limits on the test login (secure coding order, point 3)")
+    flood = Client(INTERNAL)
+    stopped = False
+    for _ in range(25):
+        s, h, _ = flood.post("/sso/generate-otp", {"empId": "ZZ0001", "_csrf": flood.csrf("/login")})
+        if "error=locked" in (h.get("Location") or ""):
+            stopped = True
+            break
+    check("asking for an OTP again and again is stopped (20 per employee id in 15 minutes)", stopped)
+    victim = Client(INTERNAL)
+    victim.post("/sso/generate-otp", {"empId": "51373", "_csrf": victim.csrf("/login")})
+    last = ""
+    for i in range(6):
+        token = victim.csrf("/otp") or victim.csrf("/login")
+        s, h, _ = victim.post("/otp-verify", {"otp": "%06d" % (900000 + i), "_csrf": token})
+        last = h.get("Location") or ""
+        if "error=locked" in last:
+            break
+    check("5 wrong OTPs lock the employee id (this test locks 51373 for 15 minutes)", "error=locked" in last, last)
+    check("... and then even the right OTP does not sign in", not Client(INTERNAL).dev_login("51373"))
 
 failed = results.count(False)
 print(f"\n{len(results) - failed}/{len(results)} checks passed")

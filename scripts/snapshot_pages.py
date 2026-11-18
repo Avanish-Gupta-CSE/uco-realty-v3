@@ -31,7 +31,7 @@ STAFF = [("dit", "55012"), ("marketing", "54534"), ("retail", "58382"), ("maker-
 
 # links worth opening (everything else on a page is a button that changes data, which this script never presses)
 STAFF_LINKS = re.compile(r'(?:href|src)="(/UcoRealtyStaff(/admin/projects/staging/\d+/(?:edit|review|preview)'
-                         r'|/admin/projects/UCR-PROJ-[0-9A-F]{8}/change|/project/UCR-PROJ-[0-9A-F]{8}|/files/\d+))"')
+                         r'|/project/UCR-PROJ-[0-9A-F]{8}|/files/\d+))"')
 PUBLIC_LINKS = re.compile(r'(?:href|src)="(/UcoRealty(/project/UCR-PROJ-[0-9A-F]{8}|/files/\d+))"')
 
 PROJECT_CODE = re.compile(r"UCR-PROJ-[0-9A-F]{8}")
@@ -80,7 +80,7 @@ def fetch(client, path, cleaner):
         except zipfile.BadZipFile:
             text = "NOT A VALID XLSX"
     elif kind.startswith(("image/", "application/pdf", "application/octet-stream")):
-        text = f"binary {kind} {len(body)} bytes sha1={hashlib.sha1(body).hexdigest()}"
+        text = f"binary {kind} {len(body)} bytes sha256={hashlib.sha256(body).hexdigest()}"
     else:
         text = body.decode("utf-8", "replace")
     return status, cleaner.clean(text), headers
@@ -139,9 +139,7 @@ def save(folder):
         first = ["/admin/projects", "/admin/projects/new", "/projects", "/projects?state=Chhattisgarh", "/projects?state=West+Bengal&city=Durgapur",
                  "/projects?search=Green", "/projects?pageNo=2", "/api/admin/geo",
                  "/admin/leads", "/admin/leads?pageNo=2", "/admin/leads?pageNo=3", "/admin/leads?pageNo=99",
-                 "/admin/leads?search=Rohit", "/admin/leads?search=9811100002", "/admin/leads?from=2020-01-01&to=2099-12-31",
-                 "/admin/leads?from=not-a-date", "/admin/leads/export.xlsx", "/admin/leads/export.xlsx?search=Imran",
-                 "/api/admin/leads", "/api/admin/leads/export.xlsx",
+                 "/admin/leads?pageNo=not-a-number",
                  "/admin/audit-logs", "/admin/audit-logs?tab=login", "/admin/audit-logs?pageActivity=1", "/admin/audit-logs?tab=login&pageLogin=1"]
         # statuses offered by the leads page are part of the page itself; also open one status filter if present
         status, _, body = client.get("/admin/leads")

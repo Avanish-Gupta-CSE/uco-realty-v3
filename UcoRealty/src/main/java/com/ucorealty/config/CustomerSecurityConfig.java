@@ -32,6 +32,7 @@ public class CustomerSecurityConfig {
     http
       // No staff session or login exists in this module and it has no POST endpoint (customers apply on the bank's Home Loan page).
       .csrf(AbstractHttpConfigurer::disable)
+      .sessionManagement(s -> s.sessionCreationPolicy(org.springframework.security.config.http.SessionCreationPolicy.STATELESS))   // public site: no session, no cookie
       .logout(AbstractHttpConfigurer::disable)   // no sessions or staff login exist here
       .headers(h -> h.disable())   // replaced by SecurityHeadersFilter (see config package)
       .addFilterBefore(new SecurityHeadersFilter(), DisableEncodeUrlFilter.class)

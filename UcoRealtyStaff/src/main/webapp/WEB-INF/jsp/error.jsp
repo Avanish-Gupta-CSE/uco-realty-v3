@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Notice - UCO Bank Realty Portal</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/bootstrap.min.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css?v=20261106a">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css?v=20261118a">
 </head>
 <body class="error-layout">
   <div class="error-card">
@@ -18,9 +18,6 @@
     <div class="mt-4 d-flex justify-content-center gap-3">
       <a href="${pageContext.request.contextPath}/login" class="btn btn-primary btn-sm">
         Go to Staff Login
-      </a>
-      <a href="${pageContext.request.contextPath}/projects" class="btn btn-secondary btn-sm">
-        Browse Projects
       </a>
     </div>
   </div>

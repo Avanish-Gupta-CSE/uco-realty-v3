@@ -13,14 +13,14 @@ document.addEventListener("DOMContentLoaded", function () {
 /**
  * Global confirm box: any button or form with data-confirm="Message" asks first, in our own dialog (not the browser's popup).
  * Optional attributes: data-confirm-ok="Yes, withdraw" (button text), data-confirm-style="danger|success|primary" (button colour),
- * data-confirm-detail="#selectId" (adds the chosen option of that select, e.g. the checker's decision).
+ * data-confirm-detail="#selectId" (adds the chosen option of that drop-down, e.g. the checker's decision).
  */
 function initGlobalConfirmHandlers() {
     var modalEl = document.getElementById("ucoConfirmModal");
     if (!modalEl || typeof bootstrap === "undefined") return;
     var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
     var yes = document.getElementById("ucoConfirmYes");
-    var pending = null;     // { form, submitter } waiting for the user's answer
+    var pending = null;     // { form, submitter } waiting for the person's answer
     var approved = false;   // set while we re-submit after "Yes", so the handler does not ask again
 
     function ask(el, form, submitter) {

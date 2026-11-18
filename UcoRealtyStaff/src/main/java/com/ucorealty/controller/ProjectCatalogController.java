@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 
 /**
  * The project catalog for signed-in staff (/projects, /project/{id}) and every uploaded photo (/files/{id}) and PDF attachment (/attachments/{id}).
- * Staff see the live projects they are allowed to see; a maker's unapproved files are only handed to people who may open that request.
+ * Only signed-in staff reach these pages (StaffSecurityConfig); staff see the live projects they are allowed to see; a maker's unapproved files are only handed to people who may open that request.
  * Change this file when: the catalog page, the project detail page or who may download a file changes.
  */
 @Controller

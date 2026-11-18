@@ -4,7 +4,7 @@ package com.ucorealty.util;
  * The names of the BANK's tables that this application only reads, written once, with the database user that owns them.
  * Our own tables (realty_projects, ...) are written plainly in their repositories because they belong to our own database user.
  *
- * The bank's HRMS tables belong to the database user HRMS_DBA; our own database user has READ (SELECT) access to them,
+ * The bank's HRMS tables belong to the database user HRMS_DBA; our one application user (the one in application.properties, which also owns the realty_* tables) has READ (SELECT) access to them,
  * which is why the owner name is part of the table name.
  *
  * Change this file when: a bank table moves to another database user, or is renamed. Edit the one line, rebuild, deploy.

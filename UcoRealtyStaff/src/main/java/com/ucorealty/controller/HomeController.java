@@ -4,6 +4,7 @@ import com.ucorealty.model.HrmsEmployee;
 import com.ucorealty.model.StaffUser;
 import com.ucorealty.service.AuditService;
 import com.ucorealty.service.HrmsService;
+import com.ucorealty.util.AttemptLimiter;
 import com.ucorealty.util.SsoToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +24,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import java.security.GeneralSecurityException;
+import java.time.Duration;
 
 /**
  * Staff login. The bank SSO portal sends the employee to /entry?Value=<encrypted>; this class decrypts it, checks the employee
@@ -42,6 +44,14 @@ public class HomeController {
   // Test login (employee number + test OTP) on the login page: only the h2 and uat profiles turn this on.
   @Value("${uco.sso.dev-login-enabled:false}")
   private boolean devLoginEnabled;
+
+  // Test login only (it exists on UAT and laptops, never in production): guessing or requesting the OTP again and again is limited.
+  // Wrong OTPs: 5 per employee in 15 minutes, then that employee id is locked until the oldest wrong try is 15 minutes old.
+  // OTP requests ("resend"): 20 per employee and 100 per network address in 15 minutes.
+  private static final Duration WINDOW = Duration.ofMinutes(15);
+  private final AttemptLimiter wrongOtpByEmployee = new AttemptLimiter(5, WINDOW);
+  private final AttemptLimiter otpRequestsByEmployee = new AttemptLimiter(20, WINDOW);
+  private final AttemptLimiter otpRequestsByAddress = new AttemptLimiter(100, WINDOW);
 
   private final HrmsService hrmsService;
   private final AuditService auditService;
@@ -171,6 +181,14 @@ public class HomeController {
     }
 
     String normalized = empId.trim();
+    String address = request.getRemoteAddr();   // the real connection, not a header the caller can write
+    if (otpRequestsByEmployee.isBlocked(normalized) || otpRequestsByAddress.isBlocked(address)) {
+      logger.warn("[UCO SSO] Too many OTP requests for employee {} from {}: refused", normalized, address);
+      auditService.logLoginAttempt(normalized, extractClientIp(request), false, "Test login - too many OTP requests");
+      return "redirect:/login?error=locked";
+    }
+    otpRequestsByEmployee.record(normalized);
+    otpRequestsByAddress.record(address);
     HrmsEmployee profile = hrmsService.fetchUserProfile(normalized);
     if (profile == null || !profile.isActive()) {
       logger.warn("[UCO SSO] OTP requested for non-existent or inactive employee: {}", normalized);
@@ -218,11 +236,23 @@ public class HomeController {
     }
 
     String empId = (String) session.getAttribute("PENDING_OTP_EMP_ID");
+    if (wrongOtpByEmployee.isBlocked(empId)) {
+      forgetPending(session);
+      logger.warn("[UCO SSO] Employee {} is locked after too many wrong OTPs", empId);
+      return "redirect:/login?error=locked";
+    }
     boolean valid = hrmsService.verifyOtp(empId, otp);
     if (!valid) {
+      wrongOtpByEmployee.record(empId);
       logger.warn("[UCO SSO] Failed OTP verification attempt for employee {}", empId);
+      auditService.logLoginAttempt(empId, extractClientIp(request), false, "Test login - wrong OTP");
+      if (wrongOtpByEmployee.isBlocked(empId)) {
+        forgetPending(session);
+        return "redirect:/login?error=locked";
+      }
       return "redirect:/otp?error=otp";
     }
+    wrongOtpByEmployee.reset(empId);
 
     session.removeAttribute("PENDING_OTP_EMP_ID");
     session.removeAttribute("PENDING_OTP_NAME");
@@ -255,6 +285,12 @@ public class HomeController {
     session.setAttribute("emp_id", profile.getEmpNo());
     session.setAttribute("emp_name", profile.getName());   // shown in the header
     session.setAttribute("sol_id", profile.getPostingSolId());
+  }
+
+  private static void forgetPending(HttpSession session) {
+    for (String key : new String[] {"PENDING_OTP_EMP_ID", "PENDING_OTP_NAME", "PENDING_OTP_SOL", "PENDING_OTP_MOBILE", "PENDING_OTP_ROLE"}) {
+      session.removeAttribute(key);
+    }
   }
 
   /** New session id for every login (prevents session fixation). */

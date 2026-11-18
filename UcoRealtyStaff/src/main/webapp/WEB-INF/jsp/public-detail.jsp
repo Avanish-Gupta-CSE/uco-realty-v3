@@ -14,7 +14,7 @@
                         </a>
                     </div>
 
-                    <!-- Staff Preview Warning Banner -->
+                    <%-- Staff Preview Warning Banner --%>
                     <c:if test="${isStaffPreview}">
                         <div class="staff-preview-banner" id="staff-preview-banner">
                             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -42,7 +42,7 @@
                         </div>
                     </c:if>
 
-                    <!-- Project Header Card -->
+                    <%-- Project Header Card --%>
                     <div class="project-header-card" id="card-project-header">
                         <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
                             <div>
@@ -87,7 +87,7 @@
                         </div>
                     </div>
 
-                    <!-- Photos Gallery -->
+                    <%-- Photos Gallery --%>
                     <c:if test="${not empty images}">
                         <div class="card-custom mb-4" id="card-project-gallery">
                             <h2 class="card-title-custom" id="gallery-heading">Project Gallery</h2>
@@ -101,11 +101,11 @@
                         </div>
                     </c:if>
 
-                    <!-- Main Content Grid -->
+                    <%-- Main Content Grid --%>
                     <div class="row g-4" id="project-content-grid">
-                        <!-- Left Column: Specs -->
+                        <%-- Left Column: Specs --%>
                         <div class="col-lg-8" id="project-specs-column">
-                            <!-- Overview & Pricing -->
+                            <%-- Overview & Pricing --%>
                             <div class="card-custom mb-4" id="card-pricing-overview">
                                 <h2 class="card-title-custom" id="pricing-heading">Pricing &amp; Inventory</h2>
                                 <div class="row g-3">
@@ -136,7 +136,7 @@
                                 </div>
                             </div>
 
-                            <!-- Property Specs -->
+                            <%-- Property Specs --%>
                             <div class="card-custom mb-4" id="card-property-specs">
                                 <h2 class="card-title-custom" id="specs-heading">Property Details &amp; Specifications
                                 </h2>
@@ -240,7 +240,7 @@
                                 </div>
                             </div>
 
-                            <!-- Builder Profile -->
+                            <%-- Builder Profile --%>
                             <div class="card-custom mb-4" id="card-builder-profile">
                                 <h2 class="card-title-custom" id="builder-heading">Builder Details</h2>
                                 <div class="table-responsive">
@@ -285,10 +285,10 @@
                             </div>
                         </div>
 
-                        <!-- Right Column: Home Loan Lead & Branch Contacts -->
+                        <%-- Right Column: Home Loan Lead & Branch Contacts --%>
                         <div class="col-lg-4" id="project-loan-column">
                             <%-- The Apply for Home Loan card is for customers only: bank staff never see it (preview or live). --%>
-                            <!-- UCO Bank Branch Assistance -->
+                            <%-- UCO Bank Branch Assistance --%>
                             <div class="card-custom" id="card-branch-assistance">
                                 <h2 class="card-title-custom" id="branch-assistance-heading">Bank Branch Assistance</h2>
                                 <div class="text-muted small" id="branch-details-wrap">

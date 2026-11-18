@@ -11,28 +11,30 @@
         <div>
             <h2 class="h4 text-primary fw-bold mb-1" id="leads-title">Home Loan Leads from UCO Realty</h2>
             <p class="text-muted small mb-0" id="leads-subtitle">
-                Customers who clicked Apply for Home Loan on the realty portal and filled the bank's Home Loan application (read from the bank's lead table).
+                Customers who clicked Apply for Home Loan on the realty portal and filled the bank's Home Loan application (read from the bank's lead table).<c:if test="${maskPii}"> Customer name, mobile and e-mail are shown masked, as the bank's security policy requires.</c:if>
             </p>
         </div>
 
         <div>
-            <a href="${pageContext.request.contextPath}/admin/leads/export.xlsx?from=${fn:escapeXml(param.from)}&to=${fn:escapeXml(param.to)}&status=${fn:escapeXml(param.status)}&search=${fn:escapeXml(param.search)}" class="btn btn-success" id="btn-export-leads">
-                &darr; Export Leads to Excel (.xlsx)
-            </a>
+            <form action="${pageContext.request.contextPath}/admin/leads/export" method="post" class="d-inline m-0" id="form-export-leads">
+                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+                <button type="submit" class="btn btn-success" id="btn-export-leads">&darr; Export Leads to Excel (.xlsx)</button>
+            </form>
         </div>
     </div>
 
-    <!-- Filter Bar -->
+    <%-- Filter Bar --%>
     <div class="filter-bar mb-4" id="leads-filter-container">
-        <form action="${pageContext.request.contextPath}/admin/leads" method="get" class="row g-3 align-items-end" id="form-leads-filter">
+        <form action="${pageContext.request.contextPath}/admin/leads/filter" method="post" class="row g-3 align-items-end" id="form-leads-filter">
+            <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
             <div class="col-md-2">
                 <label for="from" class="form-label fw-semibold small">From Date</label>
-                <input type="date" id="from" name="from" class="form-control form-control-sm" value="${fn:escapeXml(param.from)}">
+                <input type="date" id="from" name="from" class="form-control form-control-sm" value="<c:out value="${filter.from}"/>">
             </div>
 
             <div class="col-md-2">
                 <label for="to" class="form-label fw-semibold small">To Date</label>
-                <input type="date" id="to" name="to" class="form-control form-control-sm" value="${fn:escapeXml(param.to)}">
+                <input type="date" id="to" name="to" class="form-control form-control-sm" value="<c:out value="${filter.to}"/>">
             </div>
 
             <div class="col-md-3">
@@ -40,24 +42,24 @@
                 <select id="status" name="status" class="form-select form-select-sm">
                     <option value="">-- All Statuses --</option>
                     <c:forEach var="st" items="${statuses}">
-                        <option value="${fn:escapeXml(st)}" ${param.status == st ? 'selected' : ''}><c:out value="${st}"/></option>
+                        <option value="<c:out value="${st}"/>" ${filter.status == st ? 'selected' : ''}><c:out value="${st}"/></option>
                     </c:forEach>
                 </select>
             </div>
 
             <div class="col-md-3">
                 <label for="search" class="form-label fw-semibold small">Search Name / Mobile / Lead ID</label>
-                <input type="text" id="search" name="search" class="form-control form-control-sm" value="${fn:escapeXml(param.search)}" placeholder="Name, mobile or lead ID">
+                <input type="text" id="search" name="search" class="form-control form-control-sm" value="<c:out value="${filter.search}"/>" placeholder="Name, mobile or lead ID">
             </div>
 
             <div class="col-md-2 d-flex gap-2">
                 <button type="submit" class="btn btn-primary btn-sm flex-fill" id="btn-leads-filter-apply">Filter</button>
-                <a href="${pageContext.request.contextPath}/admin/leads" class="btn btn-secondary btn-sm flex-fill" id="btn-leads-filter-reset">Reset</a>
+                <button type="submit" name="clear" value="1" formnovalidate class="btn btn-secondary btn-sm flex-fill" id="btn-leads-filter-reset">Reset</button>
             </div>
         </form>
     </div>
 
-    <!-- Leads Table -->
+    <%-- Leads Table --%>
     <div class="card-custom p-0 overflow-hidden mb-4" id="card-leads-table">
         <div class="card-title-custom p-3 mb-0 bg-light border-bottom" id="leads-table-title">
             Newest first &middot; ${leadCount} ${leadCount == 1 ? 'lead' : 'leads'}
@@ -91,7 +93,7 @@
                                 <tr id="row-lead-${vs.index}">
                                     <td class="ps-3" data-label="Lead"><span class="badge bg-light text-secondary border" id="lead-badge-id-${vs.index}"><c:out value="${l.leadId}"/></span></td>
                                     <td data-label="Customer"><strong id="lead-name-${vs.index}"><c:out value="${l.name}"/></strong></td>
-                                    <td data-label="Mobile"><a href="tel:<c:out value="${l.mobile}"/>" class="fw-semibold text-primary" id="lead-phone-${vs.index}"><c:out value="${l.mobile}"/></a></td>
+                                    <td data-label="Mobile"><c:choose><c:when test="${maskPii}"><span class="fw-semibold" id="lead-phone-${vs.index}"><c:out value="${l.mobile}"/></span></c:when><c:otherwise><a href="tel:<c:out value="${l.mobile}"/>" class="fw-semibold text-primary" id="lead-phone-${vs.index}"><c:out value="${l.mobile}"/></a></c:otherwise></c:choose></td>
                                     <td data-label="Email"><small id="lead-email-${vs.index}"><c:out value="${l.email}"/></small></td>
                                     <td data-label="Location"><c:out value="${l.location}"/></td>
                                     <td data-label="Facility"><c:out value="${l.facility}"/></td>
@@ -109,7 +111,7 @@
             <div class="card-footer bg-white d-flex justify-content-center py-3" id="footer-leads-pages">
                 <ul class="pagination pagination-sm pagination-custom mb-0" id="ul-leads-pages">
                     <c:forEach var="n" begin="1" end="${pageCount}">
-                        <c:url var="leadPageUrl" value="/admin/leads"><c:param name="from" value="${param.from}"/><c:param name="to" value="${param.to}"/><c:param name="status" value="${param.status}"/><c:param name="search" value="${param.search}"/><c:param name="pageNo" value="${n}"/></c:url>
+                        <c:url var="leadPageUrl" value="/admin/leads"><c:param name="pageNo" value="${n}"/></c:url>
                         <li class="page-item ${pageNo == n ? 'active' : ''}"><a class="page-link" href="${leadPageUrl}" id="link-leads-page-${n}">${n}</a></li>
                     </c:forEach>
                 </ul>

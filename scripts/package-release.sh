@@ -62,7 +62,7 @@ rm -f "$OUT/db/06_STAGING_MODEL.sql" "$OUT/db/07_DROP_UNUSED_TABLES.sql"
 # the drop-everything script is for UAT resets only
 [ "$MODE" = "prod" ] && rm -f "$OUT/db/00_DROP_ALL_TABLES.sql"
 cp "$ROOT/docs/DEPLOYMENT.md" "$OUT/"
-
+cp "$ROOT/docs/CONSTANTS_TO_CHANGE.md" "$OUT/"
 (cd "$OUT" && find . -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 shasum -a 256 > SHA256SUMS)
 (cd "$ROOT/release" && zip -qr "$NAME.zip" "$NAME")
 

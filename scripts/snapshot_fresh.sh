@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Takes a page snapshot from a CLEAN start, so two snapshots can be compared (see scripts/snapshot_pages.py).
-#   scripts/snapshot_fresh.sh .run/snap-before      # stop, rebuild, start on H2, load demo data, save the snapshot
+#   scripts/snapshot_fresh.sh .run/snap-before      # stop, rebuild, start on the Docker Oracle, load demo data, save the snapshot
 # Do it once before a code change and once after, then:
 #   python3 scripts/snapshot_pages.py compare .run/snap-before .run/snap-after
 set -euo pipefail

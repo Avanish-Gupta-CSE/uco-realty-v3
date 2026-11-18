@@ -167,13 +167,16 @@ public class ProjectWorkflowController {
     return form(model, auth, s, s, null);
   }
 
-  /** Opens (or creates) the maker's working copy of a LIVE project. The live project stays exactly as approved. */
-  @GetMapping("/projects/{projectId}/change")
-  public String changeLive(@PathVariable String projectId, Authentication auth, Model model, RedirectAttributes ra) {
+  /**
+   * Opens (or creates) the maker's working copy of a LIVE project, then shows its form. The live project stays exactly as approved.
+   * It is a POST because it creates a row (secure coding order, point 4); the form itself is the normal GET .../staging/{id}/edit.
+   */
+  @PostMapping("/projects/{projectId}/change")
+  public String changeLive(@PathVariable String projectId, Authentication auth, RedirectAttributes ra) {
     String user = StaffRoles.require(auth, StaffRoles.MAKERS);
     try {
       ProjectStaging s = workflow.openUpdateDraft(projectId, user);
-      return form(model, auth, s, s, null);
+      return "redirect:/admin/projects/staging/" + s.id + "/edit";
     } catch (ResponseStatusException e) {
       ra.addFlashAttribute("error", e.getReason());
       return "redirect:/admin/projects";
@@ -225,9 +228,11 @@ public class ProjectWorkflowController {
       }
       return "redirect:/admin/projects";
     } catch (Exception e) {
-      log.warn("Saving a project request failed: {}", e.getMessage());
+      log.warn("Saving a project request failed: {}", e.getMessage(), e);
+      // Only the application's own messages (a rule the maker can fix) reach the screen; a database or system error stays in the log.
       String msg = e instanceof ResponseStatusException && ((ResponseStatusException) e).getReason() != null
-          ? ((ResponseStatusException) e).getReason() : rootMessage(e);
+          ? ((ResponseStatusException) e).getReason()
+          : "The project could not be saved. Please try again; if it happens again, contact the DIT SWDC Cell.";
       ProjectStaging current = s;
       if (current == null && stagingId != null) {
         try { current = workflow.get(stagingId); } catch (Exception ignored) { /* shown without a request */ }
@@ -467,11 +472,5 @@ public class ProjectWorkflowController {
     file = imageRepo.save(file);
     file.filePath = "/files/" + file.id;
     imageRepo.save(file);
-  }
-
-  private static String rootMessage(Throwable e) {
-    Throwable root = e;
-    while (root.getCause() != null && root.getCause() != root) root = root.getCause();
-    return root.getMessage() != null && !root.getMessage().trim().isEmpty() ? root.getMessage() : e.getMessage();
   }
 }

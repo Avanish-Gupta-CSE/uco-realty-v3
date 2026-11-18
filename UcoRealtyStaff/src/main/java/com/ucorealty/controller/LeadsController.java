@@ -1,12 +1,16 @@
 package com.ucorealty.controller;
 
+import com.ucorealty.dto.LeadFilter;
 import com.ucorealty.model.Lead;
 import com.ucorealty.repository.LgEntryRepository;
 import com.ucorealty.service.AuditService;
+import com.ucorealty.util.PiiMask;
 import com.ucorealty.util.StaffRoles;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -19,7 +23,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 /**
- * The customer Leads page, its Excel export and the same list as JSON, for Head Office Marketing, Retail Banking and DIT.
+ * The customer Leads page and its Excel export, for Head Office Marketing, Retail Banking and DIT. Filters travel by POST into the session;
+ * customer name, mobile and e-mail are masked (setting uco.leads.mask-pii).
  * The leads are NOT stored by us: the bank's Home Loan page keeps them in HRMS table LG_ENTRY_REVAMP (CHANNEL = 'REALTY'),
  * and LgEntryRepository reads them from there. The page itself is leads.jsp.
  * Change this file when: the Leads page or the Excel columns change (see docs/MAINTENANCE_GUIDE.md, "Add or remove a column").
@@ -28,71 +33,82 @@ import java.util.List;
 public class LeadsController {
   private static final int LEADS_PER_PAGE = 20;
   private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(LeadsController.class);
+  private static final String FILTER_KEY = "LEAD_FILTER";
   private final LgEntryRepository leadSource;
   private final AuditService auditService;
+  private final boolean maskPii;
 
-  public LeadsController(LgEntryRepository leads, AuditService auditService) {
+  public LeadsController(LgEntryRepository leads, AuditService auditService,
+                         @Value("${uco.leads.mask-pii:true}") boolean maskPii) {
     this.leadSource = leads;
     this.auditService = auditService;
+    this.maskPii = maskPii;
   }
 
+  /** The Leads page. The filter comes from the session, not from the address: only the page number is in the URL. */
   @GetMapping("/admin/leads")
-  public String listLeads(@RequestParam(required = false) String from,
-                          @RequestParam(required = false) String to,
-                          @RequestParam(required = false) String status,
-                          @RequestParam(required = false) String search,
-                          @RequestParam(defaultValue = "1") int pageNo,
-                          Authentication auth,
-                          Model model) {
+  public String listLeads(@RequestParam(defaultValue = "1") int pageNo,
+                          Authentication auth, HttpSession session, Model model) {
     // The nav link is hidden for other roles, but hiding is not protection: customer phone numbers need a real check
     StaffRoles.require(auth, StaffRoles.LEAD_ROLES);
-    int total = countLeads(from, to, status, search);
+    LeadFilter f = filterOf(session);
+    int total = countLeads(f.getFrom(), f.getTo(), f.getStatus(), f.getSearch());
     int pages = Math.max(1, (total + LEADS_PER_PAGE - 1) / LEADS_PER_PAGE);
     int current = Math.min(Math.max(1, pageNo), pages);
     // only the 20 rows of this page are fetched from the bank table
-    List<Lead> leads = leadsPage(from, to, status, search, (current - 1) * LEADS_PER_PAGE, LEADS_PER_PAGE);
+    List<Lead> leads = leadsPage(f.getFrom(), f.getTo(), f.getStatus(), f.getSearch(), (current - 1) * LEADS_PER_PAGE, LEADS_PER_PAGE);
+    maskIfRequired(leads);
     model.addAttribute("leadCount", total);
     model.addAttribute("pageCount", pages);
     model.addAttribute("pageNo", current);
-
+    model.addAttribute("filter", f);
+    model.addAttribute("maskPii", maskPii);
     model.addAttribute("leads", leads);
     model.addAttribute("statuses", leadSource.statuses());   // status codes for the filter drop-down
     return "leads";
   }
 
-  @GetMapping("/admin/leads/export.xlsx")
-  public void exportFromPage(@RequestParam(required = false) String from,
-                             @RequestParam(required = false) String to,
-                             @RequestParam(required = false) String status,
-                             @RequestParam(required = false) String search,
-                             HttpServletResponse res,
-                             Authentication auth) throws IOException {
+  /** Saves the filter in the session (a POST: the search can be a name or a phone number) and shows the first page. */
+  @PostMapping("/admin/leads/filter")
+  public String applyFilter(@RequestParam(required = false) String from,
+                            @RequestParam(required = false) String to,
+                            @RequestParam(required = false) String status,
+                            @RequestParam(required = false) String search,
+                            @RequestParam(required = false) String clear,
+                            Authentication auth, HttpSession session) {
+    StaffRoles.require(auth, StaffRoles.LEAD_ROLES);
+    if (clear != null) {
+      session.removeAttribute(FILTER_KEY);
+    } else {
+      parseDate(from);   // a wrong date is refused here (400), not when the page is shown
+      parseDate(to);
+      session.setAttribute(FILTER_KEY, new LeadFilter(from, to, status, search));
+    }
+    return "redirect:/admin/leads";
+  }
+
+  /** The Excel file of the leads the page is filtered to (a POST with the security token: it hands out customer data and writes an audit row). */
+  @PostMapping("/admin/leads/export")
+  public void export(HttpServletResponse res, HttpSession session, Authentication auth) throws IOException {
     StaffRoles.require(auth, StaffRoles.LEAD_ROLES);   // before the audit row: a refused export must not be recorded as an export
     auditService.logActivity(auth.getName(), "EXPORT_LEADS", "LEAD", "EXCEL", "Exported leads to Excel");
-    writeExcel(from, to, status, search, res, auth);
+    LeadFilter f = filterOf(session);
+    writeExcel(f.getFrom(), f.getTo(), f.getStatus(), f.getSearch(), res, auth);
   }
 
-  /** The same leads as JSON (filters: date range, lead status, keyword). */
-  @GetMapping("/api/admin/leads")
-  @ResponseBody
-  public List<Lead> listAsJson(@RequestParam(required = false) String from,
-                               @RequestParam(required = false) String to,
-                               @RequestParam(required = false) String status,
-                               @RequestParam(required = false) String search,
-                               Authentication auth) {
-    StaffRoles.require(auth, StaffRoles.LEAD_ROLES);
-    return filterLeads(from, to, status, search);
+  private static LeadFilter filterOf(HttpSession session) {
+    Object f = session.getAttribute(FILTER_KEY);
+    return f instanceof LeadFilter ? (LeadFilter) f : LeadFilter.empty();
   }
 
-  /** The Excel export without the audit row (kept as it was: this address is the older one). */
-  @GetMapping("/api/admin/leads/export.xlsx")
-  public void exportAsApi(@RequestParam(required = false) String from,
-                          @RequestParam(required = false) String to,
-                          @RequestParam(required = false) String status,
-                          @RequestParam(required = false) String search,
-                          HttpServletResponse res,
-                          Authentication auth) throws IOException {
-    writeExcel(from, to, status, search, res, auth);
+  /** Customer name, mobile and e-mail are shown masked unless the setting uco.leads.mask-pii is false (the bank decides). */
+  private void maskIfRequired(List<Lead> leads) {
+    if (!maskPii) return;
+    for (Lead l : leads) {   // the rows are detached copies read from the bank table: changing them changes nothing in the database
+      l.name = PiiMask.name(l.name);
+      l.mobile = PiiMask.mobile(l.mobile);
+      l.email = PiiMask.email(l.email);
+    }
   }
 
   /** Writes the filtered leads as a styled Excel (.xlsx) file with Call Center action columns. */
@@ -101,6 +117,7 @@ public class LeadsController {
     String exporter = StaffRoles.require(auth, StaffRoles.LEAD_ROLES);
 
     List<Lead> filtered = filterLeads(from, to, status, search);
+    maskIfRequired(filtered);
     log.info("[UCO LEAD] {} exports {} leads to Excel (from={}, to={}, status={})", exporter, filtered.size(), from, to, status);
 
     // File name: uco-realty-leads_ plus the date of the download, e.g. uco-realty-leads_2026-11-18.xlsx
@@ -183,6 +200,7 @@ public class LeadsController {
                           " to " + (to != null && !to.trim().isEmpty() ? to : "Present") +
                           " | Status Filter: " + (status != null && !status.trim().isEmpty() ? status : "ALL") +
                           " | Total Leads: " + filtered.size() +
+                          (maskPii ? " | Customer name, mobile and e-mail are masked" : "") +
                           " | Exported By: " + exporter + " | Handover Time: " +
                           LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MMM-yyyy HH:mm:ss"));
       Cell metaCell = metaRow.createCell(0);

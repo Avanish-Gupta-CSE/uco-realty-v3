@@ -328,7 +328,7 @@ function initPhotoSlots() {
         });
     });
 
-    // 6. Delete saved photo from DB
+    // 6. Delete a saved photo or attachment of this request
     document.querySelectorAll(".slot-delete-saved-btn").forEach(function (btn) {
         btn.addEventListener("click", function () {
             var imgId = btn.getAttribute("data-image-id");

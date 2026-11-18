@@ -8,7 +8,7 @@
     <title>Staff Login - UCO Bank Realty Portal</title>
     <link rel="icon" type="image/png" id="favicon-link" href="${pageContext.request.contextPath}/assets/images/favicon.png">
     <link rel="stylesheet" id="bootstrap-css" href="${pageContext.request.contextPath}/assets/css/bootstrap.min.css">
-    <link rel="stylesheet" id="uco-theme-css" href="${pageContext.request.contextPath}/assets/css/style.css?v=20261106a">
+    <link rel="stylesheet" id="uco-theme-css" href="${pageContext.request.contextPath}/assets/css/style.css?v=20261118a">
 </head>
 <body class="login-bg" id="login-page-body">
 
@@ -27,7 +27,13 @@
         </div>
     </c:if>
 
-    <c:if test="${param.error != null && param.error != 'invalid_employee'}">
+    <c:if test="${param.error == 'locked'}">
+        <div class="alert alert-danger py-2 small mb-3" id="login-locked-alert">
+            Too many wrong or repeated one-time password attempts. Please wait 15 minutes and try again.
+        </div>
+    </c:if>
+
+    <c:if test="${param.error != null && param.error != 'invalid_employee' && param.error != 'locked'}">
         <div class="alert alert-danger py-2 small mb-3" id="login-error-alert">
             Single Sign-On could not be completed. Please sign in again through the UCO Bank portal or with your Employee ID.
         </div>
@@ -53,7 +59,7 @@
     </c:if>
 
     <c:if test="${devLogin}">
-    <!-- Employee SSO (OTP Flow) -->
+    <%-- Employee SSO (OTP Flow) --%>
     <div id="pane-sso" class="tab-pane-content">
         <form action="${pageContext.request.contextPath}/sso/generate-otp" method="post" id="ssoOtpForm">
 <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
@@ -81,11 +87,6 @@
 
     </c:if>
 
-    <div class="mt-4 text-center" id="wrap-back-catalog">
-        <a href="${pageContext.request.contextPath}/projects" class="login-back-link" id="link-back-catalog">
-            &larr; Back to Public Project Catalog
-        </a>
-    </div>
 </div>
 
 <script id="bootstrap-bundle-js" src="${pageContext.request.contextPath}/assets/js/bootstrap.bundle.min.js"></script>

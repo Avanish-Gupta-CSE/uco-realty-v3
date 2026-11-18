@@ -1,4 +1,4 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" session="false"%>
 <%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%-- Shown by Spring Boot for errors that happen before any page code runs (unknown address, blocked request, system error).
      Without this file the browser would show Spring's plain "Whitelabel Error Page". --%>

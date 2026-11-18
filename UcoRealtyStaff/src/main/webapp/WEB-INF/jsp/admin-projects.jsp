@@ -33,7 +33,7 @@
         </div>
     </c:if>
 
-    <!-- Alert messages -->
+    <%-- Alert messages --%>
     <c:if test="${message != null}">
         <div class="alert alert-success py-2 small mb-3" id="admin-alert-message"><c:out value="${message}"/></div>
     </c:if>
@@ -41,7 +41,7 @@
         <div class="alert alert-danger py-2 small mb-3" id="admin-alert-error"><c:out value="${error}"/></div>
     </c:if>
 
-    <!-- Search & Filter Controls -->
+    <%-- Search & Filter Controls --%>
     <div class="filter-bar mb-4" id="card-projects-filter">
         <form action="${pageContext.request.contextPath}/admin/projects" method="get" class="row g-3 align-items-end" id="form-admin-projects-filter">
             <input type="hidden" name="status" value="${fn:escapeXml(currentStatus)}">
@@ -69,7 +69,7 @@
             </div>
         </form>
 
-        <!-- Status tabs -->
+        <%-- Status tabs --%>
         <div class="status-tabs mt-3 pt-3 border-top" id="status-filters-wrap">
             <c:url var="tabUrl" value="/admin/projects"><c:param name="status" value=""/><c:param name="search" value="${currentSearch}"/><c:param name="zone" value="${currentZone}"/></c:url>
             <a href="${tabUrl}" class="status-tab ${currentStatus == '' ? 'active' : ''}" id="filter-status-all">All <span class="status-tab-count">${statusCounts['ALL']}</span></a>
@@ -88,7 +88,7 @@
         </div>
     </div>
 
-    <!-- Table of Projects -->
+    <%-- Table of Projects --%>
     <div class="card-custom p-0 overflow-hidden mb-4" id="card-projects-table">
         <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center py-2 px-3" id="header-projects-summary">
             <span class="fw-semibold text-secondary small" id="text-projects-summary">
@@ -185,11 +185,11 @@
                                     <td data-label="Created by" class="col-th-creator"><span class="creator-tag" id="row-creator-${p.id}" title="EMP ID <c:out value="${p.createdBy}"/>"><c:out value="${not empty empNames[p.createdBy] ? empNames[p.createdBy] : (p.createdBy != null ? p.createdBy : '-')}"/></span></td>
                                     <td class="text-end pe-3 col-th-actions">
                                         <div class="d-inline-flex justify-content-end align-items-center gap-1" id="actions-wrap-${p.id}">
-                                            <!-- Preview: a live project as customers see it; an unapproved one as it would look -->
+                                            <%-- Preview: a live project as customers see it; an unapproved one as it would look --%>
                                             <a href="${pageContext.request.contextPath}<c:out value="${p.master ? '/project/'.concat(p.id) : '/admin/projects/staging/'.concat(p.stagingId).concat('/preview')}"/>"
                                                class="btn btn-outline-primary btn-sm" id="link-preview-project-${p.id}">Preview</a>
 
-                                            <!-- Maker: his own NEW project (draft / returned / waiting) -->
+                                            <%-- Maker: his own NEW project (draft / returned / waiting) --%>
                                             <sec:authorize access="hasAnyRole('ZO_MAKER', 'HO_MARKETING', 'SUPERADMIN_DIT')">
                                                 <c:if test="${!p.master && mine}">
                                                     <c:if test="${workable}">
@@ -207,11 +207,14 @@
                                                     </c:if>
                                                 </c:if>
 
-                                                <!-- Maker: change a LIVE project (every change needs a checker) -->
+                                                <%-- Maker: change a LIVE project (every change needs a checker) --%>
                                                 <c:if test="${p.master}">
                                                     <c:choose>
                                                         <c:when test="${p.stagingId == null}">
-                                                            <a href="${pageContext.request.contextPath}/admin/projects/<c:out value="${p.id}"/>/change" class="btn btn-outline-secondary btn-sm" id="link-change-project-${p.id}">Edit</a>
+                                                            <form action="${pageContext.request.contextPath}/admin/projects/<c:out value="${p.id}"/>/change" method="post" class="d-inline m-0" id="form-change-project-${p.id}">
+<input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+                                                                <button type="submit" class="btn btn-outline-secondary btn-sm" id="link-change-project-${p.id}">Edit</button>
+                                                            </form>
                                                             <button type="button" class="btn btn-outline-secondary btn-sm btn-reduce-units"
                                                                     id="btn-reduce-units-${p.id}"
                                                                     data-project-id="${p.id}"
@@ -241,7 +244,7 @@
                                                 </c:if>
                                             </sec:authorize>
 
-                                            <!-- Checker: review whatever is waiting (new project, change or deletion), not his own -->
+                                            <%-- Checker: review whatever is waiting (new project, change or deletion), not his own --%>
                                             <sec:authorize access="hasAnyRole('ZO_CHECKER', 'HO_MARKETING', 'SUPERADMIN_DIT')">
                                                 <c:if test="${p.waitingForChecker && !mine}">
                                                     <a href="${pageContext.request.contextPath}/admin/projects/staging/${p.stagingId}/review" class="btn btn-warning btn-sm" id="link-review-${p.id}">
@@ -259,7 +262,7 @@
             </table>
         </div>
 
-        <!-- Projects Pagination Footer -->
+        <%-- Projects Pagination Footer --%>
         <c:if test="${projectPage.totalPages > 1}">
             <div class="card-footer bg-white border-top d-flex justify-content-between align-items-center py-3 px-3 flex-wrap gap-2" id="footer-projects-pagination">
                 <small class="text-muted" id="text-projects-page-info">
@@ -285,7 +288,7 @@
     </div>
 </main>
 
-<!-- Reduce Units Modal (Bootstrap 5) -->
+<%-- Reduce Units Modal (Bootstrap 5) --%>
 <div class="modal fade" id="reduceModal" tabindex="-1" aria-labelledby="reduceModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
@@ -322,7 +325,7 @@
     </div>
 </div>
 
-<!-- Delete Project Modal (needs checker approval) -->
+<%-- Delete Project Modal (needs checker approval) --%>
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
