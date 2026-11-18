@@ -1,7 +1,7 @@
 services:
   oracle:
-    image: gvenzl/oracle-xe:21-slim
-    container_name: uco-oracle
+    image: gvenzl/oracle-free:23.6-slim-faststart
+    container_name: uco-oracle-free
     ports:
       - "1521:1521"
     environment:
@@ -9,12 +9,12 @@ services:
       APP_USER: uco_realty
       APP_USER_PASSWORD: uco_realty_pwd
     volumes:
-      - oracle-data:/opt/oracle/oradata
+      - oracle-free-data:/opt/oracle/oradata
     healthcheck:
-      test: ["CMD-SHELL", "sqlplus -L uco_realty/uco_realty_pwd@localhost:1521/XEPDB1 <<< 'select 1 from dual;'"]
+      test: ["CMD-SHELL", "sqlplus -L uco_realty/uco_realty_pwd@localhost:1521/FREEPDB1 <<< 'select 1 from dual;'"]
       interval: 30s
       timeout: 10s
       retries: 5
 
 volumes:
-  oracle-data:
+  oracle-free-data:

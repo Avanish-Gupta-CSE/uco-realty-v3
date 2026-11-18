@@ -1,7 +1,9 @@
 package com.ucorealty.controller;
 
 import com.ucorealty.model.Project;
+import com.ucorealty.model.ProjectAttachment;
 import com.ucorealty.model.ProjectImage;
+import com.ucorealty.repository.ProjectAttachmentRepository;
 import com.ucorealty.repository.ProjectImageRepository;
 import com.ucorealty.repository.ProjectRepository;
 import com.ucorealty.service.MasterDataService;
@@ -22,7 +24,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * The project catalog for signed-in staff (/projects, /project/{id}) and every uploaded photo or PDF (/files/{id}).
+ * The project catalog for signed-in staff (/projects, /project/{id}) and every uploaded photo (/files/{id}) and PDF attachment (/attachments/{id}).
  * Staff see the live projects they are allowed to see; a maker's unapproved files are only handed to people who may open that request.
  * Change this file when: the catalog page, the project detail page or who may download a file changes.
  */
@@ -33,15 +35,17 @@ public class ProjectCatalogController {
   private final ProjectAccessService projectAccess;
   private final MasterDataService masterDataService;
   private final ProjectImageRepository imageRepo;
+  private final ProjectAttachmentRepository attachmentRepo;
   private final ProjectRepository projectRepo;
   private final ProjectWorkflowService workflow;
 
   public ProjectCatalogController(ProjectAccessService projectAccess, MasterDataService masterDataService,
-                             ProjectImageRepository imageRepo, ProjectRepository projectRepo,
-                             ProjectWorkflowService workflow) {
+                             ProjectImageRepository imageRepo, ProjectAttachmentRepository attachmentRepo,
+                             ProjectRepository projectRepo, ProjectWorkflowService workflow) {
     this.projectAccess = projectAccess;
     this.masterDataService = masterDataService;
     this.imageRepo = imageRepo;
+    this.attachmentRepo = attachmentRepo;
     this.projectRepo = projectRepo;
     this.workflow = workflow;
   }
@@ -107,9 +111,8 @@ public class ProjectCatalogController {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Project not found or not published");
     }
 
-    List<ProjectImageRepository.FileInfo> all = imageRepo.findFilesOfProject(id);
-    List<ProjectImageRepository.FileInfo> imgs = all.stream().filter(ProjectImageRepository.FileInfo::isPhoto).collect(Collectors.toList());
-    ProjectWorkflowController.addDocumentLinks(model, all.stream().filter(i -> !i.isPhoto()).collect(Collectors.toList()));
+    List<ProjectImageRepository.FileInfo> imgs = imageRepo.findFilesOfProject(id);
+    model.addAttribute("attachments", attachmentRepo.findFilesOfProject(id));
     model.addAttribute("amenityRows", com.ucorealty.util.Amenities.parse(p.amenityFlags));
     model.addAttribute("project", p);
     model.addAttribute("images", imgs);
@@ -147,6 +150,32 @@ public class ProjectCatalogController {
     headers.setContentLength(img.fileData.length);
     headers.setCacheControl("max-age=86400, private");   // private: a maker's unapproved file must never be kept by a shared proxy
     return new ResponseEntity<>(img.fileData, headers, HttpStatus.OK);
+  }
+
+  /** One PDF attachment. Same access rule as a photo: customers see only live ones of published projects; an unapproved one only people who may open that request. */
+  @GetMapping("/attachments/{id}")
+  public ResponseEntity<byte[]> getAttachment(@PathVariable Long id, Authentication auth) {
+    ProjectAttachment att = attachmentRepo.findById(id)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+    boolean isStaff = (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getName()));
+    if (!isStaff) {
+      if (att.projectId == null || projectAccess.publicById(att.projectId) == null) {
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+      }
+    } else if (att.stagingId != null) {
+      ProjectStaging request = workflow.get(att.stagingId);
+      workflow.requireCanView(request, auth.getName());
+    }
+    if (att.fileData == null || att.fileData.length == 0) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+    }
+
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_PDF);
+    headers.setContentLength(att.fileData.length);
+    headers.setCacheControl("max-age=86400, private");   // private: a maker's unapproved file must never be kept by a shared proxy
+    return new ResponseEntity<>(att.fileData, headers, HttpStatus.OK);
   }
 
   /** Adds a city to the drop-down when it has a name and belongs to the chosen state (no state chosen = every state). */

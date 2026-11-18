@@ -196,16 +196,14 @@
                                                     <td><a href="<c:out value='${project.videoUrl}'/>" target="_blank" rel="noopener noreferrer" id="link-project-video">Watch Project Video &rarr;</a></td>
                                                 </tr>
                                             </c:if>
-                                            <c:if test="${not empty brochureId}">
-                                                <tr>
-                                                    <th>Brochure</th>
-                                                    <td><a href="${pageContext.request.contextPath}/files/<c:out value='${brochureId}'/>" target="_blank" rel="noopener" id="link-brochure">Download Brochure (PDF)</a></td>
-                                                </tr>
-                                            </c:if>
-                                            <c:if test="${not empty floorPlanId}">
-                                                <tr>
-                                                    <th>Floor Plan</th>
-                                                    <td><a href="${pageContext.request.contextPath}/files/<c:out value='${floorPlanId}'/>" target="_blank" rel="noopener" id="link-floor-plan">View Floor Plan (PDF)</a></td>
+                                            <c:if test="${not empty attachments}">
+                                                <tr id="row-attachments">
+                                                    <th>Documents (PDF)</th>
+                                                    <td>
+                                                        <c:forEach var="att" items="${attachments}">
+                                                            <div><a href="${pageContext.request.contextPath}/attachments/<c:out value='${att.id}'/>" target="_blank" rel="noopener" id="link-attachment-${att.id}"><c:out value="${att.fileName}"/></a></div>
+                                                        </c:forEach>
+                                                    </td>
                                                 </tr>
                                             </c:if>
                                         </tbody>

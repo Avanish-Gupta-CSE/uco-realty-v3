@@ -456,39 +456,36 @@
                 </div>
             </div>
 
-            <!-- 7. PDF documents -->
-            <h3 class="form-section-title" id="section-documents">
-                7. Brochure &amp; Floor Plan (PDF, Max 3MB each)
+            <!-- 7. PDF attachments (any number) -->
+            <h3 class="form-section-title" id="section-attachments">
+                7. Attachments (PDF files, max 3MB each, as many as you need)
             </h3>
-            <div class="row g-3 mb-4" id="documents-row">
-                <div class="col-md-6" id="doc-brochure">
-                    <label for="brochure" class="form-label fw-semibold small">Brochure (PDF)</label>
-                    <c:if test="${not empty existingBrochure}">
-                        <div class="small mb-1" id="existing-brochure-info">
-                            <a href="${pageContext.request.contextPath}/files/<c:out value="${existingBrochure.id}"/>" target="_blank" rel="noopener"><c:out value="${existingBrochure.fileName}"/></a>
-                            <button type="button" class="slot-delete-btn slot-delete-saved-btn ms-2" id="btn-delete-saved-photo-${existingBrochure.id}"
-                                    data-image-id="${existingBrochure.id}" data-project-id="${staging.projectId}"
-                                    data-delete-url="${pageContext.request.contextPath}/admin/projects/staging/<c:out value="${staging.id}"/>/photos/<c:out value="${existingBrochure.id}"/>/remove"
-                                    data-context-path="${pageContext.request.contextPath}">✕ Remove</button>
-                        </div>
-                        <div class="text-muted small mb-1">Choose a new file below to replace it.</div>
-                    </c:if>
-                    <input type="file" id="brochure" name="brochure" class="form-control form-control-sm doc-file-input" accept="application/pdf,.pdf">
+            <p class="text-muted small mb-2" id="attachments-hint-text">
+                Brochure, floor plan, approval letters or any other PDF. Choose several files at once, or press <strong>"+ Add another file"</strong>.
+                Everything you add is shown to customers after the checker approves it. One save can carry about 30 files (33 MB in total); save, then add more if you need to.
+            </p>
+            <div class="mb-4" id="attachments-box">
+                <c:if test="${not empty existingAttachments}">
+                    <ul class="list-unstyled small mb-2" id="existing-attachments-list">
+                        <c:forEach var="att" items="${existingAttachments}">
+                            <li class="mb-1" id="existing-attachment-${att.id}">
+                                <a href="${pageContext.request.contextPath}/attachments/<c:out value="${att.id}"/>" target="_blank" rel="noopener" id="existing-attachment-link-${att.id}"><c:out value="${att.fileName}"/></a>
+                                <button type="button" class="slot-delete-btn slot-delete-saved-btn ms-2" id="btn-delete-attachment-${att.id}"
+                                        data-image-id="${att.id}" data-project-id="${staging.projectId}"
+                                        data-delete-url="${pageContext.request.contextPath}/admin/projects/staging/<c:out value="${staging.id}"/>/attachments/<c:out value="${att.id}"/>/remove"
+                                        data-context-path="${pageContext.request.contextPath}">✕ Remove</button>
+                            </li>
+                        </c:forEach>
+                    </ul>
+                </c:if>
+                <div id="attachment-inputs">
+                    <div class="mb-2" id="attachment-row-1">
+                        <input type="file" id="attachment_input_1" name="attachments" multiple class="form-control form-control-sm doc-file-input" accept="application/pdf,.pdf">
+                    </div>
                 </div>
-                <div class="col-md-6" id="doc-floorplan">
-                    <label for="floorPlan" class="form-label fw-semibold small">Floor Plan (PDF)</label>
-                    <c:if test="${not empty existingFloorPlan}">
-                        <div class="small mb-1" id="existing-floorplan-info">
-                            <a href="${pageContext.request.contextPath}/files/<c:out value="${existingFloorPlan.id}"/>" target="_blank" rel="noopener"><c:out value="${existingFloorPlan.fileName}"/></a>
-                            <button type="button" class="slot-delete-btn slot-delete-saved-btn ms-2" id="btn-delete-saved-photo-${existingFloorPlan.id}"
-                                    data-image-id="${existingFloorPlan.id}" data-project-id="${staging.projectId}"
-                                    data-delete-url="${pageContext.request.contextPath}/admin/projects/staging/<c:out value="${staging.id}"/>/photos/<c:out value="${existingFloorPlan.id}"/>/remove"
-                                    data-context-path="${pageContext.request.contextPath}">✕ Remove</button>
-                        </div>
-                        <div class="text-muted small mb-1">Choose a new file below to replace it.</div>
-                    </c:if>
-                    <input type="file" id="floorPlan" name="floorPlan" class="form-control form-control-sm doc-file-input" accept="application/pdf,.pdf">
-                </div>
+                <button type="button" id="addAttachmentBtn" class="add-photos-btn">
+                    <span class="fs-6 fw-bold">+</span> Add another file
+                </button>
             </div>
 
             <!-- Submission Actions -->

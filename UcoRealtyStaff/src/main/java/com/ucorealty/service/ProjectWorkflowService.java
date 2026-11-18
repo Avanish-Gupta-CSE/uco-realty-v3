@@ -4,7 +4,9 @@ import com.ucorealty.dto.ProjectRow;
 import com.ucorealty.model.StaffUser;
 import com.ucorealty.model.Project;
 import com.ucorealty.model.ProjectFields;
+import com.ucorealty.model.ProjectAttachment;
 import com.ucorealty.model.ProjectImage;
+import com.ucorealty.repository.ProjectAttachmentRepository;
 import com.ucorealty.model.ProjectStaging;
 import com.ucorealty.repository.ProjectImageRepository;
 import com.ucorealty.repository.ProjectRepository;
@@ -32,7 +34,8 @@ import java.util.stream.Collectors;
  * Only when a checker approves is the row applied to the master table:
  *   CREATE -> a new master row, UPDATE -> the existing master row changes, DELETE -> the master row is marked DELETED.
  * The staging row stays as history (APPROVED / REJECTED / WITHDRAWN). Photos follow the same rule: they belong to the
- * staging row (project_images.staging_id) and become live (project_id) only on approval.
+ * staging row (realty_project_images.staging_id) and become live (project_id) only on approval. PDF attachments
+ * (realty_project_attachments, as many as the maker adds) follow exactly the same rule.
  * Change this file when: the approval steps change (draft, submit, approve, reject, return, withdraw, delete, unit reduction).
  */
 @Service
@@ -46,15 +49,17 @@ public class ProjectWorkflowService {
   private final ProjectRepository projects;
   private final ProjectStagingRepository staging;
   private final ProjectImageRepository images;
+  private final ProjectAttachmentRepository attachments;
   private final ProjectAccessService projectAccess;
   private final MasterDataService masterData;
   private final AuditService audit;
 
   public ProjectWorkflowService(ProjectRepository projects, ProjectStagingRepository staging, ProjectImageRepository images,
-                                ProjectAccessService projectAccess, MasterDataService masterData, AuditService audit) {
+                                ProjectAttachmentRepository attachments, ProjectAccessService projectAccess, MasterDataService masterData, AuditService audit) {
     this.projects = projects;
     this.staging = staging;
     this.images = images;
+    this.attachments = attachments;
     this.projectAccess = projectAccess;
     this.masterData = masterData;
     this.audit = audit;
@@ -153,10 +158,11 @@ public class ProjectWorkflowService {
 
   public List<ProjectImage> removedImages(ProjectStaging s) { return images.findAllById(removedImageIds(s)); }
 
-  public List<ProjectImage> newImages(ProjectStaging s) { return images.findByStagingId(s.id); }
+  /** The photos added in this request (not live yet): what the checker reviews. No bytes are read. */
+  public List<ProjectImageRepository.FileInfo> newImages(ProjectStaging s) { return images.findFilesOfStaging(s.id); }
 
-  /** Every uploaded file the maker sees for this request: live ones not marked for removal (UPDATE), plus those added in this request. */
-  private List<ProjectImageRepository.FileInfo> filesForForm(ProjectStaging s) {
+  /** The photos the maker sees for this request: live ones not marked for removal (UPDATE), plus those added in this request. */
+  public List<ProjectImageRepository.FileInfo> photosForForm(ProjectStaging s) {
     List<ProjectImageRepository.FileInfo> out = new ArrayList<>();
     if (ProjectStaging.UPDATE.equals(s.requestType)) {
       Set<Long> removed = removedImageIds(s);
@@ -166,18 +172,32 @@ public class ProjectWorkflowService {
     return out;
   }
 
-  /** The photos (gallery pictures) of this request. */
-  public List<ProjectImageRepository.FileInfo> photosForForm(ProjectStaging s) {
-    List<ProjectImageRepository.FileInfo> out = new ArrayList<>();
-    for (ProjectImageRepository.FileInfo i : filesForForm(s)) if (i.isPhoto()) out.add(i);
+  public Set<Long> removedAttachmentIds(ProjectStaging s) {
+    Set<Long> ids = new LinkedHashSet<>();
+    if (s.removeAttachmentIds != null) {
+      for (String x : s.removeAttachmentIds.split(",")) if (!x.trim().isEmpty()) ids.add(Long.valueOf(x.trim()));
+    }
+    return ids;
+  }
+
+  /** The attachments (PDF files) the maker sees for this request: live ones not marked for removal (UPDATE), plus those added in this request. */
+  public List<ProjectAttachmentRepository.FileInfo> attachmentsForForm(ProjectStaging s) {
+    List<ProjectAttachmentRepository.FileInfo> out = new ArrayList<>();
+    if (ProjectStaging.UPDATE.equals(s.requestType)) {
+      Set<Long> removed = removedAttachmentIds(s);
+      for (ProjectAttachmentRepository.FileInfo a : attachments.findFilesOfProject(s.projectId)) if (!removed.contains(a.getId())) out.add(a);
+    }
+    out.addAll(attachments.findFilesOfStaging(s.id));
     return out;
   }
 
-  /** The PDF documents (brochure, floor plan) of this request. */
-  public List<ProjectImageRepository.FileInfo> documentsForForm(ProjectStaging s) {
-    List<ProjectImageRepository.FileInfo> out = new ArrayList<>();
-    for (ProjectImageRepository.FileInfo i : filesForForm(s)) if (!i.isPhoto()) out.add(i);
-    return out;
+  /** The attachments added in this request (not live yet): what the checker reviews. */
+  public List<ProjectAttachmentRepository.FileInfo> newAttachments(ProjectStaging s) { return attachments.findFilesOfStaging(s.id); }
+
+  /** The live attachments this change request removes: what the checker reviews. */
+  public List<ProjectAttachmentRepository.FileInfo> removedAttachments(ProjectStaging s) {
+    Set<Long> ids = removedAttachmentIds(s);
+    return ids.isEmpty() ? new ArrayList<>() : attachments.findFilesByIds(ids);
   }
 
   /** The maker; or, while the request waits for approval, staff of the right zone who are not makers. */
@@ -273,6 +293,27 @@ public class ProjectWorkflowService {
     log.info("[UCO WORKFLOW] {} removed photo {} from request {} of project {}", username, imageId, id, s.projectId);
   }
 
+  /** Removes an attachment from the request: one added in this request is deleted, a live one is marked and goes only on approval. */
+  @Transactional
+  public void removeAttachment(Long id, Long attachmentId, String username) {
+    ProjectStaging s = ownEditable(id, username);
+    ProjectAttachment att = attachments.findById(attachmentId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Attachment not found"));
+    if (id.equals(att.stagingId)) {
+      attachments.delete(att);
+    } else if (ProjectStaging.UPDATE.equals(s.requestType) && s.projectId.equals(att.projectId)) {
+      Set<Long> ids = removedAttachmentIds(s);
+      ids.add(attachmentId);
+      String joined = ids.stream().map(String::valueOf).collect(Collectors.joining(","));
+      if (joined.length() > 1900)
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Too many attachments are marked for removal in one request. Send this change first, then remove the rest");
+      s.removeAttachmentIds = joined;
+      staging.save(s);
+    } else {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "That attachment does not belong to this request");
+    }
+    log.info("[UCO WORKFLOW] {} removed attachment {} from request {} of project {}", username, attachmentId, id, s.projectId);
+  }
+
   @Transactional
   public ProjectStaging submit(Long id, String username) {
     ProjectStaging s = ownEditable(id, username);
@@ -282,8 +323,9 @@ public class ProjectWorkflowService {
     if (update) {
       Project live = liveProject(s.projectId);
       List<FieldChange> diff = diff(live, s);
-      if (diff.isEmpty() && removedImageIds(s).isEmpty() && images.findByStagingId(s.id).isEmpty())
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nothing was changed: edit a value or a photo first");
+      if (diff.isEmpty() && removedImageIds(s).isEmpty() && images.findFilesOfStaging(s.id).isEmpty()
+          && removedAttachmentIds(s).isEmpty() && attachments.findFilesOfStaging(s.id).isEmpty())
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nothing was changed: edit a value, a photo or an attachment first");
       s.summary = trim(summaryOf(diff, s), 1000);
     } else {
       s.summary = "New project";
@@ -351,6 +393,7 @@ public class ProjectWorkflowService {
     if (!username.equals(s.createdBy)) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the maker who raised this request can withdraw it");
     if (!s.isOpen()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "This request is already closed (" + s.status + ")");
     images.deleteAll(images.findByStagingId(s.id));
+    attachments.deleteOfStaging(s.id);
     s.status = ProjectStaging.WITHDRAWN;
     s.decidedAt = LocalDateTime.now();
     staging.save(s);
@@ -396,7 +439,10 @@ public class ProjectWorkflowService {
         case "reject":
           ProjectAccessService.requireComment(comment);
           s.status = ProjectStaging.REJECTED;
-          if (!ProjectStaging.CREATE.equals(type)) images.deleteAll(images.findByStagingId(s.id));   // they will never go live
+          if (!ProjectStaging.CREATE.equals(type)) {   // they will never go live
+            images.deleteAll(images.findByStagingId(s.id));
+            attachments.deleteOfStaging(s.id);
+          }
           audit.logActivity(checkerUsername, ProjectStaging.CREATE.equals(type) ? "CHECKER_REJECT" : ProjectStaging.UPDATE.equals(type) ? "CHANGE_REJECTED" : "DELETE_REJECTED",
               "PROJECT", s.projectId, null, trim(comment, 1000));
           break;
@@ -452,6 +498,8 @@ public class ProjectWorkflowService {
     for (Long imageId : removedImageIds(s)) {
       images.findById(imageId).filter(i -> p.id.equals(i.projectId)).ifPresent(images::delete);
     }
+    Set<Long> removedAttachments = removedAttachmentIds(s);
+    if (!removedAttachments.isEmpty()) attachments.deleteLiveByIds(p.id, removedAttachments);
     p.checkedBy = checker;
     p.checkerComment = trim(comment, 1000);
     projects.saveAndFlush(p);
@@ -474,7 +522,7 @@ public class ProjectWorkflowService {
     projects.saveAndFlush(p);
   }
 
-  /** The photos of the approved request become the project's live photos. */
+  /** The photos and attachments of the approved request become the project's live photos and attachments. */
   private void goLive(ProjectStaging s, Project p) {
     for (ProjectImage img : images.findByStagingId(s.id)) {
       img.projectId = p.id;
@@ -483,6 +531,7 @@ public class ProjectWorkflowService {
       images.save(img);
     }
     images.flush();
+    attachments.makeLive(s.id, p.id);
     p.totalImgCount = (int) images.countPhotos(p.id);
     projects.save(p);
   }
@@ -582,11 +631,11 @@ public class ProjectWorkflowService {
     List<String> parts = new ArrayList<>();
     for (FieldChange c : diff) parts.add(c.label + ": " + c.oldValue + " -> " + c.newValue);
     if (!removedImageIds(s).isEmpty()) parts.add(removedImageIds(s).size() + " photo(s) removed");
-    List<ProjectImage> added = images.findByStagingId(s.id);
-    int addedPhotos = (int) added.stream().filter(ProjectImage::isPhoto).count();
-    int addedDocs = added.size() - addedPhotos;
+    int addedPhotos = images.findFilesOfStaging(s.id).size();
     if (addedPhotos > 0) parts.add(addedPhotos + " photo(s) added");
-    if (addedDocs > 0) parts.add(addedDocs + " document(s) added");
+    if (!removedAttachmentIds(s).isEmpty()) parts.add(removedAttachmentIds(s).size() + " attachment(s) removed");
+    int addedAttachments = attachments.findFilesOfStaging(s.id).size();
+    if (addedAttachments > 0) parts.add(addedAttachments + " attachment(s) added");
     return String.join("; ", parts);
   }
 

@@ -1,7 +1,9 @@
 package com.ucorealty.controller;
 
 import com.ucorealty.model.Project;
+import com.ucorealty.model.ProjectAttachment;
 import com.ucorealty.model.ProjectImage;
+import com.ucorealty.repository.ProjectAttachmentRepository;
 import com.ucorealty.repository.ProjectImageRepository;
 import com.ucorealty.service.MasterDataService;
 import com.ucorealty.service.CatalogService;
@@ -19,8 +21,10 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * The customer pages: the catalog (/projects), one project (/project/{id}) and the files (/files/{id}: photos and PDFs).
- * Only approved, active and published projects are shown. Change this file when: a customer page needs other data.
+ * The customer pages: the catalog (/projects), one project (/project/{id}) and
+ * the files (/files/{id}: photos, /attachments/{id}: PDF attachments).
+ * Only approved, active and published projects are shown. Change this file
+ * when: a customer page needs other data.
  */
 @Controller
 public class CatalogPageController {
@@ -29,27 +33,33 @@ public class CatalogPageController {
   private final CatalogService catalogService;
   private final MasterDataService masterDataService;
   private final ProjectImageRepository imageRepo;
+  private final ProjectAttachmentRepository attachmentRepo;
 
-  /** Where "Apply for Home Loan" sends the customer: bank site (uco.homeloan.base-url, differs per environment) + this fixed path. */
+  /**
+   * Where "Apply for Home Loan" sends the customer: bank site
+   * (uco.homeloan.base-url, differs per environment) + this fixed path.
+   */
   private static final String HOME_LOAN_PATH = "/Lead_App/lead_web.jsp?utm=REALTY";
   private final String homeLoanUrl;
 
   public CatalogPageController(CatalogService catalogService, MasterDataService masterDataService,
-                             ProjectImageRepository imageRepo,
-                             @Value("${uco.homeloan.base-url}") String homeLoanBaseUrl) {
+      ProjectImageRepository imageRepo, ProjectAttachmentRepository attachmentRepo,
+      @Value("${uco.homeloan.base-url}") String homeLoanBaseUrl) {
     this.homeLoanUrl = homeLoanBaseUrl.replaceAll("/+$", "") + HOME_LOAN_PATH;
     this.catalogService = catalogService;
     this.masterDataService = masterDataService;
     this.imageRepo = imageRepo;
+    this.attachmentRepo = attachmentRepo;
   }
 
-  @GetMapping({"/", "/projects"})
+  @GetMapping({ "/", "/projects" })
   public String listProjects(@RequestParam(required = false) String state,
-                             @RequestParam(required = false) String city,
-                             @RequestParam(required = false) String search,
-                             @RequestParam(defaultValue = "1") int pageNo,
-                             Model model) {
-    List<Project> allPublic = catalogService.allPublic();   // read once: the list and the city drop-down both come from it
+      @RequestParam(required = false) String city,
+      @RequestParam(required = false) String search,
+      @RequestParam(defaultValue = "1") int pageNo,
+      Model model) {
+    List<Project> allPublic = catalogService.allPublic(); // read once: the list and the city drop-down both come from
+                                                          // it
     List<Project> list = CatalogService.filter(allPublic, state, city, search);
 
     // 12 cards per page
@@ -75,7 +85,8 @@ public class CatalogPageController {
 
     Map<String, Long> thumbnails = new HashMap<>();
     if (!pageItems.isEmpty()) {
-      for (ProjectImageRepository.FirstPhoto photo : imageRepo.findFirstImageIds(pageItems.stream().map(p -> p.id).collect(Collectors.toList()))) {
+      for (ProjectImageRepository.FirstPhoto photo : imageRepo
+          .findFirstImageIds(pageItems.stream().map(p -> p.id).collect(Collectors.toList()))) {
         thumbnails.put(photo.getProjectId(), photo.getImageId());
       }
     }
@@ -97,9 +108,7 @@ public class CatalogPageController {
     }
     model.addAttribute("project", p);
     model.addAttribute("images", imgs);
-    for (ProjectImageRepository.DocumentInfo doc : imageRepo.findDocuments(id)) {      // PDF documents
-      model.addAttribute(ProjectImage.BROCHURE.equals(doc.getFileKind()) ? "brochureId" : "floorPlanId", doc.getImageId());
-    }
+    model.addAttribute("attachments", attachmentRepo.findFilesOfProject(id));   // PDF attachments: any number
     model.addAttribute("amenityRows", com.ucorealty.util.Amenities.parse(p.amenityFlags));
     model.addAttribute("homeLoanUrl", homeLoanUrl);
     return "public-detail";
@@ -110,7 +119,7 @@ public class CatalogPageController {
     ProjectImage img = imageRepo.findById(id)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-    if (img.projectId == null) {                      // belongs to a maker's unapproved work: not live
+    if (img.projectId == null) { // belongs to a maker's unapproved work: not live
       throw new ResponseStatusException(HttpStatus.NOT_FOUND);
     }
     Project p = catalogService.publicById(img.projectId);
@@ -126,7 +135,8 @@ public class CatalogPageController {
     if (img.mimeType != null) {
       try {
         mediaType = MediaType.parseMediaType(img.mimeType);
-      } catch (Exception ignored) {}
+      } catch (Exception ignored) {
+      }
     }
 
     return ResponseEntity.ok()
@@ -134,5 +144,22 @@ public class CatalogPageController {
         .header(HttpHeaders.CACHE_CONTROL, "public, max-age=86400")
         .body(img.fileData);
   }
-}
 
+  /** One PDF attachment of a live project. A maker's unapproved attachment (no project id) and one of an unpublished project give 404. */
+  @GetMapping("/attachments/{id}")
+  public ResponseEntity<byte[]> getAttachment(@PathVariable Long id) {
+    ProjectAttachment att = attachmentRepo.findById(id)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+    if (att.projectId == null || catalogService.publicById(att.projectId) == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+    }
+    if (att.fileData == null || att.fileData.length == 0) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+    }
+    return ResponseEntity.ok()
+        .contentType(MediaType.APPLICATION_PDF)
+        .header(HttpHeaders.CACHE_CONTROL, "public, max-age=86400")
+        .body(att.fileData);
+  }
+}

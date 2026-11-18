@@ -80,8 +80,9 @@ DEMO_PDF = (b"%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Ty
 
 
 def documents():
-    return [("brochure", "demo-brochure.pdf", DEMO_PDF, "application/pdf"),
-            ("floorPlan", "demo-floor-plan.pdf", DEMO_PDF, "application/pdf")]
+    # attachments: any number of PDF files, all under the one field name "attachments"
+    return [("attachments", "demo-brochure.pdf", DEMO_PDF, "application/pdf"),
+            ("attachments", "demo-floor-plan.pdf", DEMO_PDF, "application/pdf")]
 
 
 def newest_project_id(client, name):

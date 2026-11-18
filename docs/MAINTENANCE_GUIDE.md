@@ -76,7 +76,8 @@ Which roles may open a page: the `StaffRoles.require(auth, StaffRoles.XYZ)` line
 5. If it must be validated (required, length, number): `service/ProjectValidator.java`.
 
 ### Change a size limit
-* Photo 1 MB and PDF 3 MB: `controller/ProjectWorkflowController.java` (`MAX_PHOTO_BYTES`, `MAX_DOC_BYTES`) AND the browser check in `webapp/assets/js/project-form.js`
+* Photo 1 MB and each PDF attachment 3 MB: `controller/ProjectWorkflowController.java` (`MAX_PHOTO_BYTES`, `MAX_ATTACHMENT_BYTES`) AND the browser check in `webapp/assets/js/project-form.js` (`MAX_ATTACHMENT_BYTES`).
+* Attachments (PDF files) have no limit on how many a project holds. One save is limited to 30 attachments and 33 MB of files in total: `MAX_ATTACHMENTS_PER_SAVE` and `MAX_UPLOAD_BYTES_PER_SAVE` in `project-form.js`, and `spring.servlet.multipart.max-request-size` (35 MB) in the staff `application.properties`. Photos are table `realty_project_images`, attachments `realty_project_attachments` (`model/ProjectAttachment.java`, `repository/ProjectAttachmentRepository.java`).
   (search for `1 * 1024 * 1024` and `3 * 1024 * 1024`) AND `spring.servlet.multipart.max-file-size` in `application.properties` (must be at least the largest file).
 * Number of photos: `MAX_PHOTOS` in `service/ProjectWorkflowService.java`.
 * Idle session time: `server.servlet.session.timeout` in `application.properties`.

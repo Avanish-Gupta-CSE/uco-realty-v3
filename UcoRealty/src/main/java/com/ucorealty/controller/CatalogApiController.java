@@ -116,7 +116,7 @@ public class CatalogApiController {
     m.put("relExecName", p.relExecName);
     m.put("relExecNumber", p.relExecNumber);
 
-    List<String> files = imageRepo.findImageIds(id).stream()
+    List<String> files = imageRepo.findPhotoIds(id).stream()
         .map(i -> request.getContextPath() + "/files/" + i.getImageId()).collect(Collectors.toList());   // context path is /<war name> on Tomcat
     m.put("images", files);
     return m;

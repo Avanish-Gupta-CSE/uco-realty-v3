@@ -45,6 +45,10 @@ public class ProjectStaging extends ProjectFields {
   @Column(name = "remove_image_ids", length = 500)
   public String removeImageIds;
 
+  // UPDATE: ids of live attachments (PDF files) the maker removed, comma separated; they are deleted when the change is approved
+  @Column(name = "remove_attachment_ids", length = 2000)
+  public String removeAttachmentIds;
+
   @Column(length = 1000)
   public String reason;
 

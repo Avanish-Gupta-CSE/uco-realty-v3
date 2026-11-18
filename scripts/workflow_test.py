@@ -285,6 +285,64 @@ s_, _, _ = save_packed(maker, fl, action="submit")
 check("packed 'Submit for Approval' works (302) and the status is Pending Approval", s_ == 302 and status_of(maker, pid6) == "Pending Approval")
 decide(checker, sid6, "reject", "test only")
 
+print("\n== 14. PDF attachments: any number per project, each at most 3 MB, a table of their own")
+def attachment_ids_on_form(c, staging_id):
+    return set(re.findall(r'id="existing-attachment-link-(\d+)"', c.get(f"/admin/projects/staging/{staging_id}/edit")[2].decode("utf-8", "replace")))
+
+
+def attachment_ids_public(pid):
+    return set(re.findall(r'id="link-attachment-(\d+)"', public(pid)[1]))
+
+
+def pdfs(n, prefix="file"):
+    return [("attachments", f"{prefix}-{i + 1}.pdf", demo.DEMO_PDF, "application/pdf") for i in range(n)]
+
+
+fl = demo.form(7, "ZZ Workflow Attachments", "ZZ Workflow Builder", "West Bengal", "Durgapur", "713201", 40)
+fl.update({"branchName": "Durgapur Main Branch", "amenities": "Park"})
+s_, _, _ = save(maker, fl, files=pdfs(12))
+pid7 = demo.newest_project_id(maker, "ZZ Workflow Attachments"); sid7 = sid(maker, pid7)
+check("a new project with 12 PDF attachments saves (302)", s_ == 302 and pid7 is not None)
+ids12 = attachment_ids_on_form(maker, sid7)
+check("the maker sees all 12 on the form", len(ids12) == 12, len(ids12))
+check("customers cannot open a not-yet-approved attachment (404)", all(Client(PUBLIC).get(f"/attachments/{i}")[0] == 404 for i in ids12))
+check("the checker cannot open a draft's attachment, the maker can",
+      all(checker.get(f"/attachments/{i}")[0] in (403, 404) for i in ids12) and all(maker.get(f"/attachments/{i}")[0] == 200 for i in ids12))
+bad_text = [("attachments", "notes.pdf", b"this is not a pdf at all", "application/pdf")]
+before = len(attachment_ids_on_form(maker, sid7))
+s_, _, body = save(maker, {}, stagingId=sid7, files=pdfs(1, "good") + bad_text)
+check("a fake PDF is refused and nothing from that upload is saved", s_ == 200 and len(attachment_ids_on_form(maker, sid7)) == before)
+big = [("attachments", "big.pdf", b"%PDF-1.4\n" + b"x" * (3 * 1024 * 1024 + 10), "application/pdf")]
+s_, _, _ = save(maker, {}, stagingId=sid7, files=big)
+check("a PDF over 3 MB is refused (the server stops it with 413; the page stops it earlier)", s_ in (200, 413) and len(attachment_ids_on_form(maker, sid7)) == before)
+save(maker, {}, stagingId=sid7, action="submit"); decide(checker, sid7, "approve", "")
+pub = attachment_ids_public(pid7)
+check("after approval the customer page lists all 12 attachments", pub == ids12, f"{len(pub)} listed")
+r = Client(PUBLIC).get(f"/attachments/{next(iter(pub))}")
+check("a live attachment opens for customers as a PDF", r[0] == 200 and "pdf" in (r[1].get("Content-Type") or "").lower() and r[2].startswith(b"%PDF"))
+check("the staff catalog page lists them too", len(set(re.findall(r'id="link-attachment-(\d+)"', maker.get(f"/project/{pid7}")[2].decode("utf-8", "replace")))) == 12)
+
+maker.get(f"/admin/projects/{pid7}/change"); cs7 = sid(maker, pid7)
+victim = sorted(ids12)[0]
+maker.post(f"/admin/projects/staging/{cs7}/attachments/{victim}/remove", {"_csrf": maker.csrf("/admin/projects")})
+save(maker, {}, stagingId=cs7, files=pdfs(2, "extra"))
+check("in a change request the removed attachment leaves the form, two new ones appear", victim not in attachment_ids_on_form(maker, cs7) and len(attachment_ids_on_form(maker, cs7)) == 13)
+check("meanwhile the live project still shows its 12 and not the new ones", attachment_ids_public(pid7) == ids12)
+save(maker, {}, stagingId=cs7, action="submit")
+rev = checker.get(f"/admin/projects/staging/{cs7}/review")[2].decode("utf-8", "replace")
+check("the checker's review page lists 2 new attachments and the removed one",
+      len(re.findall(r'id="new-attachment-link-\d+"', rev)) == 2 and f'id="removed-attachment-link-{victim}"' in rev)
+decide(checker, cs7, "approve", "")
+pub2 = attachment_ids_public(pid7)
+check("after approval: 13 attachments are live, the removed one is gone (404)", len(pub2) == 13 and victim not in pub2 and Client(PUBLIC).get(f"/attachments/{victim}")[0] == 404)
+
+maker.get(f"/admin/projects/{pid7}/change"); cs8 = sid(maker, pid7)
+save(maker, {}, stagingId=cs8, files=pdfs(1, "never-live"))
+never = attachment_ids_on_form(maker, cs8) - pub2
+save(maker, {}, stagingId=cs8, action="submit"); decide(checker, cs8, "reject", "not needed")
+check("a rejected change deletes its attachments (404 for everyone)", len(never) == 1 and all(maker.get(f"/attachments/{i}")[0] == 404 for i in never))
+check("the live attachments are untouched by the rejection", attachment_ids_public(pid7) == pub2)
+
 print(f"\n{results.count(True)}/{len(results)} checks passed")
 print("(test projects ZZ Workflow ... remain: one DELETED in the master table, one REJECTED in staging; scripts/remove_demo_data.sh removes them)")
 sys.exit(1 if False in results else 0)

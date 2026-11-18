@@ -19,6 +19,6 @@ if lsof -nP -iTCP:9092 -sTCP:LISTEN >/dev/null 2>&1; then   # the h2 profile is 
   printf '%s\n' "${STATEMENTS[@]}" > "$ROOT/.run/h2-remove-demo.sql"
   java -cp "$H2_JAR" org.h2.tools.RunScript -url "jdbc:h2:tcp://localhost:9092/mem:ucorealty;MODE=Oracle;DB_CLOSE_DELAY=-1" -user sa -script "$ROOT/.run/h2-remove-demo.sql"
 else
-  { echo "set feedback on serveroutput on"; printf '%s\n' "${STATEMENTS[@]}"; echo "exit"; } | docker exec -i uco-oracle sqlplus -s "$DB_USER/$DB_PASS@//localhost/XEPDB1"
+  { echo "set feedback on serveroutput on"; printf '%s\n' "${STATEMENTS[@]}"; echo "exit"; } | docker exec -i uco-oracle-free sqlplus -s "$DB_USER/$DB_PASS@//localhost/FREEPDB1"
 fi
 echo "demo data removed"

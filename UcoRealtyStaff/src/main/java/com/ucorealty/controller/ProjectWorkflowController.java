@@ -4,8 +4,10 @@ import com.ucorealty.dto.ProjectRow;
 import com.ucorealty.model.StaffUser;
 import com.ucorealty.model.Project;
 import com.ucorealty.model.ProjectFields;
+import com.ucorealty.model.ProjectAttachment;
 import com.ucorealty.model.ProjectImage;
 import com.ucorealty.model.ProjectStaging;
+import com.ucorealty.repository.ProjectAttachmentRepository;
 import com.ucorealty.repository.ProjectImageRepository;
 import com.ucorealty.service.HrmsService;
 import com.ucorealty.service.MasterDataService;
@@ -43,21 +45,23 @@ import java.util.stream.Collectors;
 public class ProjectWorkflowController {
   private static final Logger log = LoggerFactory.getLogger(ProjectWorkflowController.class);
   private static final long MAX_PHOTO_BYTES = 1L * 1024 * 1024;   // each photo: 1 MB at most
-  private static final long MAX_DOC_BYTES = 3L * 1024 * 1024;     // brochure / floor plan PDF: 3 MB at most
+  private static final long MAX_ATTACHMENT_BYTES = 3L * 1024 * 1024;   // each attachment (PDF): 3 MB at most; there is no limit on how many
 
   private final ProjectWorkflowService workflow;
   private final ProjectAccessService projectAccess;
   private final ProjectImageRepository imageRepo;
+  private final ProjectAttachmentRepository attachmentRepo;
   private final MasterDataService masterData;
   private final HrmsService hrms;
 
   public ProjectWorkflowController(ProjectWorkflowService workflow, ProjectAccessService projectAccess,
-                                   ProjectImageRepository imageRepo, MasterDataService masterData,
-                                   HrmsService hrms) {
+                                   ProjectImageRepository imageRepo, ProjectAttachmentRepository attachmentRepo,
+                                   MasterDataService masterData, HrmsService hrms) {
     this.hrms = hrms;
     this.workflow = workflow;
     this.projectAccess = projectAccess;
     this.imageRepo = imageRepo;
+    this.attachmentRepo = attachmentRepo;
     this.masterData = masterData;
   }
 
@@ -190,8 +194,7 @@ public class ProjectWorkflowController {
                      @RequestParam(value = "photo8", required = false) MultipartFile photo8,
                      @RequestParam(value = "photo9", required = false) MultipartFile photo9,
                      @RequestParam(value = "photo10", required = false) MultipartFile photo10,
-                     @RequestParam(value = "brochure", required = false) MultipartFile brochure,
-                     @RequestParam(value = "floorPlan", required = false) MultipartFile floorPlan,
+                     @RequestParam(value = "attachments", required = false) List<MultipartFile> attachments,
                      @RequestParam(value = "customCity", required = false) String customCity,
                      HttpServletRequest request, Authentication auth, Model model, RedirectAttributes ra) {
     String user = StaffRoles.require(auth, StaffRoles.MAKERS);
@@ -207,8 +210,7 @@ public class ProjectWorkflowController {
       }
       s = stagingId == null ? workflow.createDraft(form, sent, user) : workflow.saveDraft(stagingId, form, sent, user);
       addPhotos(s, user, photo1, photo2, photo3, photo4, photo5, photo6, photo7, photo8, photo9, photo10);
-      addDocument(s, user, ProjectImage.BROCHURE, "Brochure", brochure);
-      addDocument(s, user, ProjectImage.FLOOR_PLAN, "Floor plan", floorPlan);
+      addAttachments(s, user, attachments);
 
       boolean update = ProjectStaging.UPDATE.equals(s.requestType);
       if ("submit".equalsIgnoreCase(action)) {
@@ -240,6 +242,18 @@ public class ProjectWorkflowController {
     try {
       workflow.removePhoto(stagingId, imageId, user);
       ra.addFlashAttribute("message", "File removed. A file that is already live disappears only after the checker approves.");
+    } catch (ResponseStatusException e) {
+      ra.addFlashAttribute("error", e.getReason());
+    }
+    return "redirect:/admin/projects/staging/" + stagingId + "/edit";
+  }
+
+  @PostMapping("/projects/staging/{stagingId}/attachments/{attachmentId}/remove")
+  public String removeAttachment(@PathVariable Long stagingId, @PathVariable Long attachmentId, Authentication auth, RedirectAttributes ra) {
+    String user = StaffRoles.require(auth, StaffRoles.MAKERS);
+    try {
+      workflow.removeAttachment(stagingId, attachmentId, user);
+      ra.addFlashAttribute("message", "Attachment removed. An attachment that is already live disappears only after the checker approves.");
     } catch (ResponseStatusException e) {
       ra.addFlashAttribute("error", e.getReason());
     }
@@ -329,6 +343,8 @@ public class ProjectWorkflowController {
     model.addAttribute("contents", create ? workflow.contents(s) : Collections.emptyList());
     model.addAttribute("removedImages", workflow.removedImages(s));
     model.addAttribute("newImages", workflow.newImages(s));
+    model.addAttribute("removedAttachments", workflow.removedAttachments(s));
+    model.addAttribute("newAttachments", workflow.newAttachments(s));
     model.addAttribute("canDecide", checkerRole && !user.equals(s.createdBy));
     model.addAttribute("isOwner", user.equals(s.createdBy));
     return "change-review";
@@ -357,7 +373,7 @@ public class ProjectWorkflowController {
     workflow.requireCanView(s, user);
     model.addAttribute("project", workflow.previewOf(s));
     model.addAttribute("images", workflow.photosForForm(s));
-    addDocumentLinks(model, workflow.documentsForForm(s));
+    model.addAttribute("attachments", workflow.attachmentsForForm(s));
     model.addAttribute("amenityRows", Amenities.parse(workflow.previewOf(s).amenityFlags));
     model.addAttribute("isStaffPreview", true);
     model.addAttribute("stagingPreview", true);
@@ -378,10 +394,7 @@ public class ProjectWorkflowController {
     model.addAttribute("zones", masterData.getZones());
     model.addAttribute("states", masterData.getStates());
     model.addAttribute("existingImages", photos);
-    List<ProjectImageRepository.FileInfo> docs = s != null ? workflow.documentsForForm(s) : Collections.emptyList();
-    for (ProjectImageRepository.FileInfo d : docs) {
-      model.addAttribute(ProjectImage.BROCHURE.equals(d.getFileKind()) ? "existingBrochure" : "existingFloorPlan", d);
-    }
+    model.addAttribute("existingAttachments", s != null ? workflow.attachmentsForForm(s) : Collections.emptyList());
     model.addAttribute("amenityList", Amenities.LIST);
     model.addAttribute("amenityAnswers", Amenities.parse(shown != null ? shown.amenityFlags : null));
     model.addAttribute("existingCount", photos.size());
@@ -389,34 +402,35 @@ public class ProjectWorkflowController {
     return "project-form";
   }
 
-  /** Puts the ids of the brochure / floor plan PDFs into the page model (the detail page shows them as buttons). */
-  static void addDocumentLinks(Model model, List<ProjectImageRepository.FileInfo> docs) {
-    for (ProjectImageRepository.FileInfo d : docs) {
-      model.addAttribute(ProjectImage.BROCHURE.equals(d.getFileKind()) ? "brochureId" : "floorPlanId", d.getId());
+  /**
+   * Stores the PDF attachments of the request. There is no limit on how many a project has; each file must be a PDF of at most 3 MB.
+   * All files are checked first, so one bad file saves nothing from this upload.
+   */
+  private void addAttachments(ProjectStaging s, String username, List<MultipartFile> files) throws IOException {
+    if (files == null) return;
+    List<ProjectAttachment> ready = new ArrayList<>();
+    for (MultipartFile file : files) {
+      if (file == null || file.isEmpty()) continue;
+      String name = file.getOriginalFilename();
+      boolean pdfName = name != null && name.toLowerCase().endsWith(".pdf");
+      if (file.getSize() > MAX_ATTACHMENT_BYTES) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "\"" + UploadChecks.cleanName(name) + "\" is larger than 3 MB. An attachment must be a PDF file of at most 3 MB.");
+      }
+      byte[] bytes = file.getBytes();
+      if (!pdfName || !UploadChecks.isPdf(bytes)) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "\"" + UploadChecks.cleanName(name) + "\" is not a PDF file. An attachment must be a PDF file of at most 3 MB.");
+      }
+      ProjectAttachment att = new ProjectAttachment();
+      att.stagingId = s.id;                         // belongs to the maker's working copy: not live, never shown to customers
+      att.projectId = null;
+      att.fileName = UploadChecks.cleanName(name);
+      att.mimeType = "application/pdf";
+      att.fileSize = file.getSize();
+      att.fileData = bytes;
+      att.uploadedBy = username;
+      ready.add(att);
     }
-  }
-
-  /** Stores one PDF (brochure or floor plan) for the request; a new one replaces the old one of the same kind. */
-  private void addDocument(ProjectStaging s, String username, String kind, String label, MultipartFile file) throws IOException {
-    if (file == null || file.isEmpty()) return;
-    String name = file.getOriginalFilename();
-    byte[] bytes = file.getBytes();
-    boolean pdfName = name != null && name.toLowerCase().endsWith(".pdf");
-    if (file.getSize() > MAX_DOC_BYTES || !pdfName || !UploadChecks.isPdf(bytes)) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, label + " must be a PDF file of at most 3 MB.");
-    }
-    for (ProjectImageRepository.FileInfo old : workflow.documentsForForm(s)) {
-      if (kind.equals(old.getFileKind())) workflow.removePhoto(s.id, old.getId(), username);
-    }
-    ProjectImage doc = new ProjectImage();
-    doc.stagingId = s.id;
-    doc.projectId = null;
-    doc.fileKind = kind;
-    doc.fileName = UploadChecks.cleanName(name);
-    doc.mimeType = "application/pdf";
-    doc.fileSize = file.getSize();
-    doc.fileData = bytes;
-    storeFile(doc, username);
+    attachmentRepo.saveAll(ready);
   }
 
   private void addPhotos(ProjectStaging s, String username, MultipartFile... files) throws IOException {
@@ -445,7 +459,7 @@ public class ProjectWorkflowController {
     }
   }
 
-  /** Saves an uploaded file (photo or PDF) of a staging request; its path needs the id the database gives it, so it is saved twice. */
+  /** Saves an uploaded photo of a staging request; its path needs the id the database gives it, so it is saved twice. */
   private void storeFile(ProjectImage file, String username) {
     file.uploadedBy = username;
     file.isVerified = 0;

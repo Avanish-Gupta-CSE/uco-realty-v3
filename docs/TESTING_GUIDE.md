@@ -38,7 +38,7 @@ Checks the customer-site lockdown, headers, bad SSO tokens, CSRF, roles (DIT/mak
 **A. Maker in Durgapur (700001)**
 1. Open http://localhost:8081/UcoRealtyStaff/login, enter `52260`, press *Generate OTP*, enter `123456`. The header shows `ROLE_ZO_MAKER`; there is no Logs and no Customer Leads tab.
 2. **+ Add New Project**. The zone is fixed to **Durgapur** (it comes from the login, never typed). Pick State, then District (or **+ Other / Custom City**). Fill name, builder, branch name, a 6-digit pincode; available units must not exceed total.
-3. Add photos (4 slots, **+ Add More Photos** up to 10, 1 MB each, JPG/PNG/WEBP). **Save Draft**, reopen it, edit it.
+3. Add photos (4 slots, **+ Add More Photos** up to 10, 1 MB each, JPG/PNG/WEBP). **Save Draft**, reopen it, edit it. Section 7: add **PDF attachments** (brochure, floor plan, anything): choose several files at once or press **+ Add another file**; each at most 3 MB, no limit on how many.
 4. **Save & Request Approval**. Leave the branch name empty first: it must be refused with the message on the same form.
 
 **B. Checker in Durgapur (700002) and zone isolation**
@@ -87,13 +87,14 @@ scripts/remove_demo_data.sh          # physically removes those test projects an
 
 ## 3c. Look inside the database while you test (this is the best way to understand the model)
 ```bash
-docker exec -i uco-oracle sqlplus -s uco_realty/uco_realty_pwd@//localhost/XEPDB1 <<'SQL'
+docker exec -i uco-oracle-free sqlplus -s uco_realty/uco_realty_pwd@//localhost/FREEPDB1 <<'SQL'
 set linesize 200 pagesize 100
 col project_name format a28
 col status format a18
 select id, project_name, status, row_version from projects order by created_at;
 select id, project_id, request_type, status, created_by, base_version, row_version from realty_project_staging order by id;
 select id, project_id, staging_id, file_name from realty_project_images order by id;
+select id, project_id, staging_id, file_name from realty_project_attachments order by id;
 SQL
 ```
 Watch it between the steps: *Save as Draft* changes only `realty_project_staging`; *Submit for Approval* flips its status to `PENDING_APPROVAL`; *Approve* copies the values into `realty_projects` (`row_version` +1) and marks the staging row `APPROVED`; a deletion sets `realty_projects.status = 'DELETED'`.
@@ -126,3 +127,7 @@ The test employees are rows in `db_migrations/05_LOCAL_TEST_EMPLOYEES.sql`, in t
 * Logs: `.run/public.log`, `.run/internal.log`.
 * "Port already in use": `scripts/dev-stop.sh`.
 * Login page shows "Single Sign-On required" and no form: the app is running with the `prod` profile.
+
+## Testing on a real Oracle (Docker)
+`scripts/dev-start.sh --oracle` starts Oracle Free in Docker (`gvenzl/oracle-free:23.6-slim-faststart`, native on Apple-silicon Macs; the bank's UAT is 19c, which has no arm64 image), creates our tables and the HRMS stand-in tables (user `HRMS_DBA`), and runs both apps on it. Then `python3 scripts/load_demo_data.py`, and the usual scripts. Needs about 5 GB of free disk; if Docker reports input/output errors the disk is full. Do NOT use the tag `23-slim-faststart` at the moment: its `libsqlplus.so` is empty and the container exits.
+Result of the full run on 13 Nov 2026 (main ad9e29f): the 438-page snapshot taken on Oracle is identical to the one taken on H2 (every role, catalog, leads, audit, Excel, JSON), smoke 34/34, workflow 83/83, a dashboard with 1,108 live projects (more than Oracle's 1,000-item IN limit) opens, a 3 MB PDF and a 0.8 MB photo come back byte for byte, retired and role-less employees are refused. Not covered: the bank's real HRMS tables (column names, the EMAIL column), 19c itself, several servers.

@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 /**
- * One uploaded file (table realty_project_images): a photo, or a PDF (brochure / floor plan), stored in the database as a BLOB.
+ * One uploaded photo (table realty_project_images), stored in the database as a BLOB. PDF files are ProjectAttachment.
  * It belongs either to a live project (projectId) or to a maker's unapproved work (stagingId), never to both.
  * Change this file when: a file needs another property.
  */
@@ -23,17 +23,6 @@ public class ProjectImage {
   // set while the photo is part of a staging request: never shown to customers
   @Column(name = "staging_id")
   public Long stagingId;
-
-  // PHOTO (gallery), BROCHURE or FLOOR_PLAN (PDF documents): one table holds all uploaded files
-  public static final String PHOTO = "PHOTO";
-  public static final String BROCHURE = "BROCHURE";
-  public static final String FLOOR_PLAN = "FLOOR_PLAN";
-
-  @Column(name = "file_kind", length = 20, nullable = false)
-  public String fileKind = PHOTO;
-
-  public boolean isPhoto() { return fileKind == null || PHOTO.equals(fileKind); }
-  public String getFileKind() { return fileKind; }
 
   @Column(name = "file_name", length = 255)
   public String fileName;

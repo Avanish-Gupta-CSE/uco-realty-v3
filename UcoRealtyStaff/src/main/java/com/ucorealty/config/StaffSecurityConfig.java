@@ -53,7 +53,7 @@ public class StaffSecurityConfig {
       .authorizeHttpRequests(auth -> auth
         .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.ERROR, DispatcherType.INCLUDE).permitAll()   // INCLUDE: the shared header/footer of every JSP
         // Open pages: the catalog, the login steps, static files. Everything else needs a login.
-        .requestMatchers("/", "/home", "/entry", "/projects", "/project/**", "/files/**",
+        .requestMatchers("/", "/home", "/entry", "/projects", "/project/**", "/files/**", "/attachments/**",
                          "/login", "/sso/generate-otp", "/otp", "/otp-verify", "/error-page", "/error",
                          "/assets/**", "/css/**", "/images/**", "/js/**").permitAll()
         // Superadmin DIT audit logs strictly restricted:

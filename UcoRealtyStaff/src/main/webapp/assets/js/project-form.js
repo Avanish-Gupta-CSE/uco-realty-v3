@@ -423,21 +423,66 @@ function initDateGuards() {
     }
 }
 
-/** Brochure / floor plan: a PDF of at most 3 MB (the server checks again). */
+/**
+ * Attachments: PDF files of at most 3 MB each, any number. One input can take several files; "+ Add another file" adds another
+ * input. One save can carry at most 30 attachments and 33 MB of files in total (photos included): Tomcat refuses more,
+ * so the page says so before sending. The server checks every file again.
+ */
+var MAX_ATTACHMENT_BYTES = 3 * 1024 * 1024;
+var MAX_ATTACHMENTS_PER_SAVE = 30;
+var MAX_UPLOAD_BYTES_PER_SAVE = 33 * 1024 * 1024;
+
 function initDocumentInputs() {
-    document.querySelectorAll(".doc-file-input").forEach(function (input) {
-        input.addEventListener("change", function () {
-            var file = input.files && input.files[0];
-            if (!file) return;
-            var isPdf = file.name.toLowerCase().endsWith(".pdf");
-            if (!isPdf) {
-                showFormNotice("\"" + file.name + "\" is not a PDF. Please choose a PDF file.");
+    document.querySelectorAll(".doc-file-input").forEach(bindDocumentInput);
+    var addBtn = document.getElementById("addAttachmentBtn");
+    var holder = document.getElementById("attachment-inputs");
+    if (!addBtn || !holder) return;
+    addBtn.addEventListener("click", function () {
+        var next = holder.querySelectorAll(".doc-file-input").length + 1;
+        var row = document.createElement("div");
+        row.className = "mb-2";
+        row.id = "attachment-row-" + next;
+        var input = document.createElement("input");
+        input.type = "file";
+        input.id = "attachment_input_" + next;
+        input.name = "attachments";
+        input.multiple = true;
+        input.className = "form-control form-control-sm doc-file-input";
+        input.accept = "application/pdf,.pdf";
+        row.appendChild(input);
+        holder.appendChild(row);
+        bindDocumentInput(input);
+    });
+}
+
+function bindDocumentInput(input) {
+    input.addEventListener("change", function () {
+        var files = Array.prototype.slice.call(input.files || []);
+        for (var i = 0; i < files.length; i++) {
+            var file = files[i];
+            if (!file.name.toLowerCase().endsWith(".pdf")) {
+                showFormNotice("\"" + file.name + "\" is not a PDF. Please choose PDF files.");
                 input.value = "";
-            } else if (file.size > 3 * 1024 * 1024) {
-                showFormNotice("\"" + file.name + "\" is " + (file.size / 1024 / 1024).toFixed(2) + " MB. The limit is 3 MB.");
-                input.value = "";
+                return;
             }
+            if (file.size > MAX_ATTACHMENT_BYTES) {
+                showFormNotice("\"" + file.name + "\" is " + (file.size / 1024 / 1024).toFixed(2) + " MB. The limit is 3 MB per file.");
+                input.value = "";
+                return;
+            }
+        }
+        var count = 0, bytes = 0;
+        document.querySelectorAll("input[type=file]").forEach(function (other) {
+            Array.prototype.forEach.call(other.files || [], function (f) {
+                bytes += f.size;
+                if (other.classList.contains("doc-file-input")) count++;
+            });
         });
+        if (count > MAX_ATTACHMENTS_PER_SAVE || bytes > MAX_UPLOAD_BYTES_PER_SAVE) {
+            showFormNotice("That is too much for one save (" + count + " attachments, " + (bytes / 1024 / 1024).toFixed(1) +
+                " MB in total; the limit is " + MAX_ATTACHMENTS_PER_SAVE + " attachments and 33 MB). Remove some, save, then add the rest.");
+            input.value = "";
+        }
     });
 }
 
@@ -453,7 +498,7 @@ function packTextFields(formData) {
         var name = entry[0], value = entry[1];
         if (name === "_csrf" || name === "action") return;          // the CSRF check and the button stay ordinary parts
         if (value instanceof File) {
-            if (value.size === 0 && !value.name) formData.delete(name);   // an empty photo slot is not worth a part
+            if (value.size === 0 && !value.name) formData.delete(name);   // an empty photo slot or attachment input is not worth a part
             return;
         }
         packed.append(name, value);

@@ -34,23 +34,23 @@ done
 ENV_ARGS=()
 if [ "$ORACLE" = 1 ]; then
   say "Oracle in Docker"
-  SQ="docker exec -i uco-oracle sqlplus -s uco_realty/uco_realty_pwd@//localhost/XEPDB1"
+  SQ="docker exec -i uco-oracle-free sqlplus -s uco_realty/uco_realty_pwd@//localhost/FREEPDB1"
   sql() { printf 'set heading off feedback off pagesize 0 verify off\n%s\nexit\n' "$1" | $SQ | tr -d ' \t\r\n'; }
-  run_file() { show "sqlplus uco_realty@XEPDB1 @$1"; echo exit | $SQ "@/tmp/db_migrations/$1" 2>&1 | grep -i "ORA-" && die "$1 failed" || true; }
+  run_file() { show "sqlplus uco_realty@FREEPDB1 @$1"; echo exit | $SQ "@/tmp/db_migrations/$1" 2>&1 | grep -i "ORA-" && die "$1 failed" || true; }
   docker info >/dev/null 2>&1 || die "Docker is not running"
-  docker start uco-oracle >/dev/null 2>&1 || (cd "$ROOT" && docker compose up -d oracle >/dev/null 2>&1)
+  docker start uco-oracle-free >/dev/null 2>&1 || (cd "$ROOT" && docker compose up -d oracle >/dev/null 2>&1)
   for i in $(seq 1 60); do
-    [ "$(docker inspect -f '{{.State.Health.Status}}' uco-oracle 2>/dev/null)" = "healthy" ] && break
-    [ "$i" = 60 ] && die "Oracle did not become healthy (docker logs uco-oracle)"
+    [ "$(docker inspect -f '{{.State.Health.Status}}' uco-oracle-free 2>/dev/null)" = "healthy" ] && break
+    [ "$i" = 60 ] && die "Oracle did not become healthy (docker logs uco-oracle-free)"
     sleep 10
   done
-  docker cp "$ROOT/db_migrations" uco-oracle:/tmp/ >/dev/null
+  docker cp "$ROOT/db_migrations" uco-oracle-free:/tmp/ >/dev/null
   [ "$RESET" = 1 ] && run_file 00_DROP_ALL_TABLES.sql
   [ "$(sql "select count(*) from user_tables where table_name='REALTY_PROJECTS';")" = "0" ] && run_file 01_CREATE_TABLES.sql
   # The bank's HRMS tables belong to the database user HRMS_DBA (see util/DatabaseTables.java); our user only has SELECT on them.
   # Locally we recreate that: a user HRMS_DBA owns the stand-in tables (03 + 05) and uco_realty may read them.
-  SYSQ="docker exec -i uco-oracle sqlplus -s system/uco_realty_pwd@//localhost/XEPDB1"
-  HRMSQ="docker exec -i uco-oracle sqlplus -s HRMS_DBA/hrms_dba_pwd@//localhost/XEPDB1"
+  SYSQ="docker exec -i uco-oracle-free sqlplus -s system/uco_realty_pwd@//localhost/FREEPDB1"
+  HRMSQ="docker exec -i uco-oracle-free sqlplus -s HRMS_DBA/hrms_dba_pwd@//localhost/FREEPDB1"
   if [ "$(printf 'set heading off feedback off pagesize 0\nselect count(*) from dba_tables where owner='"'"'HRMS_DBA'"'"' and table_name='"'"'EMPLOYEE_CONTACT_DETAILS'"'"';\nexit\n' | $SYSQ | tr -d ' \t\r\n')" = "0" ]; then
     show "sqlplus system: create user HRMS_DBA (owner of the stand-in HRMS tables)"
     printf 'CREATE USER HRMS_DBA IDENTIFIED BY hrms_dba_pwd QUOTA UNLIMITED ON USERS;\nGRANT CREATE SESSION, CREATE TABLE TO HRMS_DBA;\nexit\n' | $SYSQ >/dev/null 2>&1 || true
@@ -60,7 +60,7 @@ if [ "$ORACLE" = 1 ]; then
     printf 'GRANT SELECT ON HRMS_DBA.employee_contact_details TO uco_realty;\nGRANT SELECT ON HRMS_DBA.employee_tenure TO uco_realty;\nGRANT SELECT ON HRMS_DBA.LG_ENTRY_REVAMP TO uco_realty;\nexit\n' | $HRMSQ >/dev/null
   fi
   # SPRING_PROFILES_ACTIVE: without it the line spring.profiles.active=h2 in application.properties would still switch the apps to H2.
-  ENV_ARGS=(SPRING_PROFILES_ACTIVE=oracle-local DB_URL=jdbc:oracle:thin:@localhost:1521/XEPDB1 DB_USER=uco_realty DB_PASS=uco_realty_pwd)
+  ENV_ARGS=(SPRING_PROFILES_ACTIVE=oracle-local DB_URL=jdbc:oracle:thin:@localhost:1521/FREEPDB1 DB_USER=uco_realty DB_PASS=uco_realty_pwd)
 else
   say "H2 in-memory (local dev)"
   ENV_ARGS=(SPRING_PROFILES_ACTIVE=h2 DB_URL="jdbc:h2:tcp://localhost:9092/mem:ucorealty;MODE=Oracle;DB_CLOSE_DELAY=-1" DB_USER=sa DB_PASS="")

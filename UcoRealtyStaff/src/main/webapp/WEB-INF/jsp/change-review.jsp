@@ -63,12 +63,20 @@
                     </table>
                 </div>
                 <c:if test="${not empty newImages}">
-                    <h3 class="form-section-title" id="review-new-photos-title">New photos and documents</h3>
+                    <h3 class="form-section-title" id="review-new-photos-title">New photos</h3>
                     <div class="d-flex flex-wrap gap-3 mb-3" id="review-new-photos">
                         <c:forEach var="img" items="${newImages}">
-                            <div id="new-photo-${img.id}"><c:choose><c:when test="${img.photo}"><img src="${pageContext.request.contextPath}/files/<c:out value="${img.id}"/>" alt="Photo" class="slot-preview-img" id="new-photo-img-${img.id}"></c:when><c:otherwise><a href="${pageContext.request.contextPath}/files/<c:out value="${img.id}"/>" target="_blank" rel="noopener" class="btn btn-outline-primary btn-sm" id="new-doc-link-${img.id}"><c:out value="${img.fileKind == 'BROCHURE' ? 'Brochure' : 'Floor plan'}"/>: <c:out value="${img.fileName}"/> (PDF)</a></c:otherwise></c:choose></div>
+                            <div id="new-photo-${img.id}"><img src="${pageContext.request.contextPath}/files/<c:out value="${img.id}"/>" alt="Photo" class="slot-preview-img" id="new-photo-img-${img.id}"></div>
                         </c:forEach>
                     </div>
+                </c:if>
+                <c:if test="${not empty newAttachments}">
+                    <h3 class="form-section-title" id="review-new-attachments-title">New attachments (PDF)</h3>
+                    <ul class="mb-3" id="review-new-attachments">
+                        <c:forEach var="att" items="${newAttachments}">
+                            <li id="new-attachment-${att.id}"><a href="${pageContext.request.contextPath}/attachments/<c:out value="${att.id}"/>" target="_blank" rel="noopener" id="new-attachment-link-${att.id}"><c:out value="${att.fileName}"/></a></li>
+                        </c:forEach>
+                    </ul>
                 </c:if>
             </c:when>
             <c:otherwise>
@@ -79,7 +87,7 @@
                 <h3 class="form-section-title" id="review-diff-title">What changes</h3>
                 <c:choose>
                     <c:when test="${empty diff}">
-                        <p class="text-muted small" id="review-no-field-changes">No field values change (photos only).</p>
+                        <p class="text-muted small" id="review-no-field-changes">No field values change (photos or attachments only).</p>
                     </c:when>
                     <c:otherwise>
                         <div class="table-responsive">
@@ -102,20 +110,36 @@
                 </c:choose>
 
                 <c:if test="${not empty removedImages}">
-                    <h3 class="form-section-title" id="review-removed-photos-title">Photos and documents to be removed</h3>
+                    <h3 class="form-section-title" id="review-removed-photos-title">Photos to be removed</h3>
                     <div class="d-flex flex-wrap gap-3 mb-3" id="review-removed-photos">
                         <c:forEach var="img" items="${removedImages}">
-                            <div id="removed-photo-${img.id}"><c:choose><c:when test="${img.photo}"><img src="${pageContext.request.contextPath}/files/<c:out value="${img.id}"/>" alt="Photo to remove" class="slot-preview-img" id="removed-photo-img-${img.id}"></c:when><c:otherwise><a href="${pageContext.request.contextPath}/files/<c:out value="${img.id}"/>" target="_blank" rel="noopener" class="btn btn-outline-primary btn-sm" id="removed-doc-link-${img.id}"><c:out value="${img.fileKind == 'BROCHURE' ? 'Brochure' : 'Floor plan'}"/>: <c:out value="${img.fileName}"/> (PDF)</a></c:otherwise></c:choose></div>
+                            <div id="removed-photo-${img.id}"><img src="${pageContext.request.contextPath}/files/<c:out value="${img.id}"/>" alt="Photo to remove" class="slot-preview-img" id="removed-photo-img-${img.id}"></div>
                         </c:forEach>
                     </div>
                 </c:if>
+                <c:if test="${not empty removedAttachments}">
+                    <h3 class="form-section-title" id="review-removed-attachments-title">Attachments to be removed</h3>
+                    <ul class="mb-3" id="review-removed-attachments">
+                        <c:forEach var="att" items="${removedAttachments}">
+                            <li id="removed-attachment-${att.id}"><a href="${pageContext.request.contextPath}/attachments/<c:out value="${att.id}"/>" target="_blank" rel="noopener" id="removed-attachment-link-${att.id}"><c:out value="${att.fileName}"/></a></li>
+                        </c:forEach>
+                    </ul>
+                </c:if>
                 <c:if test="${not empty newImages}">
-                    <h3 class="form-section-title" id="review-new-photos-title">New photos and documents</h3>
+                    <h3 class="form-section-title" id="review-new-photos-title">New photos</h3>
                     <div class="d-flex flex-wrap gap-3 mb-3" id="review-new-photos">
                         <c:forEach var="img" items="${newImages}">
-                            <div id="new-photo-${img.id}"><c:choose><c:when test="${img.photo}"><img src="${pageContext.request.contextPath}/files/<c:out value="${img.id}"/>" alt="New photo" class="slot-preview-img" id="new-photo-img-${img.id}"></c:when><c:otherwise><a href="${pageContext.request.contextPath}/files/<c:out value="${img.id}"/>" target="_blank" rel="noopener" class="btn btn-outline-primary btn-sm" id="new-doc-link-${img.id}"><c:out value="${img.fileKind == 'BROCHURE' ? 'Brochure' : 'Floor plan'}"/>: <c:out value="${img.fileName}"/> (PDF)</a></c:otherwise></c:choose></div>
+                            <div id="new-photo-${img.id}"><img src="${pageContext.request.contextPath}/files/<c:out value="${img.id}"/>" alt="New photo" class="slot-preview-img" id="new-photo-img-${img.id}"></div>
                         </c:forEach>
                     </div>
+                </c:if>
+                <c:if test="${not empty newAttachments}">
+                    <h3 class="form-section-title" id="review-new-attachments-title">New attachments (PDF)</h3>
+                    <ul class="mb-3" id="review-new-attachments">
+                        <c:forEach var="att" items="${newAttachments}">
+                            <li id="new-attachment-${att.id}"><a href="${pageContext.request.contextPath}/attachments/<c:out value="${att.id}"/>" target="_blank" rel="noopener" id="new-attachment-link-${att.id}"><c:out value="${att.fileName}"/></a></li>
+                        </c:forEach>
+                    </ul>
                 </c:if>
             </c:otherwise>
         </c:choose>
