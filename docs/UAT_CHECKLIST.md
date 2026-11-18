@@ -56,7 +56,7 @@ Then: `scripts/package-release.sh uat` gives both WARs in `release/ucorealty-uat
 1. Copy `UcoRealtyStaff.war` and `UcoRealty.war` to Tomcat's `webapps` folder (the senior helps). Tomcat 11, JDK 25.
 2. Open `http://<server>:<port>/UcoRealtyStaff/` and `http://<server>:<port>/UcoRealty/projects`.
 3. Sign in with an employee number from B6 and OTP `123456` (the test login).
-4. Logs: the `logs` folder in Tomcat's working folder: `UcoRealtyStaff.log`, `UcoRealty.log`.
+4. Logs: `E:/Realty/UcoRealtyStaff/logs/UcoRealtyStaff-<dateTime>.log` and `E:/Realty/UcoRealty/logs/UcoRealty-<dateTime>.log` (the E: drive must exist on the server), and Tomcat's `catalina.out`.
 
 ## D. If you cannot reach the Oracle database
 Run on H2 instead (in memory, test employees 55012 ... 600003, data lost when Tomcat stops). There is no server setting on the bank servers, so this is a file edit and a rebuild:

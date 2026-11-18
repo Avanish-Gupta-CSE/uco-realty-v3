@@ -10,6 +10,7 @@ the checks that do not need a login and says what it skipped. It never creates p
 Exit code is 0 only when every check passes.
 """
 import os
+import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -61,6 +62,10 @@ else:
     check("Durgapur maker 52260 (SOL 7010) signs in", Client(INTERNAL).dev_login("52260"))
     check("HO retail 58382 signs in", retail.dev_login("58382"))
     check("HO retail can open Customer Leads", retail.get("/admin/leads")[0] == 200)
+    s, h, _ = retail.get("/admin/leads/export.xlsx")
+    disp = h.get("Content-Disposition") or h.get("content-disposition") or ""
+    check("Leads Excel downloads as uco-realty-leads_<date>.xlsx", s == 200 and
+          re.search(r'filename="uco-realty-leads_\d{4}-\d{2}-\d{2}\.xlsx"', disp) is not None, disp)
     check("Maker cannot open Customer Leads (403)", maker.get("/admin/leads")[0] == 403)
     check("Checker cannot open Customer Leads (403)", checker.get("/admin/leads")[0] == 403)
     check("DIT can open Customer Leads", dit.get("/admin/leads")[0] == 200)

@@ -58,7 +58,7 @@ paths:
   /api/admin/leads/export.xlsx:
     get:
       summary: The same leads as an Excel file
-      description: Same filters and roles as the list. (The Leads page uses /admin/leads/export.xlsx, which also writes an audit row.)
+      description: Same filters and roles as the list. (The Leads page uses /admin/leads/export.xlsx, which also writes an audit row.) The file is named uco-realty-leads_yyyy-MM-dd.xlsx (date of the download, server time).
       parameters:
         - { $ref: "#/components/parameters/from" }
         - { $ref: "#/components/parameters/to" }

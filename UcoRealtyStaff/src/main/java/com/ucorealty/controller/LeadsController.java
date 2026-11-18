@@ -103,16 +103,8 @@ public class LeadsController {
     List<Lead> filtered = filterLeads(from, to, status, search);
     log.info("[UCO LEAD] {} exports {} leads to Excel (from={}, to={}, status={})", exporter, filtered.size(), from, to, status);
 
-    // Build dynamic date-based filename
-    String filename = "uco-realty-leads";
-    if (from != null && !from.trim().isEmpty() && to != null && !to.trim().isEmpty()) {
-      filename += "_" + from.replaceAll("[^0-9-]", "") + "_to_" + to.replaceAll("[^0-9-]", "");
-    } else if (from != null && !from.trim().isEmpty()) {
-      filename += "_from_" + from.replaceAll("[^0-9-]", "");
-    } else if (to != null && !to.trim().isEmpty()) {
-      filename += "_upto_" + to.replaceAll("[^0-9-]", "");
-    }
-    filename += ".xlsx";
+    // File name: uco-realty-leads_ plus the date of the download, e.g. uco-realty-leads_2026-11-18.xlsx
+    String filename = "uco-realty-leads_" + LocalDate.now() + ".xlsx";
 
     res.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     res.setHeader("Content-Disposition", "attachment; filename=\"" + filename + "\"");

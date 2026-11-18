@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <!-- Log folder is fixed on purpose: this is where the UAT / production server keeps application logs (drive E:). On a laptop it just creates an "E:" folder in the directory you started Java from. -->
+    <!-- Log folder is fixed on purpose: this is where the UAT / production server keeps application logs (drive E:). On a laptop it just creates an "E:" folder in the directory you started Java from.
+         Every start of the application opens a NEW file named with the start date and time, e.g. UcoRealtyStaff-2026-11-18_14-35-52.log.
+         That file is closed and compressed to UcoRealtyStaff-yyyy-MM-dd.<n>.log.gz when the day changes or it reaches 50 MB; those archives are kept 30 days (3 GB at most) and then deleted. -->
+    <timestamp key="startTime" datePattern="yyyy-MM-dd_HH-mm-ss"/>
+
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level [%thread] %logger{36} - %msg%n</pattern>
@@ -8,9 +12,9 @@
     </appender>
 
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>E:/UcoRealtyStaff/logs/UcoRealtyStaff.log</file>
+        <file>E:/Realty/UcoRealtyStaff/logs/UcoRealtyStaff-${startTime}.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>E:/UcoRealtyStaff/logs/UcoRealtyStaff-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <fileNamePattern>E:/Realty/UcoRealtyStaff/logs/UcoRealtyStaff-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
             <maxFileSize>50MB</maxFileSize>
             <maxHistory>30</maxHistory>
             <totalSizeCap>3GB</totalSizeCap>

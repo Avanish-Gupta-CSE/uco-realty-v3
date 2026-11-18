@@ -102,7 +102,7 @@ In the matching file in `repository/`, copy an existing method and keep the form
 with the column names in quotes as `AS "name"` matching the getter). Never pass `null` or `''` as a value (Oracle treats an empty text as NULL): use a 0/1 flag like `LgEntryRepository` does.
 
 ### Where are the logs, and how do I read them?
-`E:/UcoRealtyStaff/logs/` and `E:/UcoRealty/logs/` on the bank server (set in `src/main/resources/logback-spring.xml`); on your laptop `.run/internal.log` and `.run/public.log`.
+`E:/Realty/UcoRealtyStaff/logs/` and `E:/Realty/UcoRealty/logs/` on the bank server, one file `<app>-<dateTime>.log` per start (set in `src/main/resources/logback-spring.xml`, see `docs/DEPLOYMENT.md` section Logs); on your laptop `.run/internal.log` and `.run/public.log`.
 Lines start with a tag: `[UCO SECURITY]`, `[UCO ACCESS]` (someone was refused), `[UCO ERROR]` (a bug: always look at these), `[UCO LEAD]`, `[UCO HRMS]`.
 
 ### Build and hand over
