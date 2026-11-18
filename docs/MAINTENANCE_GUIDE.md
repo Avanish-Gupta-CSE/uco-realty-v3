@@ -88,7 +88,7 @@ Customer app: `UcoRealty/src/main/resources/application.properties`, line `uco.h
 are fixed in `controller/CatalogPageController.java` (`HOME_LOAN_PATH`). Rebuild.
 
 ### Turn the test login off (production) / see the test users
-`UcoRealtyStaff/.../application.properties`: `uco.sso.dev-login-enabled=false` and delete the `uco.sso.test-otp` line; also remove the line `spring.profiles.active=h2`
+`UcoRealtyStaff/.../application.properties`: `uco.sso.dev-login-enabled=false` and delete the `uco.sso.test-otp` line; keep the line `spring.profiles.active=h2` commented out (it already is)
 (in both apps) so Oracle is used. Test employees and what they may do: `TESTING_GUIDE.md`.
 
 ### Add a new page

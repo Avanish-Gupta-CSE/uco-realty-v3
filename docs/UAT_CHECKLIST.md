@@ -6,9 +6,9 @@ Fill in the real values only on your own PC. Do not commit the password or the S
 | What | File | Line | Change |
 | :--- | :--- | :--- | :--- |
 | DB password | `UcoRealtyStaff/src/main/resources/application.properties` | 24 | in `${DB_PASS:...}` replace what is after the colon with the real `HRMS_DBA` UAT password |
-| DB password | `UcoRealty/src/main/resources/application.properties` | 24 | the same |
+| DB password | `UcoRealty/src/main/resources/application.properties` | 24 | the same. **Or** leave `CHANGE_ME_DB_PASSWORD` in the build and set it on the server. On the server, after Tomcat has unpacked the WAR, you can also change the password in `<Tomcat>/webapps/UcoRealtyStaff/WEB-INF/classes/application.properties` and `<Tomcat>/webapps/UcoRealty/WEB-INF/classes/application.properties` (line 24) and restart Tomcat. Copying a new WAR over the old one replaces the unpacked folder, so the password must be set again each time. |
 | (DB address and user are already right, lines 21 and 22) | | | `10.21.128.29:1530/CLDBUAT`, `HRMS_DBA` |
-| Use Oracle instead of H2 | both `application.properties` | staff 66, customer 50 | delete the line `spring.profiles.active=h2` (keep it only for the laptop database, section D) |
+| Use Oracle instead of H2 | both `application.properties` | staff 67, customer 51 | nothing to do: the line `# spring.profiles.active=h2` is already commented out. Remove the `#` only for the laptop database (section D) |
 | SSO key, when you get it | staff `application.properties` | 49 | replace what is after the colon in `${SSO_ENCRYPTION_KEY:...}` (16, 24 or 32 characters). Not needed for the first UAT run |
 
 Then: `scripts/package-release.sh uat` gives both WARs in `release/ucorealty-uat-<date>/`.
@@ -60,13 +60,13 @@ Then: `scripts/package-release.sh uat` gives both WARs in `release/ucorealty-uat
 
 ## D. If you cannot reach the Oracle database
 Run on H2 instead (in memory, test employees 55012 ... 600003, data lost when Tomcat stops). There is no server setting on the bank servers, so this is a file edit and a rebuild:
-keep the line `spring.profiles.active=h2` in both `application.properties` files (staff line 66, customer line 50), build with `scripts/package-release.sh uat`, deploy.
-To go back to Oracle: delete that line in both files, rebuild, deploy.
+remove the `#` in front of `# spring.profiles.active=h2` in both `application.properties` files (staff line 67, customer line 51), build with `scripts/package-release.sh uat`, deploy.
+To go back to Oracle: put the `#` back in both files, rebuild, deploy.
 
 ## E. Before production (nothing to delete in Java)
 1. Staff `application.properties`: set `uco.sso.dev-login-enabled=false` and delete the `uco.sso.test-otp` line (search for TODO).
 2. Put the real SSO key in `sso.encryption.key` (search for TODO).
-   Also delete the line `spring.profiles.active=h2` in both `application.properties` files. All of this is a file edit before the build: there are no server settings.
+   The line `spring.profiles.active=h2` is already commented out in both files and must stay that way (the production build refuses a build where it is active). All of this is a file edit before the build: there are no server settings.
    The session cookie `Secure` flag is not set from our files on a Tomcat server (`server.*` lines are ignored there): ask the server team to set it on the https connector.
 3. Run `UAT_TEST_USERS.sql`'s DELETE if you used it.
 4. Rebuild with `scripts/package-release.sh prod`. After that only the portal link `/entry?Value=...` signs people in.

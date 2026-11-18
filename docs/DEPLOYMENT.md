@@ -19,15 +19,15 @@ Both WARs run two ways (same file): `java -jar <war>` (verified), or dropped int
 
 ## 1. Database (DBA)
 Follow `db/README_DBA_DEPLOYMENT.md`. Order: `01_CREATE_TABLES.sql`; for an existing older database also `06_STAGING_MODEL.sql` and `07_DROP_UNUSED_TABLES.sql` (maker's working-copy table `realty_project_staging`). There is no seed data and no application accounts. UAT and production use the bank's **real HRMS data** and never run `03_`/`05_` (laptop / H2 / Docker only; they are not in the release bundles).
-The application schema user needs `SELECT` on the bank HRMS tables of the user `HRMS_DBA` (`employee_contact_details`, `employee_tenure`, `LG_ENTRY_REVAMP`). Columns read from `employee_contact_details`: `EMPNO, NAME, POSTING_SOL_ID, POSTING_SOL_DESC, SCALE_CODE, CADRE_CODE, POSTING_REGION_NAME, DESIG, MOBILE_NO, E_MAIL` (the tables are read as `HRMS_DBA.employee_contact_details`, `HRMS_DBA.employee_tenure` and `HRMS_DBA.LG_ENTRY_REVAMP`; the owner name is written once, in `util/DatabaseTables.java`). Please verify these names against the real HRMS schema.
+The application schema user needs `SELECT` on the bank HRMS tables of the user `HRMS_DBA` (`employee_contact_details`, `employee_tenure`, `LG_ENTRY_REVAMP`). Columns read from `employee_contact_details`: `EMPNO, NAME, POSTING_SOL_ID, POSTING_SOL_DESC, SCALE_CODE, CADRE_CODE, POSTING_REGION_NAME, DESIG, MOBILE_NO, E_MAIL` (the tables are read as `HRMS_DBA.employee_contact_details`, `HRMS_DBA.employee_tenure` and `HRMS_DBA.LG_ENTRY_REVAMP`; the owner name is written once, in `util/DatabaseTables.java`). The owner confirmed on 18 Nov 2026 that these are the real HRMS column names (checked on another developer's bank PC).
 
 ## 2. Configuration
 **Single `application.properties` per module (aligned with the bank IndiaPost UAT pattern, Decision 133):**
-Each app has one `application.properties` file (`WEB-INF/classes/application.properties`) that holds the bank UAT values. The file `application-h2.properties` is only for laptops; it is used only while the line `spring.profiles.active=h2` is present (see the TODO comments in `application.properties`).
+Each app has one `application.properties` file (`WEB-INF/classes/application.properties`) that holds the bank UAT values. The file `application-h2.properties` is only for laptops; it is used only when the line `spring.profiles.active=h2` is active. In the files that line is commented out (`# spring.profiles.active=h2`) so UAT and production use Oracle; `scripts/dev-start.sh` switches H2 on for a laptop by itself.
 The bank UAT database connection is embedded directly as defaults:
 - URL: `jdbc:oracle:thin:@//10.21.128.29:1530/CLDBUAT`
 - User: `HRMS_DBA`
-- Password: UAT password
+- Password: UAT password. It is written in `application.properties` before the build, or changed on the server in the unpacked WAR: `<Tomcat>/webapps/<WAR name>/WEB-INF/classes/application.properties` (line 24, both apps), then restart Tomcat. Copying a new WAR over the old one replaces the unpacked folder, so set it again.
 - SSO key: UAT testing key
 
 **Tomcat on Windows VM (the bank way):**
@@ -41,13 +41,13 @@ Copy both WAR files into Tomcat's `webapps/` folder and start Tomcat. The values
 **Overrides:** the `${NAME:default}` form in the file would accept a JVM `-D` flag or an environment variable, but that works only where we control the machine (a laptop, `scripts/dev-start.sh`, a `java -jar` run). **On the bank servers do not rely on it: edit the default after the colon and rebuild.**
 
 **Before production (all in `application.properties`, then rebuild):**
-In `UcoRealtyStaff`: set `uco.sso.dev-login-enabled=false` (line 53), delete the `uco.sso.test-otp` line (54), write the real key after the colon in `sso.encryption.key` (49), and delete the line `spring.profiles.active=h2` (66) in **both** apps. `scripts/package-release.sh prod` refuses to build while any of these is still there. It does not check the session cookie `Secure` flag: `server.servlet.session.cookie.secure` is ignored on an external Tomcat (see above), so ask the server team to set it on the https connector.
+In `UcoRealtyStaff`: set `uco.sso.dev-login-enabled=false` (line 53), delete the `uco.sso.test-otp` line (54), write the real key after the colon in `sso.encryption.key` (49). Keep `spring.profiles.active=h2` commented out in **both** apps (it already is). `scripts/package-release.sh prod` refuses to build while any of these is still there. It does not check the session cookie `Secure` flag: `server.servlet.session.cookie.secure` is ignored on an external Tomcat (see above), so ask the server team to set it on the https connector.
 
 The names below are the setting names written in `application.properties` (`${NAME:default}`). On the bank servers you change the default in the file; the "override" column only applies on a laptop or `java -jar`.
 
 | Variable | Module | Required | Meaning |
 | :--- | :--- | :--- | :--- |
-| `SPRING_PROFILES_ACTIVE` | both | no | the line `spring.profiles.active=h2` in `application.properties`: keep it for the laptop database, delete it to use Oracle |
+| `SPRING_PROFILES_ACTIVE` | both | no | the line `# spring.profiles.active=h2` in `application.properties`: commented out = Oracle (UAT, production); remove the `#` only for the laptop database |
 | `DB_URL` / `DB_USER` / `DB_PASS` | both | `uat`, `prod` | Oracle connection |
 | `DB_POOL_MAX` | both | no | connection pool size (default 10 in uat, 25 in prod) |
 | `SSO_ENCRYPTION_KEY` | staff | `prod` | the bank SSO key as plain text (16, 24 or 32 characters). The app refuses to start without a valid key in `prod`; `h2` and `uat` use a development key until set |
