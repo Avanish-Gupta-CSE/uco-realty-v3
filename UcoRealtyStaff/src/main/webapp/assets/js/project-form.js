@@ -320,7 +320,14 @@ function initPhotoSlots() {
                 previewWrap.classList.add("d-none");
             }
             if (promptEl) promptEl.classList.remove("d-none");
-            if (card) {
+            // any empty card can be removed (the "+ Add More Photos" button brings the first removed one back);
+            // the last card left on the page is only cleared, so there is always a place to add a photo
+            var shown = 0;
+            for (var n = 1; n <= 10; n++) {
+                var other = document.getElementById("slot_card_" + n);
+                if (document.getElementById("existing_card_" + n) || (other && !other.classList.contains("d-none"))) shown++;
+            }
+            if (card && shown > 1) {
                 card.classList.remove("d-flex");
                 card.classList.add("d-none");
             }
@@ -437,10 +444,23 @@ function initDocumentInputs() {
     var addBtn = document.getElementById("addAttachmentBtn");
     var holder = document.getElementById("attachment-inputs");
     if (!addBtn || !holder) return;
+    var rowCounter = holder.querySelectorAll(".doc-file-input").length;
+    // ✕ on a file row: the last remaining row is only cleared, any other row is removed
+    holder.addEventListener("click", function (e) {
+        var btn = e.target.closest ? e.target.closest(".attachment-row-remove-btn") : null;
+        if (!btn) return;
+        var row = btn.parentNode;
+        if (holder.querySelectorAll(".attachment-input-row").length > 1) {
+            holder.removeChild(row);
+        } else {
+            var only = row.querySelector(".doc-file-input");
+            if (only) only.value = "";
+        }
+    });
     addBtn.addEventListener("click", function () {
-        var next = holder.querySelectorAll(".doc-file-input").length + 1;
+        var next = ++rowCounter;
         var row = document.createElement("div");
-        row.className = "mb-2";
+        row.className = "mb-2 d-flex align-items-center gap-2 attachment-input-row";
         row.id = "attachment-row-" + next;
         var input = document.createElement("input");
         input.type = "file";
@@ -449,7 +469,14 @@ function initDocumentInputs() {
         input.multiple = true;
         input.className = "form-control form-control-sm doc-file-input";
         input.accept = "application/pdf,.pdf";
+        var removeBtn = document.createElement("button");
+        removeBtn.type = "button";
+        removeBtn.className = "attachment-row-remove-btn";
+        removeBtn.id = "btn-remove-attachment-row-" + next;
+        removeBtn.title = "Remove this file";
+        removeBtn.textContent = "\u2715";
         row.appendChild(input);
+        row.appendChild(removeBtn);
         holder.appendChild(row);
         bindDocumentInput(input);
     });

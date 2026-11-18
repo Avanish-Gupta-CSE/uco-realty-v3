@@ -304,9 +304,9 @@
                 <div class="col-md-6 col-lg-4">
                     <label for="builderRating" class="form-label fw-semibold small">Builder Rating (X / Y)</label>
                     <div class="input-group">
-                        <input type="text" id="builderRating" name="builderRating" class="form-control" maxlength="50" value="<c:out value="${project.builderRating}"/>" placeholder="X e.g. 4">
+                        <input type="text" id="builderRating" name="builderRating" class="form-control" maxlength="50" value="<c:out value="${project.builderRating}"/>" placeholder="e.g. 4">
                         <span class="input-group-text">/</span>
-                        <input type="text" id="builderRatingOutOf" name="builderRatingOutOf" class="form-control" maxlength="20" value="<c:out value="${project.builderRatingOutOf}"/>" placeholder="Y e.g. 5">
+                        <input type="text" id="builderRatingOutOf" name="builderRatingOutOf" class="form-control" maxlength="20" value="<c:out value="${project.builderRatingOutOf}"/>" placeholder="e.g. 5">
                     </div>
                 </div>
 
@@ -361,9 +361,6 @@
             <h3 class="form-section-title" id="section-photos">
                 6. Project Photographs (Upload up to 10 Photos — Max 1MB each)
             </h3>
-            <p class="text-muted small mb-3" id="photos-hint-text">
-                Upload distinct project photos into the separate slots below (JPG, PNG, WEBP). Showing 4 slots initially. Click <strong>"+ Add More Photos"</strong> to add more slots (up to 10 photos total). Maximum 1MB per photo.
-            </p>
 
             <c:set var="existingCount" value="${not empty existingCount ? existingCount : (not empty existingImages ? existingImages.size() : 0)}"/>
             <c:set var="initialVisible" value="${not empty initialVisible ? initialVisible : (existingCount > 4 ? existingCount : 4)}"/>
@@ -401,9 +398,7 @@
                         <%-- Slot is empty, ready for upload with dedicated icon --%>
                         <c:otherwise>
                             <div class="photo-slot-card upload-slot position-relative ${i <= initialVisible ? 'd-flex' : 'd-none'}" id="slot_card_${i}">
-                                <c:if test="${i > 4}">
-                                    <button type="button" class="slot-remove-extra-btn" id="btn-remove-slot-${i}" data-slot="${i}" title="Remove this slot">✕</button>
-                                </c:if>
+                                <button type="button" class="slot-remove-extra-btn" id="btn-remove-slot-${i}" data-slot="${i}" title="Remove this photo slot">✕</button>
 
                                 <input type="file" id="photo_input_${i}" name="photo${i}" accept="image/png,image/jpeg,image/webp" class="d-none slot-file-input" data-slot="${i}">
 
@@ -458,11 +453,10 @@
 
             <%-- 7. PDF attachments (any number) --%>
             <h3 class="form-section-title" id="section-attachments">
-                7. Attachments (PDF files, max 3MB each, as many as you need)
+                7. Attachments (PDF files, max 3MB each)
             </h3>
             <p class="text-muted small mb-2" id="attachments-hint-text">
-                Brochure, floor plan, approval letters or any other PDF. Choose several files at once, or press <strong>"+ Add another file"</strong>.
-                Everything you add is shown to customers after the checker approves it. One save can carry about 30 files (33 MB in total); save, then add more if you need to.
+                Brochure, floor plan, approval letters or any other PDF. Use <strong>"+ Add another file"</strong> for more. Files are shown to customers after approval.
             </p>
             <div class="mb-4" id="attachments-box">
                 <c:if test="${not empty existingAttachments}">
@@ -479,8 +473,9 @@
                     </ul>
                 </c:if>
                 <div id="attachment-inputs">
-                    <div class="mb-2" id="attachment-row-1">
+                    <div class="mb-2 d-flex align-items-center gap-2 attachment-input-row" id="attachment-row-1">
                         <input type="file" id="attachment_input_1" name="attachments" multiple class="form-control form-control-sm doc-file-input" accept="application/pdf,.pdf">
+                        <button type="button" class="attachment-row-remove-btn" id="btn-remove-attachment-row-1" title="Remove this file">✕</button>
                     </div>
                 </div>
                 <button type="button" id="addAttachmentBtn" class="add-photos-btn">
