@@ -41,6 +41,10 @@ public class HomeController {
   @Value("${sso.encryption.key}")
   private String encryptionKey;
 
+  // How the bank portal encrypts the token: AES/GCM/NoPadding (default) or AES/CBC/PKCS5Padding. Anything else stops the start.
+  @Value("${sso.cipher:AES/GCM/NoPadding}")
+  private String ssoCipher;
+
   // Test login (employee number + test OTP) on the login page: only the h2 and uat profiles turn this on.
   @Value("${uco.sso.dev-login-enabled:false}")
   private boolean devLoginEnabled;
@@ -63,6 +67,9 @@ public class HomeController {
 
   @PostConstruct
   void init() {
+    if (!SsoToken.isValidCipher(ssoCipher)) {
+      throw new IllegalStateException("sso.cipher must be exactly AES/GCM/NoPadding or AES/CBC/PKCS5Padding");
+    }
     if (!SsoToken.isValidKey(encryptionKey)) {
       throw new IllegalStateException("sso.encryption.key (SSO_ENCRYPTION_KEY) must be 16, 24 or 32 characters long");
     }
@@ -85,7 +92,7 @@ public class HomeController {
     String empNo;
     String sol;
     try {
-      String text = SsoToken.decrypt(value, encryptionKey);
+      String text = SsoToken.decrypt(value, encryptionKey, ssoCipher);
       empNo = SsoToken.employeeNumber(text);
       sol = SsoToken.solId(text);
     } catch (GeneralSecurityException | IllegalArgumentException e) {

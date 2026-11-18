@@ -9,9 +9,10 @@ Every value below sits in a `application.properties` file with a `# TODO:` comme
 | 22 | `spring.datasource.username` | `HRMS_DBA` (the one application user) | production user |
 | 24 | `spring.datasource.password` (`CHANGE_ME_DB_PASSWORD` after the colon) | **real DB password** | production password |
 | 49 | `sso.encryption.key` | dev key until the bank gives one | **real bank key** (16, 24 or 32 characters) |
-| 53 | `uco.sso.dev-login-enabled` | `true` (test login) | **`false`** |
-| 54 | `uco.sso.test-otp` | `123456` | **delete the line** |
-| 59 | `uco.rbac.superadmin-sols` | `7115,7103` | `7115` only |
+| 51 | `sso.cipher` | `AES/GCM/NoPadding` (default; keep unless the bank says CBC) | exactly what the bank's portal uses: `AES/GCM/NoPadding` (12-byte IV first) or `AES/CBC/PKCS5Padding` (16-byte IV first); any other text stops the app at start |
+| 55 | `uco.sso.dev-login-enabled` | `true` (test login) | **`false`** |
+| 56 | `uco.sso.test-otp` | `123456` | **delete the line** |
+| 61 | `uco.rbac.superadmin-sols` | `7115,7103` | `7115` only |
 | 60-62 | marketing/retail SOLs, zonal regex | keep | keep |
 
 ## UcoRealty (`UcoRealty/src/main/resources/application.properties`)
