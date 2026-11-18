@@ -15,13 +15,7 @@ Both WARs run two ways (same file): `java -jar <war>` (verified), or dropped int
 
 **Names and URLs.** Project `ucorealty` (Java package `com.ucorealty`), two WARs: `UcoRealty.war` (customers, internet zone) and `UcoRealtyStaff.war` (staff, intranet). Whatever the WAR is called, no URL in the code is hard-coded: JSPs use `${pageContext.request.contextPath}`, JavaScript reads `data-context-path`, Java redirects are context-relative and the public JSON API builds photo URLs from `request.getContextPath()`. So `/api/public/projects` becomes `/UcoRealty/api/public/projects` on Tomcat with no code change. `java -jar` runs under the same context paths (`application.properties`) and `python3 scripts/context_path_check.py` proves it before every hand-over.
 
-**External Tomcat setup (per server):** put the settings in `bin/setenv.sh` (Linux) / `bin/setenv.bat` (Windows), then copy the WAR to `webapps/` and start Tomcat:
-```bash
-export CATALINA_OPTS="-Dspring.profiles.active=uat \
-  -DDB_URL=jdbc:oracle:thin:@//db-host:1521/SERVICE -DDB_USER=... -DDB_PASS=... \
-  -DSSO_ENCRYPTION_KEY=... -DSESSION_COOKIE_SECURE=true"
-```
-(`-D...` JVM properties and OS environment variables both work.) `server.port` and `server.servlet.context-path` in the application files are ignored on an external Tomcat; the connector port and the WAR name decide.
+**External Tomcat setup (per server): there are NO server settings.** On the bank servers we cannot set environment variables or Java options (`-D...`, `setenv`, `CATALINA_OPTS`). Every value that differs between UAT and production (database password, SSO key, test login, profile line) is written into `application.properties` **before the WAR is built** (`scripts/package-release.sh uat|prod`); then copy the WAR to `webapps/` and start Tomcat. Changing a value later means editing the file and rebuilding. The exact lines are listed in `.brain/03_SYSTEM/Login_Environments.md` and in section 2 below. `server.port` and `server.servlet.context-path` in the application files are ignored on an external Tomcat; the connector port and the WAR name decide.
 
 ## 1. Database (DBA)
 Follow `db/README_DBA_DEPLOYMENT.md`. Order: `01_CREATE_TABLES.sql`; for an existing older database also `06_STAGING_MODEL.sql` and `07_DROP_UNUSED_TABLES.sql` (maker's working-copy table `realty_project_staging`). There is no seed data and no application accounts. UAT and production use the bank's **real HRMS data** and never run `03_`/`05_` (laptop / H2 / Docker only; they are not in the release bundles).
@@ -39,35 +33,33 @@ The bank UAT database connection is embedded directly as defaults:
 **Tomcat on Windows VM (the bank way):**
 Copy both WAR files into Tomcat's `webapps/` folder and start Tomcat. The values built into `application.properties` are used unless you override them. Before a production build: `scripts/package-release.sh prod` refuses to build while the laptop profile, the test login, the test OTP, the UAT SSO key, SOL 7103 or the placeholder database password are still in the files.
 
-**Settings that only a DBA can change (Tomcat, not the WAR):** the `server.*` lines in `application.properties` (`server.servlet.session.*`, `server.error.*`, `server.port`, `server.servlet.context-path`) are used only when an application runs on its own (`java -jar`, as `scripts/dev-start.sh` does). On the bank's Tomcat they are ignored: the URL path comes from the WAR file name and the rest from Tomcat itself. Please check on UAT and write the answer here:
+**Settings that only the server team can change (Tomcat, not the WAR; not ours to set):** the `server.*` lines in `application.properties` (`server.servlet.session.*`, `server.error.*`, `server.port`, `server.servlet.context-path`) are used only when an application runs on its own (`java -jar`, as `scripts/dev-start.sh` does). On the bank's Tomcat they are ignored: the URL path comes from the WAR file name and the rest from Tomcat itself. Please check on UAT and write the answer here:
 - gzip of pages (HTML, CSS, JS, JSON): `compression="on"` on the Tomcat `<Connector>` in `server.xml` (saves most of the page size).
 - session time-out: `<session-timeout>` in Tomcat's `conf/web.xml` (the staff app expects 30 minutes).
 - session cookie: `HttpOnly` (Tomcat default) and, once the site runs on https, `Secure` (`<Context useHttpOnly="true">` and the `secure` cookie setting in `context.xml` or the https connector).
 
-**Optional overrides (if connecting to a different DB or port):**
-Any setting can still be overridden using JVM `-D` flags or environment variables:
-```bash
--DDB_URL='jdbc:oracle:thin:@//different-host:1521/SERVICE' -DDB_USER=... -DDB_PASS=...
-```
+**Overrides:** the `${NAME:default}` form in the file would accept a JVM `-D` flag or an environment variable, but that works only where we control the machine (a laptop, `scripts/dev-start.sh`, a `java -jar` run). **On the bank servers do not rely on it: edit the default after the colon and rebuild.**
 
-**Before production:**
-Set `uco.sso.dev-login-enabled=false` in `UcoRealtyStaff/src/main/resources/application.properties`, provide the production `SSO_ENCRYPTION_KEY`, and set `server.servlet.session.cookie.secure=true` on HTTPS. `scripts/package-release.sh prod` enforces that `dev-login-enabled` is false.
+**Before production (all in `application.properties`, then rebuild):**
+In `UcoRealtyStaff`: set `uco.sso.dev-login-enabled=false` (line 53), delete the `uco.sso.test-otp` line (54), write the real key after the colon in `sso.encryption.key` (49), and delete the line `spring.profiles.active=h2` (66) in **both** apps. `scripts/package-release.sh prod` refuses to build while any of these is still there. It does not check the session cookie `Secure` flag: `server.servlet.session.cookie.secure` is ignored on an external Tomcat (see above), so ask the server team to set it on the https connector.
+
+The names below are the setting names written in `application.properties` (`${NAME:default}`). On the bank servers you change the default in the file; the "override" column only applies on a laptop or `java -jar`.
 
 | Variable | Module | Required | Meaning |
 | :--- | :--- | :--- | :--- |
-| `SPRING_PROFILES_ACTIVE` | both | no | overrides the line in `application.properties` |
+| `SPRING_PROFILES_ACTIVE` | both | no | the line `spring.profiles.active=h2` in `application.properties`: keep it for the laptop database, delete it to use Oracle |
 | `DB_URL` / `DB_USER` / `DB_PASS` | both | `uat`, `prod` | Oracle connection |
 | `DB_POOL_MAX` | both | no | connection pool size (default 10 in uat, 25 in prod) |
 | `SSO_ENCRYPTION_KEY` | staff | `prod` | the bank SSO key as plain text (16, 24 or 32 characters). The app refuses to start without a valid key in `prod`; `h2` and `uat` use a development key until set |
 | `UCO_RBAC_RETAIL_SOLS` | staff | no (default 8001) | SOL(s) of HO Retail Banking. Others: `UCO_RBAC_SUPERADMIN_SOLS`=7115, `UCO_RBAC_MARKETING_SOLS`=8028, `UCO_RBAC_ZONAL_SOL_REGEX` |
-| `SESSION_COOKIE_SECURE` | both | no | `false` in `h2`/`uat`, `true` in `prod` |
+| `SESSION_COOKIE_SECURE` | both | no | `java -jar` only; ignored on an external Tomcat (the server team sets `Secure` there) |
 | `SERVER_PORT` | both | no | 8080 customer / 8081 staff (`java -jar` only) |
 
 Every WAR holds all the profile files and the H2 driver; only the active profile is used.
 
 ### Logs
 Every line the application writes about its own work starts with a tag: `[UCO SSO]` sign-ins and sign-outs, `[UCO HRMS]` employee lookups, `[UCO WORKFLOW]` what a maker or checker did to which project, `[UCO LEAD]` lead saved or exported (never names or phone numbers), `[UCO ACCESS]` / `[UCO SECURITY]` / `[UCO HTTP 4xx]` refused actions (wrong role or zone, missing CSRF token, unknown URL), `[UCO ERROR]` unexpected failures with the full stack trace. On Tomcat they go to `catalina.out`; with `java -jar` to the terminal. Filter with `grep '\[UCO'`.
-* More detail: set `LOGGING_LEVEL_COM_UCOREALTY=DEBUG` (environment). To also write a file: `-Dlogging.file.name=/var/log/ucorealty/UcoRealtyStaff.log`.
+* More detail: change `logging.level.com.ucorealty=INFO` to `DEBUG` in `application.properties` and rebuild. The log file location is written in `logback-spring.xml` (staff: `E:/UcoRealtyStaff/logs/UcoRealtyStaff.log`).
 * The permanent record of who did what is the database (`realty_audit_log`, `realty_login_audit`; DIT Logs page); the log is for the server team.
 
 ## 3. Bank SSO integration

@@ -2,13 +2,14 @@
 
 Fill in the real values only on your own PC. Do not commit the password or the SSO key.
 
-## A. Before building the WARs (edit two files, then rebuild)
+## A. Before building the WARs (edit the two files, then rebuild; there are no server settings on the bank servers, so the file is the only place)
 | What | File | Line | Change |
 | :--- | :--- | :--- | :--- |
-| DB password | `UcoRealtyStaff/src/main/resources/application.properties` | 22 | in `${DB_PASS:...}` replace what is after the colon with the real `HRMS_DBA` UAT password |
-| DB password | `UcoRealty/src/main/resources/application.properties` | 22 | the same |
-| (DB address and user are already right, lines 20 and 21) | | | `10.21.128.29:1530/CLDBUAT`, `HRMS_DBA` |
-| SSO key, when you get it | staff `application.properties` | 45 | replace what is after the colon in `${SSO_ENCRYPTION_KEY:...}` (16, 24 or 32 characters). Not needed for the first UAT run |
+| DB password | `UcoRealtyStaff/src/main/resources/application.properties` | 24 | in `${DB_PASS:...}` replace what is after the colon with the real `HRMS_DBA` UAT password |
+| DB password | `UcoRealty/src/main/resources/application.properties` | 24 | the same |
+| (DB address and user are already right, lines 21 and 22) | | | `10.21.128.29:1530/CLDBUAT`, `HRMS_DBA` |
+| Use Oracle instead of H2 | both `application.properties` | staff 66, customer 50 | delete the line `spring.profiles.active=h2` (keep it only for the laptop database, section D) |
+| SSO key, when you get it | staff `application.properties` | 49 | replace what is after the colon in `${SSO_ENCRYPTION_KEY:...}` (16, 24 or 32 characters). Not needed for the first UAT run |
 
 Then: `scripts/package-release.sh uat` gives both WARs in `release/ucorealty-uat-<date>/`.
 
@@ -24,7 +25,7 @@ Then: `scripts/package-release.sh uat` gives both WARs in `release/ucorealty-uat
    SELECT column_name FROM user_tab_columns WHERE table_name='EMPLOYEE_CONTACT_DETAILS' AND column_name='RETIRE_FLAG';
    ```
 4. Create our 5 tables: run the whole file `db_migrations/01_CREATE_TABLES.sql` (Run Script, F5).
-5. Check they exist (must say 6):
+5. Check they exist (must say 5):
    ```sql
    SELECT COUNT(*) FROM user_tables
    WHERE table_name IN ('REALTY_PROJECTS','REALTY_PROJECT_STAGING','REALTY_PROJECT_IMAGES','REALTY_AUDIT_LOG','REALTY_LOGIN_AUDIT');
@@ -58,13 +59,15 @@ Then: `scripts/package-release.sh uat` gives both WARs in `release/ucorealty-uat
 4. Logs: the `logs` folder in Tomcat's working folder: `UcoRealtyStaff.log`, `UcoRealty.log`.
 
 ## D. If you cannot reach the Oracle database
-Run on H2 instead (in memory, test employees 55012 ... 600003, data lost when Tomcat stops):
-add the Java option `-Dspring.profiles.active=h2` to the Tomcat service (Tomcat configuration tool > Java > Java Options), restart.
-Remove the option to go back to Oracle.
+Run on H2 instead (in memory, test employees 55012 ... 600003, data lost when Tomcat stops). There is no server setting on the bank servers, so this is a file edit and a rebuild:
+keep the line `spring.profiles.active=h2` in both `application.properties` files (staff line 66, customer line 50), build with `scripts/package-release.sh uat`, deploy.
+To go back to Oracle: delete that line in both files, rebuild, deploy.
 
 ## E. Before production (nothing to delete in Java)
 1. Staff `application.properties`: set `uco.sso.dev-login-enabled=false` and delete the `uco.sso.test-otp` line (search for TODO).
 2. Put the real SSO key in `sso.encryption.key` (search for TODO).
+   Also delete the line `spring.profiles.active=h2` in both `application.properties` files. All of this is a file edit before the build: there are no server settings.
+   The session cookie `Secure` flag is not set from our files on a Tomcat server (`server.*` lines are ignored there): ask the server team to set it on the https connector.
 3. Run `UAT_TEST_USERS.sql`'s DELETE if you used it.
 4. Rebuild with `scripts/package-release.sh prod`. After that only the portal link `/entry?Value=...` signs people in.
 

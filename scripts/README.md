@@ -4,13 +4,13 @@
 
 | # | Step | Who | Command / action |
 | :-: | :--- | :--- | :--- |
-| 1 | Create the tables | DBA | run `db_migrations` 01, and for `uat` also 03 and 05, as the application schema user |
-| 2 | Build the two WARs | you | `cd UcoRealty && mvn clean package -DskipTests`, then the same in `UcoRealtyStaff` (JDK 25). Result: `target/UcoRealty.war`, `target/UcoRealtyStaff.war` |
-| 3 | Set the settings on each server | server admin | `SPRING_PROFILES_ACTIVE=uat` (or set it in `application.properties`), `DB_URL`, `DB_USER`, `DB_PASS`; staff server also `SSO_ENCRYPTION_KEY` (e.g. in Tomcat's `bin/setenv.sh`) |
+| 1 | Create the tables | DBA | run `db_migrations/01_CREATE_TABLES.sql` as the application schema user. `03` and `05` (stand-in HRMS tables and test employees) are for a laptop or Docker only: never on UAT or production, where the real HRMS tables exist |
+| 2 | Write the settings into the files | you | there are NO server settings on the bank servers (no environment variables, no `-D`, no `setenv`): edit `application.properties` of both apps before the build: DB password (line 24), delete the line `spring.profiles.active=h2`, staff also `sso.encryption.key` (line 49) and, for production, `dev-login-enabled=false` and no `test-otp` line. List: `docs/UAT_CHECKLIST.md` sections A and E |
+| 3 | Build the two WARs | you | `scripts/package-release.sh uat` (or `prod`), or by hand `cd UcoRealty && mvn clean package -DskipTests`, then the same in `UcoRealtyStaff` (JDK 25). Result: `target/UcoRealty.war`, `target/UcoRealtyStaff.war` |
 | 4 | Copy the WAR into Tomcat's `webapps/` | server admin | customer WAR on the internet-zone server, staff WAR on the intranet server; Tomcat 11 + JDK 25 |
 | 5 | Open the URL | everyone | `https://<host>/UcoRealty/projects`, `https://<host>/UcoRealtyStaff/` |
 
-`scripts/package-release.sh uat` does steps 2 plus "put the WARs, the SQL files and DEPLOYMENT.md in one zip with checksums" for the hand-over.
+`scripts/package-release.sh uat` does step 3 plus "put the WARs, the SQL files and DEPLOYMENT.md in one zip with checksums" for the hand-over.
 
 ## Running it by hand, without `dev-start.sh`
 ```bash
@@ -19,7 +19,7 @@
 java -jar UcoRealtyStaff/target/UcoRealtyStaff.war          # terminal 1
 java -jar UcoRealty/target/UcoRealty.war    # terminal 2
 ```
-That is all with the `h2` profile set in `application.properties`: H2 starts inside the app and the staff app runs all the SQL. For Oracle put `SPRING_PROFILES_ACTIVE=uat DB_URL=... DB_USER=... DB_PASS=...` in front of each `java`. Stop with Ctrl+C.
+That is all with the `h2` profile set in `application.properties`: H2 starts inside the app and the staff app runs all the SQL. For Oracle on your own laptop you may put `DB_URL=... DB_USER=... DB_PASS=...` in front of each `java` (this works only on a machine you control, not on the bank servers), or delete the `h2` line in the files and rebuild. Stop with Ctrl+C.
 
 Customer: http://localhost:8080/UcoRealty/projects. Staff: http://localhost:8081/UcoRealtyStaff/ (employee `52260`, OTP `123456`). H2 console: http://localhost:8082 (`jdbc:h2:tcp://localhost:9092/mem:ucorealty`, user `sa`, no password).
 
@@ -40,7 +40,7 @@ It stops old runs, builds both apps, starts staff then customer, and waits until
 | `build_geo_districts.py` | one-off tool that built `geo/districts.json` from a government CSV | no |
 
 ## Reading the logs
-`.run/internal.log` (staff) and `.run/public.log` (customer). On a Tomcat server the same output goes to `catalina.out`. A failed start shows "APPLICATION FAILED TO START" with the reason (wrong `DB_*`, missing `SSO_ENCRYPTION_KEY`, or in `uat` tables that do not match the code).
+`.run/internal.log` (staff) and `.run/public.log` (customer). On a Tomcat server the same output goes to `catalina.out`. A failed start shows "APPLICATION FAILED TO START" with the reason (wrong database lines, an invalid `sso.encryption.key` (it must be 16, 24 or 32 characters), or tables that do not match the code).
 
 ## Page snapshot (proof that a clean-up changed nothing visible)
 `scripts/snapshot_fresh.sh .run/snap-before` (stop, rebuild, start on H2, load demo data, save every page for every role), make the change,
