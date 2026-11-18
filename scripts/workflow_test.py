@@ -343,6 +343,60 @@ save(maker, {}, stagingId=cs8, action="submit"); decide(checker, cs8, "reject", 
 check("a rejected change deletes its attachments (404 for everyone)", len(never) == 1 and all(maker.get(f"/attachments/{i}")[0] == 404 for i in never))
 check("the live attachments are untouched by the rejection", attachment_ids_public(pid7) == pub2)
 
+print("\n== 15. Attachments: file names, access, size limits, withdraw and delete")
+def att_links(html, prefix):
+    return re.findall(r'id="%s-(\d+)"[^>]*>([^<]*)<' % prefix, html)
+
+
+names = ['<script>alert(1)</script>.pdf', 'योजना ब्रोशर.pdf', ("long" * 80) + ".pdf", "dup.pdf", "dup.pdf", "../../etc/passwd.pdf", "with space (1).pdf"]
+fl = demo.form(8, "ZZ Workflow Names", "ZZ Workflow Builder", "West Bengal", "Durgapur", "713201", 40)
+fl.update({"branchName": "Durgapur Main Branch", "amenities": "Park"})
+s_, _, _ = save(maker, fl, action="draft", files=[("attachments", n, demo.DEMO_PDF, "application/pdf") for n in names])
+pid8 = demo.newest_project_id(maker, "ZZ Workflow Names"); sid8 = sid(maker, pid8)
+check("odd file names (markup, Hindi, 320 characters, folder part, duplicates) are accepted", s_ == 302 and pid8 is not None, s_)
+stored = att_links(maker.get(f"/admin/projects/staging/{sid8}/edit")[2].decode("utf-8", "replace"), "existing-attachment-link")
+shown = [n for _, n in stored]
+check("all 7 are stored", len(stored) == 7, len(stored))
+check("the Hindi name is kept as written", "योजना ब्रोशर.pdf" in shown, shown)
+check("no stored name is longer than 100 characters and every one still ends in .pdf", all(len(n) <= 100 and n.endswith(".pdf") for n in shown), shown)
+check("markup characters and the folder part are gone from the names", all("<" not in n and ">" not in n and "/" not in n for n in shown), shown)
+aid8 = stored[0][0]
+check("the draft's attachment opens for the maker, not for customers, not for another zone",
+      maker.get(f"/attachments/{aid8}")[0] == 200 and Client(PUBLIC).get(f"/attachments/{aid8}")[0] == 404
+      and all(c.get(f"/attachments/{aid8}")[0] in (403, 404) for c in (other_maker, other_checker, retail)))
+check("another maker cannot remove it", other_maker.post(f"/admin/projects/staging/{sid8}/attachments/{aid8}/remove",
+      {"_csrf": other_maker.csrf("/admin/projects")})[0] in (302, 403) and len(attachment_ids_on_form(maker, sid8)) == 7)
+save(maker, {}, stagingId=sid8, action="submit")
+check("the zone's checker can open it while pending, another zone's checker cannot",
+      checker.get(f"/attachments/{aid8}")[0] == 200 and other_checker.get(f"/attachments/{aid8}")[0] in (403, 404))
+check("the preview and the review of the new project list the attachments",
+      "योजना ब्रोशर.pdf" in checker.get(f"/admin/projects/staging/{sid8}/preview")[2].decode("utf-8", "replace")
+      and 'id="review-new-attachments"' in checker.get(f"/admin/projects/staging/{sid8}/review")[2].decode("utf-8", "replace"))
+decide(checker, sid8, "approve")
+pub_html = public(pid8)[1]
+check("customers see all 7 names, and no raw markup from a name", len(att_links(pub_html, "link-attachment")) == 7 and "<script>alert(1)" not in pub_html)
+live_ids = [i for i, _ in att_links(pub_html, "link-attachment")]
+r = Client(PUBLIC).get(f"/attachments/{live_ids[1]}")
+check("a download keeps the real file name (Content-Disposition, UTF-8)", r[0] == 200 and "filename" in (r[1].get("Content-Disposition") or ""), r[1])
+check("the customer download is a PDF", r[2].startswith(b"%PDF") and "pdf" in (r[1].get("Content-Type") or "").lower())
+
+fl = demo.form(9, "ZZ Workflow Thirty", "ZZ Workflow Builder", "West Bengal", "Durgapur", "713201", 40)
+fl.update({"branchName": "Durgapur Main Branch", "amenities": "Park"})
+s_, _, _ = save(maker, fl, files=[("attachments", f"t{i}.pdf", b"%PDF-1.4\n" + b"x" * (1024 * 1024 - 20), "application/pdf") for i in range(30)])
+pid9 = demo.newest_project_id(maker, "ZZ Workflow Thirty"); sid9 = sid(maker, pid9)
+check("30 attachments of 1 MB (30 MB) travel in one save", s_ == 302 and len(attachment_ids_on_form(maker, sid9)) == 30, s_)
+s_, _, b_ = save(maker, {}, stagingId=sid9, files=pdfs(60, "more"))
+check("60 files in one request are refused without a stack trace and nothing is saved",
+      s_ in (200, 400, 413) and b"Exception" not in b_ and len(attachment_ids_on_form(maker, sid9)) == 30, s_)
+ids9 = attachment_ids_on_form(maker, sid9)
+maker.post(f"/admin/projects/staging/{sid9}/withdraw", {"_csrf": maker.csrf("/admin/projects")})
+check("withdrawing the draft deletes all its attachments", all(maker.get(f"/attachments/{i}")[0] == 404 for i in ids9))
+
+maker.post(f"/admin/projects/{pid8}/delete-request", {"reason": "test", "_csrf": maker.csrf("/admin/projects")})
+decide(checker, sid(maker, pid8), "approve")
+check("after an approved deletion the project and its attachments are hidden from customers",
+      public(pid8)[0] == 404 and all(Client(PUBLIC).get(f"/attachments/{i}")[0] == 404 for i in live_ids))
+
 print(f"\n{results.count(True)}/{len(results)} checks passed")
 print("(test projects ZZ Workflow ... remain: one DELETED in the master table, one REJECTED in staging; scripts/remove_demo_data.sh removes them)")
 sys.exit(1 if False in results else 0)

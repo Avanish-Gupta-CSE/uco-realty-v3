@@ -10,6 +10,7 @@ import com.ucorealty.service.MasterDataService;
 import com.ucorealty.model.ProjectStaging;
 import com.ucorealty.service.ProjectAccessService;
 import com.ucorealty.service.ProjectWorkflowService;
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -20,6 +21,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -173,6 +175,7 @@ public class ProjectCatalogController {
 
     HttpHeaders headers = new HttpHeaders();
     headers.setContentType(MediaType.APPLICATION_PDF);
+    headers.setContentDisposition(ContentDisposition.inline().filename(att.fileName, StandardCharsets.UTF_8).build());   // "Save as" keeps the real name
     headers.setContentLength(att.fileData.length);
     headers.setCacheControl("max-age=86400, private");   // private: a maker's unapproved file must never be kept by a shared proxy
     return new ResponseEntity<>(att.fileData, headers, HttpStatus.OK);

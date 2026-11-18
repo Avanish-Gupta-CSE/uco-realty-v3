@@ -80,6 +80,7 @@ Which roles may open a page: the `StaffRoles.require(auth, StaffRoles.XYZ)` line
 * Attachments (PDF files) have no limit on how many a project holds. One save is limited to 30 attachments and 33 MB of files in total: `MAX_ATTACHMENTS_PER_SAVE` and `MAX_UPLOAD_BYTES_PER_SAVE` in `project-form.js`, and `spring.servlet.multipart.max-request-size` (35 MB) in the staff `application.properties`. Photos are table `realty_project_images`, attachments `realty_project_attachments` (`model/ProjectAttachment.java`, `repository/ProjectAttachmentRepository.java`).
   (search for `1 * 1024 * 1024` and `3 * 1024 * 1024`) AND `spring.servlet.multipart.max-file-size` in `application.properties` (must be at least the largest file).
 * Number of photos: `MAX_PHOTOS` in `service/ProjectWorkflowService.java`.
+* How an attachment's file name is cleaned (any language kept, folder part and markup characters removed, 100 characters at most): `util/UploadChecks.java` (`attachmentName`); the column is `realty_project_attachments.file_name VARCHAR2(255 CHAR)`.
 * Idle session time: `server.servlet.session.timeout` in `application.properties`.
 
 ### Change the Home Loan link

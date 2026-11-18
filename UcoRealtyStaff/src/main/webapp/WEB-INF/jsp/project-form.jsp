@@ -468,9 +468,9 @@
                 <c:if test="${not empty existingAttachments}">
                     <ul class="list-unstyled small mb-2" id="existing-attachments-list">
                         <c:forEach var="att" items="${existingAttachments}">
-                            <li class="mb-1" id="existing-attachment-${att.id}">
+                            <li class="mb-1 attachment-item" id="existing-attachment-${att.id}">
                                 <a href="${pageContext.request.contextPath}/attachments/<c:out value="${att.id}"/>" target="_blank" rel="noopener" id="existing-attachment-link-${att.id}"><c:out value="${att.fileName}"/></a>
-                                <button type="button" class="slot-delete-btn slot-delete-saved-btn ms-2" id="btn-delete-attachment-${att.id}"
+                                <button type="button" class="slot-delete-btn slot-delete-saved-btn attachment-remove-btn" id="btn-delete-attachment-${att.id}"
                                         data-image-id="${att.id}" data-project-id="${staging.projectId}"
                                         data-delete-url="${pageContext.request.contextPath}/admin/projects/staging/<c:out value="${staging.id}"/>/attachments/<c:out value="${att.id}"/>/remove"
                                         data-context-path="${pageContext.request.contextPath}">✕ Remove</button>

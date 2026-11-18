@@ -498,6 +498,17 @@ a:hover {
   color: #7f1d1d;
 }
 
+/* a saved attachment: its name and a small Remove button on one line */
+.attachment-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.attachment-remove-btn {
+  width: auto;
+  padding: 2px 10px;
+}
+
 .slot-clear-btn {
   background: #f1f5f9;
   color: #475569;

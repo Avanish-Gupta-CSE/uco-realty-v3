@@ -8,6 +8,7 @@ import com.ucorealty.repository.ProjectImageRepository;
 import com.ucorealty.service.MasterDataService;
 import com.ucorealty.service.CatalogService;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -17,6 +18,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -159,6 +161,7 @@ public class CatalogPageController {
     }
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_PDF)
+        .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.inline().filename(att.fileName, StandardCharsets.UTF_8).build().toString())   // "Save as" keeps the real name
         .header(HttpHeaders.CACHE_CONTROL, "public, max-age=86400")
         .body(att.fileData);
   }

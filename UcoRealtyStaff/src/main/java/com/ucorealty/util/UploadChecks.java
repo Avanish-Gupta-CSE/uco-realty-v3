@@ -29,7 +29,27 @@ public final class UploadChecks {
     return false;
   }
 
+  /** The name of an uploaded photo as stored: letters, digits and . _ - only, at most 100 characters (the extension is kept). */
   public static String cleanName(String name) {
-    return name.replaceAll("[^a-zA-Z0-9._-]", "_");
+    return shorten(name == null ? "file" : name.replaceAll("[^a-zA-Z0-9._-]", "_"), 100);
+  }
+
+  /**
+   * The name of a PDF attachment as stored and shown to people (it is the link text on the customer page): letters and digits of any
+   * language (Hindi too), spaces and . _ - ( ) only; no folder part, no markup characters; at most 100 characters (the extension is kept).
+   */
+  public static String attachmentName(String name) {
+    String n = name == null ? "" : name;
+    n = n.substring(Math.max(n.lastIndexOf('/'), n.lastIndexOf('\\')) + 1);                   // no folder part
+    n = n.replaceAll("[^\\p{L}\\p{N}\\p{M} ._()-]", "_").replaceAll("\\s+", " ").trim();
+    if (n.isEmpty() || n.startsWith(".")) n = "attachment" + n;
+    return shorten(n, 100);
+  }
+
+  private static String shorten(String n, int max) {
+    if (n.length() <= max) return n;
+    int dot = n.lastIndexOf('.');
+    String ext = dot > 0 && n.length() - dot <= 10 ? n.substring(dot) : "";
+    return n.substring(0, max - ext.length()) + ext;
   }
 }

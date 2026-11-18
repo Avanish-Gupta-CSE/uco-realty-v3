@@ -414,16 +414,16 @@ public class ProjectWorkflowController {
       String name = file.getOriginalFilename();
       boolean pdfName = name != null && name.toLowerCase().endsWith(".pdf");
       if (file.getSize() > MAX_ATTACHMENT_BYTES) {
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "\"" + UploadChecks.cleanName(name) + "\" is larger than 3 MB. An attachment must be a PDF file of at most 3 MB.");
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "\"" + UploadChecks.attachmentName(name) + "\" is larger than 3 MB. An attachment must be a PDF file of at most 3 MB.");
       }
       byte[] bytes = file.getBytes();
       if (!pdfName || !UploadChecks.isPdf(bytes)) {
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "\"" + UploadChecks.cleanName(name) + "\" is not a PDF file. An attachment must be a PDF file of at most 3 MB.");
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "\"" + UploadChecks.attachmentName(name) + "\" is not a PDF file. An attachment must be a PDF file of at most 3 MB.");
       }
       ProjectAttachment att = new ProjectAttachment();
       att.stagingId = s.id;                         // belongs to the maker's working copy: not live, never shown to customers
       att.projectId = null;
-      att.fileName = UploadChecks.cleanName(name);
+      att.fileName = UploadChecks.attachmentName(name);
       att.mimeType = "application/pdf";
       att.fileSize = file.getSize();
       att.fileData = bytes;
