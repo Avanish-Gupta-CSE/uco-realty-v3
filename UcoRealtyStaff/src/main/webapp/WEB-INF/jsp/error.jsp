@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Notice - UCO Bank Realty Portal</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/bootstrap.min.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css?v=20261118a">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css?v=20261119b">
 </head>
 <body class="error-layout">
   <div class="error-card">
@@ -15,11 +15,6 @@
     <h1 class="error-title" id="error-title">We could not open this page</h1>
     <p class="error-desc" id="error-message"><c:set var="sc" value="${empty status ? requestScope['jakarta.servlet.error.status_code'] : status}"/>
     <c:out value="${errorMessage != null ? errorMessage : (sc == 403 ? 'Access Denied: your role cannot open this page.' : (sc == 404 ? 'The page you asked for was not found.' : (sc == 400 ? 'The request was not valid.' : (sc == 405 ? 'This page cannot be opened this way.' : (sc >= 500 ? 'An unexpected system error occurred. Please contact the SWDC Cell or Bank Administrator.' : 'Please open the Realty portal from the UCO Bank intranet portal.')))))}"/></p>
-    <div class="mt-4 d-flex justify-content-center gap-3">
-      <a href="${pageContext.request.contextPath}/login" class="btn btn-primary btn-sm">
-        Go to Staff Login
-      </a>
-    </div>
   </div>
 </body>
 </html>
