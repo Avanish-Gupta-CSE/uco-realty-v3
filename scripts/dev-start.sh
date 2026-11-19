@@ -3,7 +3,7 @@
 # Builds and starts both applications on this machine, on Oracle in Docker (the closest copy of UAT we have).
 #   scripts/dev-start.sh            creates our tables once (db_migrations 01) and the stand-in HRMS tables (03, 05), then starts both apps
 #   scripts/dev-start.sh --reset    the same, wiping our Oracle tables first
-# What a server reads from C:\Cert\<App>.properties is given here as environment variables (nothing secret or environment-specific
+# The settings a server keeps in application.properties (database, SSO key, test login, Home Loan address) are given here as environment variables (nothing secret or environment-specific
 # is written in the WARs). The development SSO key is random and kept in .run/sso.key (tests that build tokens read it).
 # Sign in: employees 55012, 54534, 58382, 52260, 68696 ... see docs/TESTING_GUIDE.md, OTP 123456.
 set -euo pipefail

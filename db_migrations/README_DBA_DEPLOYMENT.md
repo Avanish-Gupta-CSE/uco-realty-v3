@@ -16,6 +16,7 @@ Scripts for UCO Bank's Oracle database (UAT and Production). The application nee
 | Step | Script | What it does |
 | :--- | :--- | :--- |
 | 1 | `01_CREATE_TABLES.sql` | Creates the 6 tables (`realty_projects`, `realty_project_staging`, `realty_project_images` (photos), `realty_project_attachments` (PDF files, any number per project, each at most 3 MB), `realty_audit_log`, `realty_login_audit`; every table, index and constraint name starts with `realty_` because the schema already holds many other tables), constraints, indexes and the BLOB storage. Run once as the application schema user |
+| 1b | `01_CREATE_TABLES_AND_INDEXES_CLEAN.sql` (inside the staff WAR next to `02_...`, and in the bundle `db/`) | The same 6 tables and 15 indexes as `01`, with no comments: only `CREATE TABLE` and `CREATE INDEX` statements. Use either `01` or this one, never both (a second run fails: the tables exist). |
 
 That is all. The application creates and changes no tables itself; in UAT it checks at start that the tables match the code (`validate`) and refuses to start otherwise.
 
@@ -35,7 +36,7 @@ ORDER BY table_name;          -- expect 6 rows, all VALID
 SELECT COUNT(*) FROM realty_login_audit;   -- 0 on a fresh database; one row per sign-in attempt
 ```
 
-More read-only queries for SQL Developer (checks before and after, how to find test employees, who signed in) are in `02_SERVER_QUERIES_SQL_DEVELOPER.sql`, next to `01_CREATE_TABLES.sql` inside the staff WAR (`WEB-INF/classes/db_migrations/`). Every statement in it is a SELECT.
+More read-only queries for SQL Developer (checks before and after, how to find test employees, who signed in) are in `02_READ_ONLY_DB_CHECKS_AND_REPORTS.sql`, next to `01_CREATE_TABLES.sql` inside the staff WAR (`WEB-INF/classes/db_migrations/`). Every statement in it is a SELECT.
 
 ## Notes
 * In SQL*Plus, type `EXIT` afterwards (the scripts do not exit by themselves, so they can also be run from SQL Developer).

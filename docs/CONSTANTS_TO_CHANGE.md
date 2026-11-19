@@ -8,19 +8,21 @@ Every value below sits in a `application.properties` file with a `# TODO:` comme
 | 21 | `spring.datasource.url` | CLDBUAT address (already set) | production DB host/port/service |
 | 22 | `spring.datasource.username` | `HRMS_DBA` (the one application user) | production user |
 | 24 | `spring.datasource.password` (`CHANGE_ME_DB_PASSWORD` after the colon) | **real DB password** | production password |
-| 49 | `sso.encryption.key` | dev key until the bank gives one | **real bank key** (16, 24 or 32 characters) |
-| 51 | `sso.cipher` | `AES/GCM/NoPadding` (default; keep unless the bank says CBC) | exactly what the bank's portal uses: `AES/GCM/NoPadding` (12-byte IV first) or `AES/CBC/PKCS5Padding` (16-byte IV first); any other text stops the app at start |
-| 55 | `uco.sso.dev-login-enabled` | `true` (test login) | **`false`** |
-| 56 | `uco.sso.test-otp` | `123456` | **delete the line** |
-| 61 | `uco.rbac.superadmin-sols` | `7115,7103` | `7115` only |
-| 60-62 | marketing/retail SOLs, zonal regex | keep | keep |
+| 32 | `spring.jpa.properties.hibernate.dialect` | `org.hibernate.dialect.OracleDialect` (Oracle 19c or newer) | same; keep. Hibernate 7 does not support Oracle 12c |
+| 51 | `sso.encryption.key` | dev key until the bank gives one | **real bank key** (16, 24 or 32 characters) |
+| 53 | `sso.cipher` | `AES/GCM/NoPadding` (default; keep unless the bank says CBC) | exactly what the bank's portal uses: `AES/GCM/NoPadding` (12-byte IV first) or `AES/CBC/PKCS5Padding` (16-byte IV first); any other text stops the app at start |
+| 57 | `uco.sso.dev-login-enabled` | `true` (test login) | **`false`** |
+| 58 | `uco.sso.test-otp` | `123456` | **delete the line** |
+| 63 | `uco.rbac.superadmin-sols` | `7115,7103` | `7115` only |
+| 64-66 | marketing/retail SOLs, zonal regex | keep | keep |
 
 ## UcoRealty (`UcoRealty/src/main/resources/application.properties`)
 | Line | Key | UAT | Production |
 | :-: | :--- | :--- | :--- |
 | 21, 22 | `spring.datasource.url`, `username` | as above | production |
 | 24 | `spring.datasource.password` | **real DB password** | production password |
-| 42 | `uco.homeloan.base-url` | UAT Home Loan host | production Home Loan host (no trailing slash) |
+| 32 | `spring.jpa.properties.hibernate.dialect` | `org.hibernate.dialect.OracleDialect` (Oracle 19c or newer) | same; keep. Hibernate 7 does not support Oracle 12c |
+| 44 | `uco.homeloan.base-url` | UAT Home Loan host | production Home Loan host (no trailing slash) |
 
 ## Logs
 `UcoRealtyStaff/src/main/resources/logback-spring.xml` and `UcoRealty/.../logback-spring.xml` write to `E:/Realty/<App>/logs/` (lines 15 and 17). Files are never deleted. Change the drive there only if the server team says so.
