@@ -13,7 +13,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 /**
- * Runs after a staff member presses Logout: writes a LOGOUT line to the audit trail and sends the browser to the login page.
+ * Runs after a staff member presses Logout: writes a LOGOUT line to the audit trail and sends the browser to the "signed out" page.
  * Change this file when: something else must happen at logout (for example a redirect to the bank portal).
  */
 @Component
@@ -25,7 +25,7 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
 
   public CustomLogoutSuccessHandler(AuditService auditService) {
     this.auditService = auditService;
-    setDefaultTargetUrl("/login?logout=true");
+    setDefaultTargetUrl("/signed-out");
   }
 
   @Override

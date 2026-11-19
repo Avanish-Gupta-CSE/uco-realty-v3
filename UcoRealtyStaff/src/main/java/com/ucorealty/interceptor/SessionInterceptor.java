@@ -10,7 +10,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
 
 /**
  * Runs before every staff page (see StaffWebConfig), so no controller has to check the session itself:
- * a request passes only when the session holds emp_id and sol_id (set by HomeController at login); otherwise it goes to the login page.
+ * a request passes only when the session holds emp_id and sol_id (set by HomeController at login); otherwise it goes to the session-expired or not-signed-in page.
  * /entry is not covered: that is where the session gets created.
  * Change this file when: the signed-in check changes (which session values must exist).
  */
@@ -25,10 +25,10 @@ public class SessionInterceptor implements HandlerInterceptor {
     if (session != null && session.getAttribute("emp_id") != null && session.getAttribute("sol_id") != null) {
       return true;
     }
-    log.warn("[UCO SSO] No signed-in session for {}: sent to the login page", request.getRequestURI());
-    // The browser still sends a session cookie that the server no longer knows: the 30 minutes ran out, so say so on the login page
+    log.warn("[UCO SSO] No signed-in session for {}: sent to the notice page", request.getRequestURI());
+    // The browser still sends a session cookie that the server no longer knows: the 30 minutes ran out, so say "session expired", otherwise "not signed in"
     boolean expired = request.getRequestedSessionId() != null && !request.isRequestedSessionIdValid();
-    response.sendRedirect(request.getContextPath() + "/login" + (expired ? "?expired" : ""));
+    response.sendRedirect(request.getContextPath() + (expired ? "/session-expired" : "/not-signed-in"));
     return false;
   }
 }

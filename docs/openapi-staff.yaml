@@ -8,7 +8,7 @@ info:
   title: UCO Realty - staff API
   version: "1.0"
   description: >
-    Read only. Without a session every address answers 302 (redirect to /login). With a session but a role that is not
+    Read only. Without a session every address answers 302 (redirect to /not-signed-in, or /session-expired when the session timed out). With a session but a role that is not
     allowed it answers 403. Roles are in util/StaffRoles.java.
 servers:
   - url: http://localhost:8081/UcoRealtyStaff

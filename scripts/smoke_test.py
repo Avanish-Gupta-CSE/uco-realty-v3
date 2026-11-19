@@ -47,14 +47,19 @@ check("login page loads", s == 200, s)
 dev_login = b"ssoOtpForm" in b
 check("security headers present", {"content-security-policy", "cross-origin-opener-policy", "cross-origin-resource-policy", "cross-origin-embedder-policy"} <= {k.lower() for k in h})
 s, h, _ = internal.get("/admin/projects")
-check("anonymous /admin/projects redirects to /login", s == 302 and location(h).endswith("/login"), (s, location(h)))
+check("anonymous /admin/projects redirects to the not-signed-in page", s == 302 and location(h).endswith("/not-signed-in"), (s, location(h)))
 for path in ("/projects", "/project/UCR-PROJ-NOPE", "/files/1", "/attachments/1"):
     s, h, _ = internal.get(path)
-    check(f"anonymous {path} on the staff site redirects to /login (every page needs a session)", s == 302 and "/login" in location(h), (s, location(h)))
+    check(f"anonymous {path} on the staff site redirects to the not-signed-in page (every page needs a session)", s == 302 and location(h).endswith("/not-signed-in"), (s, location(h)))
+for path, text in (("/session-expired", b"Session expired"), ("/not-signed-in", b"You are not signed in"), ("/signed-out", b"Signed out successfully")):
+    s, h, b = internal.get(path)
+    check(f"{path} is a public page with its own text and no session cookie", s == 200 and text in b and "set-cookie" not in {k.lower() for k in h}, (s, list(h)))
+s, h, _ = internal.get("/home")
+check("anonymous /home redirects to the not-signed-in page", s == 302 and location(h).endswith("/not-signed-in"), (s, location(h)))
 s, h, _ = internal.get("/entry?Value=not-a-real-token")
 check("bad SSO token is refused", s == 302 and "reason=unauthorized" in location(h), (s, location(h)))
 st_, h_, _ = internal.post("/sso/generate-otp", {"empId": "55012"})
-check("POST without CSRF token is refused and sent to the login page (session expired)", st_ == 302 and "/login?expired" in (h_.get("Location") or ""))
+check("POST without CSRF token is refused and sent to the session-expired page", st_ == 302 and (h_.get("Location") or "").endswith("/session-expired"))
 
 if not dev_login:
     print("\n  (dev login form not present: this looks like a UAT/prod build, role checks skipped)")
@@ -96,9 +101,9 @@ else:
     check("GET /logout does not log out", (dit.get("/logout"), dit.get("/admin/projects"))[1][0] == 200)
     token = dit.csrf("/admin/projects")
     st_, h_, _ = dit.post("/logout")
-    check("POST /logout without token does not log out (sent to the login page)", st_ == 302 and "/login?expired" in (h_.get("Location") or ""))
+    check("POST /logout without token does not log out (sent to the session-expired page)", st_ == 302 and (h_.get("Location") or "").endswith("/session-expired"))
     s, h, _ = dit.post("/logout", {"_csrf": token})
-    check("POST /logout with token works", s == 302 and "logout" in location(h), (s, location(h)))
+    check("POST /logout with token works and shows the signed-out page", s == 302 and location(h).endswith("/signed-out"), (s, location(h)))
     check("session is gone after logout", dit.get("/admin/projects")[0] == 302)
     check("unauthorised employee id is refused", not Client(INTERNAL).dev_login("999999"))
 

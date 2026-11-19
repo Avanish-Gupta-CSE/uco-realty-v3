@@ -109,11 +109,17 @@ public class HomeController {
     return authenticateAndEstablishSession(empNo, request, "Bank SSO");
   }
 
-  /** The landing page after login: the project dashboard if the session is set, otherwise the login page. */
+  /** The landing page after login: the project dashboard if the session is set, otherwise the "not signed in" page. */
   @GetMapping("/home")
-  public String home(HttpSession session) {
-    boolean signedIn = session.getAttribute("emp_id") != null && session.getAttribute("sol_id") != null;
-    return signedIn ? "redirect:/admin/projects" : "redirect:/login";
+  public String home(HttpServletRequest request) {
+    HttpSession session = request.getSession(false);
+    boolean signedIn = session != null && session.getAttribute("emp_id") != null && session.getAttribute("sol_id") != null;
+    if (signedIn) {
+      return "redirect:/admin/projects";
+    }
+    // a session cookie the server no longer knows = the idle time ran out
+    boolean expired = request.getRequestedSessionId() != null && !request.isRequestedSessionIdValid();
+    return expired ? "redirect:/session-expired" : "redirect:/not-signed-in";
   }
 
   /**

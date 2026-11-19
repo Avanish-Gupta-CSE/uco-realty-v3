@@ -15,7 +15,7 @@ import org.springframework.security.web.session.DisableEncodeUrlFilter;
 /**
  * Staff authentication happens only through bank SSO / test OTP (see HomeController), which builds the
  * Spring Security context itself. There is no form login, so unauthenticated requests to protected
- * pages are sent to /login (the SSO landing page).
+ * pages are sent to the static "session expired" or "not signed in" page (see SessionNoticeController); /login is only for testing.
  * Change this file when: a staff URL must be open without login, or needs a certain role (the role names are in util/StaffRoles).
  */
 @Configuration
@@ -35,11 +35,11 @@ public class StaffSecurityConfig {
     AccessDeniedHandler standard = new AccessDeniedHandlerImpl();
     AccessDeniedHandler logged = (request, response, denied) -> {
       // A missing/old security token (CsrfException) is not a role problem: the page in the browser belongs to a session the server
-      // no longer has (idle 30 minutes, restart, cached page). Send the user to the login page with the "session expired" notice.
+      // no longer has (idle 30 minutes, restart, cached page). Send the user to the "session expired" page.
       if (denied instanceof CsrfException) {
-        log.info("[UCO SECURITY] Session expired or stale page: {} {} had no valid security token, sent to login ({})",
+        log.info("[UCO SECURITY] Session expired or stale page: {} {} had no valid security token, sent to the session-expired page ({})",
             request.getMethod(), request.getRequestURI(), denied.getMessage());
-        response.sendRedirect(request.getContextPath() + "/login?expired");
+        response.sendRedirect(request.getContextPath() + "/session-expired");
         return;
       }
       log.warn("[UCO SECURITY] 403 {} {} by {} from {}: {}", request.getMethod(), request.getRequestURI(),
@@ -55,6 +55,7 @@ public class StaffSecurityConfig {
         // Open pages: only the login steps and static files. Everything else, the project catalog and every file too, needs a login (secure coding order, point 3).
         .requestMatchers("/", "/home", "/entry",
                          "/login", "/sso/generate-otp", "/otp", "/otp-verify", "/error-page", "/error",
+                         "/session-expired", "/not-signed-in", "/signed-out",
                          "/assets/**", "/css/**", "/images/**", "/js/**").permitAll()
         // Superadmin DIT audit logs strictly restricted:
         .requestMatchers("/admin/audit-logs/**").hasRole("SUPERADMIN_DIT")
@@ -63,9 +64,9 @@ public class StaffSecurityConfig {
         .anyRequest().authenticated()
       )
       .exceptionHandling(ex -> ex.authenticationEntryPoint((request, response, authException) -> {
-        // an old session cookie the server no longer knows = the 30 idle minutes ran out: tell the user on the login page
+        // an old session cookie the server no longer knows = the 30 idle minutes ran out: show the session-expired page, else the not-signed-in page
         boolean expired = request.getRequestedSessionId() != null && !request.isRequestedSessionIdValid();
-        response.sendRedirect(request.getContextPath() + "/login" + (expired ? "?expired" : ""));
+        response.sendRedirect(request.getContextPath() + (expired ? "/session-expired" : "/not-signed-in"));
       }).accessDeniedHandler(logged))
       .logout(logout -> logout
         .logoutUrl("/logout")
