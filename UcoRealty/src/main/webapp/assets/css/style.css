@@ -299,22 +299,6 @@ a:hover {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-.project-gallery-scroller {
-  display: flex;
-  gap: 16px;
-  overflow-x: auto;
-  padding-bottom: 12px;
-}
-
-.gallery-img {
-  height: 220px;
-  width: 320px;
-  object-fit: cover;
-  border-radius: 6px;
-  border: 1px solid var(--uco-gray-border);
-  flex-shrink: 0;
-}
-
 .table-spec th {
   width: 35%;
   background-color: var(--uco-gray-card);
@@ -430,16 +414,114 @@ h1, h2, h3, h4 { letter-spacing: -.01em; }
 .project-card:hover { box-shadow: 0 6px 20px rgba(15, 23, 42, .1); transform: translateY(-2px); }
 .hero-banner { border-radius: 14px; }
 
+/* amenities on the project page: one tile per amenity, available ones highlighted, the others greyed out */
+.amenity-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: .5rem; }
+.amenity-tile { display: flex; flex-direction: column; align-items: center; text-align: center; padding: .6rem .4rem; border-radius: 10px; border: 1px solid var(--ui-border); }
+.amenity-icon { font-size: 1.6rem; line-height: 1.2; font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif; }
+.amenity-name { font-weight: 600; font-size: .85rem; }
+.amenity-status { font-size: .72rem; }
+.amenity-tile-yes { background: var(--uco-green-light); border-color: var(--uco-green-border); color: var(--uco-green); }
+.amenity-tile-no { background: #f8fafc; color: var(--ui-muted); }
+.amenity-tile-no .amenity-icon { filter: grayscale(1); opacity: .45; }
+
+/* the two Home Loan buttons: enquiry (filled) and online application (outlined) */
+.loan-actions { display: flex; gap: .6rem; }
+.loan-actions-stacked { flex-direction: column; }
+.loan-actions-row { justify-content: center; flex-wrap: wrap; }
+.loan-btn { display: flex; flex-direction: column; align-items: center; text-align: center; line-height: 1.25; }
+.loan-actions-row .loan-btn { min-width: 280px; padding: .7rem 1.6rem; }
+.loan-btn-title { font-weight: 700; }
+.loan-btn-sub { font-size: .75rem; font-weight: 400; opacity: .9; }
+.loan-btn-secondary { background: #fff; color: var(--uco-navy); border: 2px solid var(--uco-navy); }
+.loan-btn-secondary:hover, .loan-btn-secondary:focus { background: var(--uco-light-blue); color: var(--uco-dark); border-color: var(--uco-dark); }
+@media (max-width: 575.98px) { .loan-actions-row { flex-direction: column; } .loan-actions-row .loan-btn { min-width: 0; width: 100%; } }
+
+/* project photos: an auto-sliding carousel */
+.photo-carousel { position: relative; border-radius: 10px; overflow: hidden; background: #0b1b2b; }
+.photo-carousel-img { height: 420px; object-fit: cover; }
+.photo-counter { position: absolute; top: 12px; right: 12px; z-index: 3; background: rgba(0, 0, 0, .55); color: #fff; font-size: .78rem; font-weight: 600; padding: 2px 10px; border-radius: 999px; }
+.photo-carousel .carousel-indicators { margin-bottom: .6rem; }
+.photo-carousel .carousel-control-prev-icon, .photo-carousel .carousel-control-next-icon { background-color: rgba(0, 0, 0, .45); border-radius: 50%; background-size: 55%; width: 2.4rem; height: 2.4rem; }
+@media (max-width: 767.98px) { .photo-carousel-img { height: 240px; } }
+
+/* project documents: one download card each */
+.doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: .75rem; }
+.doc-card { display: flex; align-items: center; gap: .8rem; padding: .8rem .9rem; border: 1px solid var(--ui-border); border-radius: 12px; background: #fff; color: var(--uco-navy); text-decoration: none; transition: box-shadow .15s ease, border-color .15s ease, transform .15s ease; }
+.doc-card:hover { border-color: var(--uco-navy); box-shadow: 0 6px 18px rgba(15, 23, 42, .12); transform: translateY(-2px); color: var(--uco-navy); }
+.doc-badge { flex: 0 0 auto; width: 44px; height: 52px; border-radius: 6px; background: #dc2626; color: #fff; font-size: .72rem; font-weight: 800; letter-spacing: .04em; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 6px; box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .15); }
+.doc-info { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+.doc-name { font-weight: 700; font-size: .98rem; overflow-wrap: anywhere; }
+.doc-meta { font-size: .78rem; color: var(--ui-muted); }
+.doc-action { flex: 0 0 auto; font-size: .8rem; font-weight: 700; color: var(--uco-navy); background: var(--uco-light-blue); border: 1px solid var(--uco-border-blue); border-radius: 999px; padding: .25rem .7rem; }
+.doc-card:hover .doc-action { background: var(--uco-navy); color: #fff; }
+
+/* header: the logo on the left, the portal name on the right */
+.header-top { justify-content: space-between; }
+.logo-text { text-align: right; }
+
+/* Home and Contact Us pages */
+.home-hero { background: linear-gradient(90deg, #00264d 0%, #004d99 55%, #3b8fd9 100%); color: #fff; padding: 48px 32px; border-radius: 12px; margin-bottom: 28px; box-shadow: 0 4px 12px rgba(0, 51, 102, .15); }
+.home-hero h2 { font-size: 2rem; font-weight: 700; margin-bottom: .6rem; }
+.home-hero p { font-size: 1.05rem; max-width: 640px; opacity: .95; margin-bottom: 1.4rem; }
+.home-hero-actions { display: flex; flex-wrap: wrap; gap: .75rem; }
+.home-section-title { font-size: 1.3rem; font-weight: 700; color: var(--uco-navy); margin-bottom: .9rem; }
+.home-step, .contact-card { height: 100%; background: #fff; border: 1px solid var(--ui-border); border-radius: 12px; padding: 1.2rem; box-shadow: 0 1px 3px rgba(15, 23, 42, .05); }
+.home-step h4, .contact-card h4 { font-size: 1.05rem; font-weight: 700; color: var(--uco-navy); margin: .5rem 0 .35rem; }
+.home-step p { margin: 0; color: var(--ui-muted); font-size: .92rem; }
+.home-step-icon { font-size: 1.8rem; font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif; }
+@media (max-width: 767.98px) { .home-hero { padding: 28px 18px; } .home-hero h2 { font-size: 1.5rem; } }
+
+/* header design: smaller logo, the blue gradient bar with a white pill for the active tab, a gold line under it */
+.logo-img { height: 72px; }
+.logo-text h1 { font-size: 1.5rem; }
+.navbar-custom { background: linear-gradient(90deg, #00264d 0%, #004d99 55%, #3b8fd9 100%); border-bottom: 3px solid var(--uco-gold); padding: 0; }
+.navbar-custom .navbar-nav { gap: .35rem; padding: .4rem 0; }
+.navbar-custom .nav-link { color: #fff; padding: .45rem 1.1rem; border-radius: 999px; border-bottom: 0; font-weight: 600; }
+.navbar-custom .nav-link:hover { background: rgba(255, 255, 255, .14); color: #fff; border-bottom: 0; }
+.navbar-custom .nav-link.active { background: #fff; color: var(--uco-navy); border-bottom: 0; }
+@media (max-width: 767.98px) { .logo-img { height: 36px; } }
+
+/* About Us page */
+.about-banner { color: #fff; padding: 56px 32px; border-radius: 12px; margin-bottom: 36px; text-align: center; box-shadow: 0 4px 12px rgba(0, 51, 102, .15); background-image: repeating-linear-gradient(90deg, rgba(255, 255, 255, .05) 0, rgba(255, 255, 255, .05) 2px, transparent 2px, transparent 44px), linear-gradient(90deg, #00264d 0%, #004d99 55%, #3b8fd9 100%); }
+.about-banner-kicker { font-size: 1.05rem; letter-spacing: .04em; opacity: .9; margin-bottom: .4rem; }
+.about-banner h2 { font-size: 2.3rem; font-weight: 700; margin: 0; }
+.about-who { display: flex; flex-wrap: wrap; gap: 2.5rem; align-items: flex-start; padding: .5rem .5rem 1.5rem; }
+.about-text { flex: 1 1 380px; }
+.about-text h3 { font-size: 2rem; font-weight: 700; color: #1f2937; margin-bottom: 1.2rem; }
+.about-text p { font-size: 1.02rem; line-height: 1.85; color: #374151; margin-bottom: 1.1rem; }
+.about-points { flex: 1 1 300px; display: flex; flex-direction: column; gap: .9rem; }
+.about-point { display: flex; gap: .9rem; align-items: flex-start; background: #fff; border: 1px solid var(--uco-border-blue); border-left: 5px solid var(--uco-navy); border-radius: 10px; padding: 1rem 1.1rem; box-shadow: 0 1px 3px rgba(15, 23, 42, .05); }
+.about-point-icon { font-size: 1.6rem; font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif; }
+.about-point h4 { font-size: 1.02rem; font-weight: 700; color: var(--uco-navy); margin: 0 0 .15rem; }
+.about-point p { margin: 0; font-size: .9rem; color: var(--ui-muted); }
+@media (max-width: 767.98px) { .about-banner { padding: 34px 18px; } .about-banner h2 { font-size: 1.55rem; } .about-text h3 { font-size: 1.5rem; } }
+
 /* error page */
 
 /* phone and small tablet */
 @media (max-width: 767.98px) {
-  .logo-img { height: 44px; }
-  .logo-text h1 { font-size: 1.2rem; }
+  .logo-img { height: 36px; }
+  .header-top { flex-wrap: nowrap; gap: .5rem; }
+  .logo-container { flex: 0 0 auto; }
+  .logo-text { flex: 1 1 auto; min-width: 0; }
+  .logo-text h1 { font-size: 1rem; }
   .logo-text p { display: none; }
   .header-top { justify-content: space-between; }
   .navbar-custom .navbar-nav { overflow-x: auto; white-space: nowrap; }
   .table-spec th { width: 42%; }
+  .amenity-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .4rem; }
+  .amenity-tile { padding: .5rem .25rem; }
+  .amenity-icon { font-size: 1.3rem; }
+  .amenity-name { font-size: .78rem; }
+  /* on a phone the specification rows are flex boxes, so the amenity row can use the full card width */
+  .table-spec, .table-spec tbody { display: block; width: 100%; }
+  .table-spec tr { display: flex; }
+  .table-spec th { flex: 0 0 42%; }
+  .table-spec td { flex: 1 1 0; min-width: 0; }
+  .amenity-row { flex-direction: column; }
+  .amenity-row th, .amenity-row td { flex: 0 0 auto; width: 100%; }
+  .amenity-row th { border-bottom: 0; padding-bottom: .2rem; }
+  .amenity-status { font-size: .65rem; }
 
   /* tables become stacked cards so nothing, especially the action buttons, is hidden off-screen */
   .table-responsive { overflow-x: visible; }

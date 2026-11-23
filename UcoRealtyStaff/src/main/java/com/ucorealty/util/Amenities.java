@@ -9,13 +9,26 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The Yes/No amenities a maker answers on the project form. To add or rename one, change LIST (and the same list in the
- * customer app's Amenities class). The answers are stored in one column (amenity_flags) as text like
+ * The Yes/No amenities a maker answers on the project form. To add or rename one, change LIST here and ICONS (its emoji) in both applications' Amenities class. The answers are stored in one column (amenity_flags) as text like
  * "Swimming Pool:Y,Community Hall:N,Gym:Y". Anything else goes in the free-text "amenities" column.
  * Change this file when: the project form gets another Yes/No amenity.
  */
 public final class Amenities {
   private Amenities() {}
+
+  /** The emoji shown in front of each amenity name on the project page. A name that is not listed gets DEFAULT_ICON. (The same map is in the other application: scripts/sync_check.py compares them.) */
+  public static final Map<String, String> ICONS = Collections.unmodifiableMap(new LinkedHashMap<String, String>() {{
+    put("Swimming Pool", "\uD83C\uDFCA");
+    put("Community Hall", "\uD83C\uDFDB\uFE0F");
+    put("Gym", "\uD83C\uDFCB\uFE0F");
+    put("Children's Play Area", "\uD83C\uDFA0");
+    put("Lift", "\uD83D\uDED7");
+    put("24x7 Power Backup", "\uD83D\uDD0C");
+    put("Parking", "\uD83C\uDD7F\uFE0F");
+    put("CCTV / Security", "\uD83D\uDCF9");
+  }});
+
+  public static final String DEFAULT_ICON = "\u2728";
 
   public static final List<String> LIST = Collections.unmodifiableList(Arrays.asList(
       "Swimming Pool", "Community Hall", "Gym", "Children's Play Area", "Lift", "24x7 Power Backup", "Parking", "CCTV / Security"));

@@ -29,6 +29,13 @@ public class ProjectAttachment {
   @Column(name = "file_name", length = 255, nullable = false)
   public String fileName;
 
+  // BROCHURE, FLOOR_PLAN, RERA or OTHER (see util/DocTypes); the title is typed by the maker for an OTHER document
+  @Column(name = "doc_type", length = 20, nullable = false)
+  public String docType = com.ucorealty.util.DocTypes.OTHER;
+
+  @Column(name = "doc_title", length = 100)
+  public String docTitle;
+
   @Column(name = "mime_type", length = 100)
   public String mimeType;
 
@@ -57,6 +64,8 @@ public class ProjectAttachment {
   public Long getId() { return id; }
   public String getProjectId() { return projectId; }
   public String getFileName() { return fileName; }
+  public String getDocType() { return docType; }
+  public String getDocTitle() { return docTitle; }
   public String getMimeType() { return mimeType; }
   public Long getFileSize() { return fileSize; }
   public byte[] getFileData() { return fileData; }

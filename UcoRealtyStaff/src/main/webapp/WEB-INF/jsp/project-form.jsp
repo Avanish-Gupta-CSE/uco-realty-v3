@@ -371,9 +371,16 @@
                         <%-- Slot has an existing photo from the database --%>
                         <c:when test="${i <= existingCount}">
                             <c:set var="curImg" value="${existingImages[i - 1]}"/>
-                            <div class="photo-slot-card existing-slot justify-content-between" id="existing_card_${i}">
+                            <div class="photo-slot-card existing-slot justify-content-between position-relative" id="existing_card_${i}">
+                                <button type="button" class="slot-delete-corner-btn slot-delete-saved-btn"
+                                        id="btn-delete-saved-photo-${curImg.id}"
+                                        data-image-id="${curImg.id}"
+                                        data-project-id="${staging.projectId}"
+                                        data-delete-url="${pageContext.request.contextPath}/admin/projects/staging/<c:out value="${staging.id}"/>/photos/<c:out value="${curImg.id}"/>/remove"
+                                        data-context-path="${pageContext.request.contextPath}"
+                                        title="${changeMode ? 'Remove this photo' : 'Delete this photo'}" aria-label="${changeMode ? 'Remove this photo' : 'Delete this photo'}">✕</button>
                                 <div>
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="d-flex align-items-center gap-2 mb-2 slot-saved-header">
                                         <span class="fw-bold small text-primary" id="existing-slot-title-${i}">Photo ${i}</span>
                                         <span class="badge badge-approved" id="existing-slot-badge-${i}">Saved</span>
                                     </div>
@@ -381,16 +388,6 @@
                                     <div class="small text-muted mt-1 text-truncate" id="existing-slot-name-${i}" title="<c:out value="${curImg.fileName}"/>">
                                         <c:out value="${curImg.fileName}"/>
                                     </div>
-                                </div>
-                                <div class="mt-2">
-                                    <button type="button" class="slot-delete-btn slot-delete-saved-btn"
-                                            id="btn-delete-saved-photo-${curImg.id}"
-                                            data-image-id="${curImg.id}"
-                                            data-project-id="${staging.projectId}"
-                                            data-delete-url="${pageContext.request.contextPath}/admin/projects/staging/<c:out value="${staging.id}"/>/photos/<c:out value="${curImg.id}"/>/remove"
-                                            data-context-path="${pageContext.request.contextPath}">
-                                        ✕ ${changeMode ? 'Remove Photo' : 'Delete Photo'}
-                                    </button>
                                 </div>
                             </div>
                         </c:when>
@@ -451,36 +448,57 @@
                 </div>
             </div>
 
-            <%-- 7. PDF attachments (any number) --%>
+            <%-- 7. PDF documents: named slots (each optional) + Others (any number, with a title) --%>
             <h3 class="form-section-title" id="section-attachments">
-                7. Attachments (PDF files, max 3MB each)
+                7. Documents (PDF files, max 3MB each)
             </h3>
             <p class="text-muted small mb-2" id="attachments-hint-text">
-                Brochure, floor plan, approval letters or any other PDF. Use <strong>"+ Add another file"</strong> for more. Files are shown to customers after approval.
+                Add what you have, any of these can stay empty. Customers see these names and download the file when they click.
             </p>
             <div class="mb-4" id="attachments-box">
-                <c:if test="${not empty existingAttachments}">
-                    <ul class="list-unstyled small mb-2" id="existing-attachments-list">
+                <c:forEach var="slot" items="${docSlots}">
+                    <div class="doc-slot position-relative" id="doc-slot-${slot.key}">
+                        <label class="form-label fw-semibold small mb-1" for="doc-input-${slot.key}" id="doc-slot-label-${slot.key}"><c:out value="${slot.value}"/></label>
                         <c:forEach var="att" items="${existingAttachments}">
-                            <li class="mb-1 attachment-item" id="existing-attachment-${att.id}">
-                                <a href="${pageContext.request.contextPath}/attachments/<c:out value="${att.id}"/>" target="_blank" rel="noopener" id="existing-attachment-link-${att.id}"><c:out value="${att.fileName}"/></a>
+                            <c:if test="${att.docType == slot.key}">
+                                <div class="small mb-1 attachment-item" id="existing-attachment-${att.id}">
+                                    <a href="${pageContext.request.contextPath}/attachments/<c:out value="${att.id}"/>" target="_blank" rel="noopener" id="existing-attachment-link-${att.id}"><c:out value="${att.fileName}"/></a>
+                                    <span class="text-muted">Choosing a new file below replaces it.</span>
+                                </div>
+                                <button type="button" class="slot-delete-corner-btn slot-delete-saved-btn attachment-remove-btn" id="btn-delete-attachment-${att.id}"
+                                        data-image-id="${att.id}" data-project-id="${staging.projectId}"
+                                        data-delete-url="${pageContext.request.contextPath}/admin/projects/staging/<c:out value="${staging.id}"/>/attachments/<c:out value="${att.id}"/>/remove"
+                                        data-context-path="${pageContext.request.contextPath}" title="Remove this document" aria-label="Remove this document">✕</button>
+                            </c:if>
+                        </c:forEach>
+                        <input type="file" id="doc-input-${slot.key}" name="doc_${slot.key}" class="form-control form-control-sm doc-file-input" accept="application/pdf,.pdf">
+                    </div>
+                </c:forEach>
+
+                <div class="doc-slot" id="doc-slot-OTHER">
+                    <span class="form-label fw-semibold small d-block mb-1" id="doc-slot-label-OTHER">Others</span>
+                    <c:forEach var="att" items="${existingAttachments}">
+                        <c:if test="${att.docType != 'BROCHURE' && att.docType != 'FLOOR_PLAN' && att.docType != 'RERA'}">
+                            <div class="small mb-1 attachment-item" id="existing-attachment-${att.id}">
+                                <a href="${pageContext.request.contextPath}/attachments/<c:out value="${att.id}"/>" target="_blank" rel="noopener" id="existing-attachment-link-${att.id}"><c:out value="${att.displayName}"/></a>
                                 <button type="button" class="slot-delete-btn slot-delete-saved-btn attachment-remove-btn" id="btn-delete-attachment-${att.id}"
                                         data-image-id="${att.id}" data-project-id="${staging.projectId}"
                                         data-delete-url="${pageContext.request.contextPath}/admin/projects/staging/<c:out value="${staging.id}"/>/attachments/<c:out value="${att.id}"/>/remove"
                                         data-context-path="${pageContext.request.contextPath}">✕ Remove</button>
-                            </li>
-                        </c:forEach>
-                    </ul>
-                </c:if>
-                <div id="attachment-inputs">
-                    <div class="mb-2 d-flex align-items-center gap-2 attachment-input-row" id="attachment-row-1">
-                        <input type="file" id="attachment_input_1" name="attachments" multiple class="form-control form-control-sm doc-file-input" accept="application/pdf,.pdf">
-                        <button type="button" class="attachment-row-remove-btn" id="btn-remove-attachment-row-1" title="Remove this file">✕</button>
+                            </div>
+                        </c:if>
+                    </c:forEach>
+                    <div id="attachment-inputs">
+                        <div class="mb-2 d-flex align-items-center gap-2 flex-wrap attachment-input-row" id="attachment-row-1">
+                            <input type="text" id="other_title_1" name="otherTitle_1" maxlength="100" class="form-control form-control-sm other-title-input" placeholder="Title, e.g. Price List" aria-label="Title of the other document">
+                            <input type="file" id="other_file_1" name="otherFile_1" class="form-control form-control-sm doc-file-input" accept="application/pdf,.pdf">
+                            <button type="button" class="attachment-row-remove-btn" id="btn-remove-attachment-row-1" title="Remove this document">✕</button>
+                        </div>
                     </div>
+                    <button type="button" id="addAttachmentBtn" class="add-photos-btn">
+                        <span class="fs-6 fw-bold">+</span> Add another document
+                    </button>
                 </div>
-                <button type="button" id="addAttachmentBtn" class="add-photos-btn">
-                    <span class="fs-6 fw-bold">+</span> Add another file
-                </button>
             </div>
 
             <%-- Submission Actions --%>

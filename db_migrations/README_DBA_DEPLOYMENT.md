@@ -17,6 +17,7 @@ Scripts for UCO Bank's Oracle database (UAT and Production). The application nee
 | :--- | :--- | :--- |
 | 1 | `01_CREATE_TABLES.sql` | Creates the 6 tables (`realty_projects`, `realty_project_staging`, `realty_project_images` (photos), `realty_project_attachments` (PDF files, any number per project, each at most 3 MB), `realty_audit_log`, `realty_login_audit`; every table, index and constraint name starts with `realty_` because the schema already holds many other tables), constraints, indexes and the BLOB storage. Run once as the application schema user |
 | 1b | `01_CREATE_TABLES_AND_INDEXES_CLEAN.sql` (inside the staff WAR next to `02_...`, and in the bundle `db/`) | The same 6 tables and 15 indexes as `01`, with no comments: only `CREATE TABLE` and `CREATE INDEX` statements. Use either `01` or this one, never both (a second run fails: the tables exist). |
+| 1c | `08_ADD_DOC_TYPE_TO_ATTACHMENTS.sql` | **Only for a database created before the document slots (UAT):** adds two columns to `realty_project_attachments` (`doc_type`, default `OTHER`, and `doc_title`) and one check constraint. No data is lost; existing PDFs become "OTHER" documents. Run it once, **before** the new WARs go live (the old WAR keeps working after it). A new database does not need it: `01` already has the columns. |
 
 That is all. The application creates and changes no tables itself; in UAT it checks at start that the tables match the code (`validate`) and refuses to start otherwise.
 

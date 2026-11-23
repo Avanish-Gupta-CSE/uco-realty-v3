@@ -58,16 +58,38 @@
                         </div>
                     </div>
 
-                    <%-- Photos Gallery --%>
+                    <%-- Photos Gallery: an auto-sliding carousel (Bootstrap data attributes only, no inline script) --%>
                     <c:if test="${not empty images}">
                         <div class="card-custom mb-4" id="card-project-gallery">
                             <h2 class="card-title-custom" id="gallery-heading">Project Gallery</h2>
-                            <div class="project-gallery-scroller" id="project-gallery-scroller">
-                                <c:forEach var="img" items="${images}" varStatus="loop">
-                                    <img src="${pageContext.request.contextPath}/files/<c:out value="${img}"/>"
-                                        alt="Project Photo ${loop.count}" class="gallery-img" loading="lazy"
-                                        id="gallery-photo-${img}">
-                                </c:forEach>
+                            <div id="project-photo-carousel" class="carousel slide photo-carousel" data-bs-ride="carousel" data-bs-interval="4000" data-bs-pause="hover" aria-label="Project photos">
+                                <c:if test="${fn:length(images) > 1}">
+                                    <div class="carousel-indicators" id="gallery-indicators">
+                                        <c:forEach var="img" items="${images}" varStatus="loop">
+                                            <button type="button" data-bs-target="#project-photo-carousel" data-bs-slide-to="${loop.index}" class="${loop.first ? 'active' : ''}" ${loop.first ? 'aria-current="true"' : ''} aria-label="Photo ${loop.count}"></button>
+                                        </c:forEach>
+                                    </div>
+                                </c:if>
+                                <div class="carousel-inner" id="project-gallery-slides">
+                                    <c:forEach var="img" items="${images}" varStatus="loop">
+                                        <div class="carousel-item ${loop.first ? 'active' : ''}">
+                                            <img src="${pageContext.request.contextPath}/files/<c:out value="${img}"/>"
+                                                alt="Project Photo ${loop.count}" class="photo-carousel-img d-block w-100" ${loop.first ? '' : 'loading="lazy"'}
+                                                id="gallery-photo-${img}">
+                                        </div>
+                                    </c:forEach>
+                                </div>
+                                <c:if test="${fn:length(images) > 1}">
+                                    <button class="carousel-control-prev" type="button" data-bs-target="#project-photo-carousel" data-bs-slide="prev" id="gallery-prev">
+                                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                        <span class="visually-hidden">Previous photo</span>
+                                    </button>
+                                    <button class="carousel-control-next" type="button" data-bs-target="#project-photo-carousel" data-bs-slide="next" id="gallery-next">
+                                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                        <span class="visually-hidden">Next photo</span>
+                                    </button>
+                                    <span class="photo-counter" id="gallery-counter" aria-hidden="true">1 / ${fn:length(images)}</span>
+                                </c:if>
                             </div>
                         </div>
                     </c:if>
@@ -180,13 +202,21 @@
                                             </tr>
                                             </c:if>
                                             <c:if test="${not empty amenityRows || not empty project.amenities}">
-                                                <tr>
+                                                <tr class="amenity-row">
                                                     <th>Amenities</th>
                                                     <td id="spec-amenities">
-                                                        <c:forEach var="a" items="${amenityRows}">
-                                                            <div><c:out value="${a.key}"/>: <strong class="${a.value == 'Yes' ? 'text-success' : 'text-muted'}">${a.value == 'Yes' ? 'Yes' : 'No'}</strong></div>
-                                                        </c:forEach>
-                                                        <c:if test="${not empty project.amenities}"><div class="mt-1"><c:out value="${project.amenities}"/></div></c:if>
+                                                        <c:if test="${not empty amenityRows}">
+                                                            <div class="amenity-grid" id="amenity-grid">
+                                                                <c:forEach var="a" items="${amenityRows}" varStatus="vs">
+                                                                    <div class="amenity-tile ${a.value == 'Yes' ? 'amenity-tile-yes' : 'amenity-tile-no'}" id="amenity-tile-${vs.index}">
+                                                                        <span class="amenity-icon" aria-hidden="true"><c:out value="${empty amenityIcons[a.key] ? amenityDefaultIcon : amenityIcons[a.key]}"/></span>
+                                                                        <span class="amenity-name"><c:out value="${a.key}"/></span>
+                                                                        <span class="amenity-status"><c:out value="${a.value == 'Yes' ? 'Available' : 'Not available'}"/></span>
+                                                                    </div>
+                                                                </c:forEach>
+                                                            </div>
+                                                        </c:if>
+                                                        <c:if test="${not empty project.amenities}"><div class="mt-2 small text-muted" id="amenity-other"><span class="fw-semibold">Other:</span> <c:out value="${project.amenities}"/></div></c:if>
                                                     </td>
                                                 </tr>
                                             </c:if>
@@ -196,20 +226,29 @@
                                                     <td><a href="<c:out value='${project.videoUrl}'/>" target="_blank" rel="noopener noreferrer" id="link-project-video">Watch Project Video &rarr;</a></td>
                                                 </tr>
                                             </c:if>
-                                            <c:if test="${not empty attachments}">
-                                                <tr id="row-attachments">
-                                                    <th>Documents (PDF)</th>
-                                                    <td>
-                                                        <c:forEach var="att" items="${attachments}">
-                                                            <div><a href="${pageContext.request.contextPath}/attachments/<c:out value='${att.id}'/>" target="_blank" rel="noopener" id="link-attachment-${att.id}"><c:out value="${att.fileName}"/></a></div>
-                                                        </c:forEach>
-                                                    </td>
-                                                </tr>
-                                            </c:if>
                                         </tbody>
                                     </table>
                                 </div>
                             </div>
+
+                            <%-- Project Documents: one download card per document --%>
+                            <c:if test="${not empty attachments}">
+                                <div class="card-custom mb-4" id="card-project-documents">
+                                    <h2 class="card-title-custom" id="documents-heading">Project Documents</h2>
+                                    <div class="doc-grid" id="doc-list">
+                                        <c:forEach var="att" items="${attachments}">
+                                            <a class="doc-card" href="${pageContext.request.contextPath}/attachments/<c:out value='${att.id}'/>" download rel="noopener" id="link-attachment-${att.id}">
+                                                <span class="doc-badge" aria-hidden="true">PDF</span>
+                                                <span class="doc-info">
+                                                    <span class="doc-name"><c:out value="${att.displayName}"/></span>
+                                                    <span class="doc-meta">PDF document</span>
+                                                </span>
+                                                <span class="doc-action" aria-hidden="true">&#11015; Download</span>
+                                            </a>
+                                        </c:forEach>
+                                    </div>
+                                </div>
+                            </c:if>
 
                             <%-- Builder Profile --%>
                             <div class="card-custom mb-4" id="card-builder-profile">
@@ -262,14 +301,21 @@
                             <div class="loan-apply-card" id="card-apply-home-loan">
                                 <h2 class="card-title-custom border-0 pb-0 mb-2" id="loan-card-heading">Apply for Home Loan</h2>
                                 <p class="text-muted small mb-3" id="loan-card-subheading">
-                                    Fast-track loan processing with preferential interest rates for this approved
-                                    project.
+                                    Choose how you would like to proceed.
                                 </p>
-                                <%-- Goes straight to the bank's Home Loan application; ?utm=REALTY tells the bank the customer came from UCO Realty. --%>
-                                <a href="<c:out value='${homeLoanUrl}'/>" class="btn btn-primary w-100 py-2 fw-bold"
-                                    id="btn-apply-loan-sidebar" rel="noopener">
-                                    Apply for Home Loan &rarr;
-                                </a>
+                                <%-- Button 1: the bank's Home Loan enquiry page; ?utm=REALTY tells the bank the customer came from UCO Realty (our leads). Button 2: the bank's online application (login), a plain link. --%>
+                                <div class="loan-actions loan-actions-stacked">
+                                    <a href="<c:out value='${homeLoanUrl}'/>" class="btn btn-primary w-100 py-2 fw-bold loan-btn"
+                                        id="btn-apply-loan-sidebar" rel="noopener">
+                                        <span class="loan-btn-title">Enquire for Home Loan &rarr;</span>
+                                        <span class="loan-btn-sub">Share your details, our team will contact you</span>
+                                    </a>
+                                    <a href="<c:out value='${homeLoanOnlineUrl}'/>" class="btn loan-btn-secondary w-100 py-2 fw-bold loan-btn"
+                                        id="btn-apply-online-sidebar" target="_blank" rel="noopener noreferrer">
+                                        <span class="loan-btn-title">Apply Online &rarr;</span>
+                                        <span class="loan-btn-sub">Log in to the UCO Home Loan portal</span>
+                                    </a>
+                                </div>
                             </div>
 
                             <%-- UCO Bank Branch Assistance --%>
@@ -301,10 +347,17 @@
                     </div>
 
                     <%-- Second Apply for Home Loan button, at the bottom of the page (same link as the sidebar card) --%>
-                    <div class="text-center my-4" id="bottom-apply-home-loan">
-                        <a href="<c:out value='${homeLoanUrl}'/>" class="btn btn-primary btn-lg px-5 fw-bold" id="btn-apply-loan-bottom" rel="noopener">
-                            Apply for Home Loan &rarr;
-                        </a>
+                    <div class="my-4" id="bottom-apply-home-loan">
+                        <div class="loan-actions loan-actions-row">
+                            <a href="<c:out value='${homeLoanUrl}'/>" class="btn btn-primary btn-lg fw-bold loan-btn" id="btn-apply-loan-bottom" rel="noopener">
+                                <span class="loan-btn-title">Enquire for Home Loan &rarr;</span>
+                                <span class="loan-btn-sub">Share your details, our team will contact you</span>
+                            </a>
+                            <a href="<c:out value='${homeLoanOnlineUrl}'/>" class="btn loan-btn-secondary btn-lg fw-bold loan-btn" id="btn-apply-online-bottom" target="_blank" rel="noopener noreferrer">
+                                <span class="loan-btn-title">Apply Online &rarr;</span>
+                                <span class="loan-btn-sub">Log in to the UCO Home Loan portal</span>
+                            </a>
+                        </div>
                     </div>
                 </main>
 

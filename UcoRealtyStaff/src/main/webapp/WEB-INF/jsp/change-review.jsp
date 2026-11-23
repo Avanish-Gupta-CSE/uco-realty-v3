@@ -74,7 +74,7 @@
                     <h3 class="form-section-title" id="review-new-attachments-title">New attachments (PDF)</h3>
                     <ul class="mb-3" id="review-new-attachments">
                         <c:forEach var="att" items="${newAttachments}">
-                            <li id="new-attachment-${att.id}"><a href="${pageContext.request.contextPath}/attachments/<c:out value="${att.id}"/>" target="_blank" rel="noopener" id="new-attachment-link-${att.id}"><c:out value="${att.fileName}"/></a></li>
+                            <li id="new-attachment-${att.id}"><a href="${pageContext.request.contextPath}/attachments/<c:out value="${att.id}"/>" target="_blank" rel="noopener" id="new-attachment-link-${att.id}"><c:out value="${att.displayName}"/></a></li>
                         </c:forEach>
                     </ul>
                 </c:if>
@@ -121,7 +121,7 @@
                     <h3 class="form-section-title" id="review-removed-attachments-title">Attachments to be removed</h3>
                     <ul class="mb-3" id="review-removed-attachments">
                         <c:forEach var="att" items="${removedAttachments}">
-                            <li id="removed-attachment-${att.id}"><a href="${pageContext.request.contextPath}/attachments/<c:out value="${att.id}"/>" target="_blank" rel="noopener" id="removed-attachment-link-${att.id}"><c:out value="${att.fileName}"/></a></li>
+                            <li id="removed-attachment-${att.id}"><a href="${pageContext.request.contextPath}/attachments/<c:out value="${att.id}"/>" target="_blank" rel="noopener" id="removed-attachment-link-${att.id}"><c:out value="${att.displayName}"/></a></li>
                         </c:forEach>
                     </ul>
                 </c:if>
@@ -137,7 +137,7 @@
                     <h3 class="form-section-title" id="review-new-attachments-title">New attachments (PDF)</h3>
                     <ul class="mb-3" id="review-new-attachments">
                         <c:forEach var="att" items="${newAttachments}">
-                            <li id="new-attachment-${att.id}"><a href="${pageContext.request.contextPath}/attachments/<c:out value="${att.id}"/>" target="_blank" rel="noopener" id="new-attachment-link-${att.id}"><c:out value="${att.fileName}"/></a></li>
+                            <li id="new-attachment-${att.id}"><a href="${pageContext.request.contextPath}/attachments/<c:out value="${att.id}"/>" target="_blank" rel="noopener" id="new-attachment-link-${att.id}"><c:out value="${att.displayName}"/></a></li>
                         </c:forEach>
                     </ul>
                 </c:if>

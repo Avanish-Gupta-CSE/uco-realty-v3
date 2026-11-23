@@ -46,6 +46,13 @@ public final class UploadChecks {
     return shorten(n, 100);
   }
 
+  /** The short title of an "Other" document as stored: letters and digits of any language, spaces and . _ ( ) & , / ' - only; at most 100 characters; null when nothing is left. */
+  public static String docTitle(String title) {
+    String t = title == null ? "" : title.replaceAll("[^\\p{L}\\p{N}\\p{M} ._()&,/'-]", "").replaceAll("\\s+", " ").trim();
+    if (t.isEmpty()) return null;
+    return t.length() <= 100 ? t : t.substring(0, 100).trim();
+  }
+
   private static String shorten(String n, int max) {
     if (n.length() <= max) return n;
     int dot = n.lastIndexOf('.');

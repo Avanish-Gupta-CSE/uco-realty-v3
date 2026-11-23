@@ -38,7 +38,7 @@ public class CustomerSecurityConfig {
       .addFilterBefore(new SecurityHeadersFilter(), DisableEncodeUrlFilter.class)
       .authorizeHttpRequests(auth -> auth
         .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.ERROR).permitAll()
-        .requestMatchers("/", "/projects", "/project/**", "/files/**", "/attachments/**",
+        .requestMatchers("/", "/about", "/projects", "/project/**", "/files/**", "/attachments/**",
                          "/assets/**", "/css/**", "/images/**", "/js/**",
                          "/api/public/**", "/error", "/WEB-INF/jsp/**").permitAll()
         .anyRequest().denyAll()

@@ -35,7 +35,7 @@ def read(path):
 
 
 def check_identical():
-    for name in ["config/H2ServerStarter.java", "config/SecurityHeadersFilter.java"]:
+    for name in ["config/H2ServerStarter.java", "config/SecurityHeadersFilter.java", "util/DocTypes.java"]:
         a = read(os.path.join(CUSTOMER, JAVA, name))
         b = read(os.path.join(STAFF, JAVA, name))
         if a != b:
@@ -51,6 +51,10 @@ def check_columns():
     staff = columns(os.path.join(STAFF, JAVA, "model", "Project.java")) | columns(os.path.join(STAFF, JAVA, "model", "ProjectFields.java"))
     for missing in sorted(customer - staff):
         problems.append(f"2. column '{missing}' is read by the customer app but is missing in the staff model (Project / ProjectFields)")
+    customer = columns(os.path.join(CUSTOMER, JAVA, "model", "ProjectAttachment.java"))
+    staff = columns(os.path.join(STAFF, JAVA, "model", "ProjectAttachment.java"))
+    for missing in sorted(customer - staff):
+        problems.append(f"2. column '{missing}' is read by the customer app but is missing in the staff model (ProjectAttachment)")
 
 
 # element ids that exist on one side only, on purpose
@@ -58,7 +62,7 @@ ONLY_ONE_SIDE = {
     "public-detail.jsp": {
         "staff-preview-banner", "btn-preview-back-admin", "btn-preview-edit-project",                       # staff preview banner
         "card-apply-home-loan", "loan-card-heading", "loan-card-subheading", "btn-apply-loan-sidebar",      # Home Loan: customers only
-        "bottom-apply-home-loan", "btn-apply-loan-bottom",
+        "bottom-apply-home-loan", "btn-apply-loan-bottom", "btn-apply-online-sidebar", "btn-apply-online-bottom",
     },
     "public-projects.jsp": {"alert-staff-banner", "btn-staff-banner-mgmt"},   # banner for signed-in staff
 }
@@ -122,10 +126,20 @@ def parse_method(path):
     return text[start:text.index("\n  }\n", start)]
 
 
+def icons_block(path):
+    text = read(path)
+    start = text.index("public static final Map<String, String> ICONS")
+    return text[start:text.index("DEFAULT_ICON", start)]
+
+
 def check_amenities():
     """Amenities.parse turns the stored text (Gym:Y,Lift:N) into Yes/No for the pages. Both apps must give the same words."""
     a = parse_method(os.path.join(CUSTOMER, JAVA, "util", "Amenities.java"))
     b = parse_method(os.path.join(STAFF, JAVA, "util", "Amenities.java"))
+    ia = icons_block(os.path.join(CUSTOMER, JAVA, "util", "Amenities.java"))
+    ib = icons_block(os.path.join(STAFF, JAVA, "util", "Amenities.java"))
+    if ia != ib:
+        problems.append("5. Amenities.ICONS (the emoji of each amenity) differs between the two applications")
     if a != b:
         problems.append("5. Amenities.parse differs between the two applications: the pages of both expect the words Yes / No")
 

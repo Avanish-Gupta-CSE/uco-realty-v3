@@ -14,6 +14,7 @@ import com.ucorealty.service.MasterDataService;
 import com.ucorealty.service.ProjectAccessService;
 import com.ucorealty.service.ProjectWorkflowService;
 import com.ucorealty.util.Amenities;
+import com.ucorealty.util.DocTypes;
 import com.ucorealty.util.StaffRoles;
 import com.ucorealty.util.UploadChecks;
 import jakarta.servlet.http.HttpServletRequest;
@@ -28,6 +29,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -213,7 +215,7 @@ public class ProjectWorkflowController {
       }
       s = stagingId == null ? workflow.createDraft(form, sent, user) : workflow.saveDraft(stagingId, form, sent, user);
       addPhotos(s, user, photo1, photo2, photo3, photo4, photo5, photo6, photo7, photo8, photo9, photo10);
-      addAttachments(s, user, attachments);
+      addAttachments(s, user, attachments, request);
 
       boolean update = ProjectStaging.UPDATE.equals(s.requestType);
       if ("submit".equalsIgnoreCase(action)) {
@@ -399,6 +401,7 @@ public class ProjectWorkflowController {
     model.addAttribute("zones", masterData.getZones());
     model.addAttribute("states", masterData.getStates());
     model.addAttribute("existingImages", photos);
+    model.addAttribute("docSlots", com.ucorealty.util.DocTypes.SLOTS);
     model.addAttribute("existingAttachments", s != null ? workflow.attachmentsForForm(s) : Collections.emptyList());
     model.addAttribute("amenityList", Amenities.LIST);
     model.addAttribute("amenityAnswers", Amenities.parse(shown != null ? shown.amenityFlags : null));
@@ -408,34 +411,70 @@ public class ProjectWorkflowController {
   }
 
   /**
-   * Stores the PDF attachments of the request. There is no limit on how many a project has; each file must be a PDF of at most 3 MB.
-   * All files are checked first, so one bad file saves nothing from this upload.
+   * Stores the PDF documents of the request. The form sends: one file per named slot (doc_BROCHURE, doc_FLOOR_PLAN, doc_RERA; each may be
+   * empty), "Others" as numbered pairs (otherFile_N + otherTitle_N), and, from older scripts, the plain field "attachments" (stored as Others).
+   * There is no limit on how many Others a project has; each file must be a PDF of at most 3 MB. All files are checked first, so one bad
+   * file saves nothing from this upload. A new file in a slot that already holds one replaces it (the old one is removed the normal way:
+   * deleted when it is still unapproved, removed on approval when it is live).
    */
-  private void addAttachments(ProjectStaging s, String username, List<MultipartFile> files) throws IOException {
-    if (files == null) return;
+  private void addAttachments(ProjectStaging s, String username, List<MultipartFile> legacy, HttpServletRequest request) throws IOException {
+    Map<String, MultipartFile> sent = request instanceof MultipartHttpServletRequest mr ? mr.getFileMap() : Collections.emptyMap();
     List<ProjectAttachment> ready = new ArrayList<>();
-    for (MultipartFile file : files) {
+    List<String> slotsReplaced = new ArrayList<>();
+    for (String code : DocTypes.SLOTS.keySet()) {
+      MultipartFile file = sent.get("doc_" + code);
       if (file == null || file.isEmpty()) continue;
-      String name = file.getOriginalFilename();
-      boolean pdfName = name != null && name.toLowerCase().endsWith(".pdf");
-      if (file.getSize() > MAX_ATTACHMENT_BYTES) {
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "\"" + UploadChecks.attachmentName(name) + "\" is larger than 3 MB. An attachment must be a PDF file of at most 3 MB.");
+      ready.add(newAttachment(s, username, file, code, null));
+      slotsReplaced.add(code);
+    }
+    List<Integer> numbers = new ArrayList<>();
+    for (String key : sent.keySet()) {
+      if (key.startsWith("otherFile_") && key.substring("otherFile_".length()).matches("\\d{1,4}")) numbers.add(Integer.valueOf(key.substring("otherFile_".length())));
+    }
+    Collections.sort(numbers);
+    for (Integer n : numbers) {
+      MultipartFile file = sent.get("otherFile_" + n);
+      if (file == null || file.isEmpty()) continue;
+      ready.add(newAttachment(s, username, file, DocTypes.OTHER, UploadChecks.docTitle(request.getParameter("otherTitle_" + n))));
+    }
+    if (legacy != null) {
+      for (MultipartFile file : legacy) {
+        if (file == null || file.isEmpty()) continue;
+        ready.add(newAttachment(s, username, file, DocTypes.OTHER, null));
       }
-      byte[] bytes = file.getBytes();
-      if (!pdfName || !UploadChecks.isPdf(bytes)) {
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "\"" + UploadChecks.attachmentName(name) + "\" is not a PDF file. An attachment must be a PDF file of at most 3 MB.");
+    }
+    if (ready.isEmpty()) return;
+    if (!slotsReplaced.isEmpty()) {
+      for (ProjectAttachmentRepository.FileInfo old : workflow.attachmentsForForm(s)) {
+        if (slotsReplaced.contains(old.getDocType())) workflow.removeAttachment(s.id, old.getId(), username);
       }
-      ProjectAttachment att = new ProjectAttachment();
-      att.stagingId = s.id;                         // belongs to the maker's working copy: not live, never shown to customers
-      att.projectId = null;
-      att.fileName = UploadChecks.attachmentName(name);
-      att.mimeType = "application/pdf";
-      att.fileSize = file.getSize();
-      att.fileData = bytes;
-      att.uploadedBy = username;
-      ready.add(att);
     }
     attachmentRepo.saveAll(ready);
+  }
+
+  /** One checked PDF (at most 3 MB, a real PDF) as a not-yet-saved attachment of the request. */
+  private ProjectAttachment newAttachment(ProjectStaging s, String username, MultipartFile file, String docType, String docTitle) throws IOException {
+    String name = file.getOriginalFilename();
+    boolean pdfName = name != null && name.toLowerCase().endsWith(".pdf");
+    String shown = DocTypes.isSlot(docType) ? DocTypes.SLOTS.get(docType) : UploadChecks.attachmentName(name);
+    if (file.getSize() > MAX_ATTACHMENT_BYTES) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "\"" + shown + "\" (" + UploadChecks.attachmentName(name) + ") is larger than 3 MB. A document must be a PDF file of at most 3 MB.");
+    }
+    byte[] bytes = file.getBytes();
+    if (!pdfName || !UploadChecks.isPdf(bytes)) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "\"" + shown + "\" (" + UploadChecks.attachmentName(name) + ") is not a PDF file. A document must be a PDF file of at most 3 MB.");
+    }
+    ProjectAttachment att = new ProjectAttachment();
+    att.stagingId = s.id;                         // belongs to the maker's working copy: not live, never shown to customers
+    att.projectId = null;
+    att.fileName = UploadChecks.attachmentName(name);   // the uploaded name stays as it was
+    att.docType = docType;
+    att.docTitle = docTitle;
+    att.mimeType = "application/pdf";
+    att.fileSize = file.getSize();
+    att.fileData = bytes;
+    att.uploadedBy = username;
+    return att;
   }
 
   private void addPhotos(ProjectStaging s, String username, MultipartFile... files) throws IOException {

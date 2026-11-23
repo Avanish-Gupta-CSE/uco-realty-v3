@@ -87,16 +87,38 @@
                         </div>
                     </div>
 
-                    <%-- Photos Gallery --%>
+                    <%-- Photos Gallery: an auto-sliding carousel (Bootstrap data attributes only, no inline script) --%>
                     <c:if test="${not empty images}">
                         <div class="card-custom mb-4" id="card-project-gallery">
                             <h2 class="card-title-custom" id="gallery-heading">Project Gallery</h2>
-                            <div class="project-gallery-scroller" id="project-gallery-scroller">
-                                <c:forEach var="img" items="${images}" varStatus="loop">
-                                    <img src="${pageContext.request.contextPath}/files/<c:out value="${img.id}"/>"
-                                        alt="Project Photo ${loop.count}" class="gallery-img" loading="lazy"
-                                        id="gallery-photo-${img.id}">
-                                </c:forEach>
+                            <div id="project-photo-carousel" class="carousel slide photo-carousel" data-bs-ride="carousel" data-bs-interval="4000" data-bs-pause="hover" aria-label="Project photos">
+                                <c:if test="${fn:length(images) > 1}">
+                                    <div class="carousel-indicators" id="gallery-indicators">
+                                        <c:forEach var="img" items="${images}" varStatus="loop">
+                                            <button type="button" data-bs-target="#project-photo-carousel" data-bs-slide-to="${loop.index}" class="${loop.first ? 'active' : ''}" ${loop.first ? 'aria-current="true"' : ''} aria-label="Photo ${loop.count}"></button>
+                                        </c:forEach>
+                                    </div>
+                                </c:if>
+                                <div class="carousel-inner" id="project-gallery-slides">
+                                    <c:forEach var="img" items="${images}" varStatus="loop">
+                                        <div class="carousel-item ${loop.first ? 'active' : ''}">
+                                            <img src="${pageContext.request.contextPath}/files/<c:out value="${img}"/>"
+                                                alt="Project Photo ${loop.count}" class="photo-carousel-img d-block w-100" ${loop.first ? '' : 'loading="lazy"'}
+                                                id="gallery-photo-${img}">
+                                        </div>
+                                    </c:forEach>
+                                </div>
+                                <c:if test="${fn:length(images) > 1}">
+                                    <button class="carousel-control-prev" type="button" data-bs-target="#project-photo-carousel" data-bs-slide="prev" id="gallery-prev">
+                                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                        <span class="visually-hidden">Previous photo</span>
+                                    </button>
+                                    <button class="carousel-control-next" type="button" data-bs-target="#project-photo-carousel" data-bs-slide="next" id="gallery-next">
+                                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                        <span class="visually-hidden">Next photo</span>
+                                    </button>
+                                    <span class="photo-counter" id="gallery-counter" aria-hidden="true">1 / ${fn:length(images)}</span>
+                                </c:if>
                             </div>
                         </div>
                     </c:if>
@@ -209,13 +231,21 @@
                                             </tr>
                                             </c:if>
                                             <c:if test="${not empty amenityRows || not empty project.amenities}">
-                                                <tr>
+                                                <tr class="amenity-row">
                                                     <th>Amenities</th>
                                                     <td id="spec-amenities">
-                                                        <c:forEach var="a" items="${amenityRows}">
-                                                            <div><c:out value="${a.key}"/>: <strong class="${a.value == 'Yes' ? 'text-success' : 'text-muted'}">${a.value == 'Yes' ? 'Yes' : 'No'}</strong></div>
-                                                        </c:forEach>
-                                                        <c:if test="${not empty project.amenities}"><div class="mt-1"><c:out value="${project.amenities}"/></div></c:if>
+                                                        <c:if test="${not empty amenityRows}">
+                                                            <div class="amenity-grid" id="amenity-grid">
+                                                                <c:forEach var="a" items="${amenityRows}" varStatus="vs">
+                                                                    <div class="amenity-tile ${a.value == 'Yes' ? 'amenity-tile-yes' : 'amenity-tile-no'}" id="amenity-tile-${vs.index}">
+                                                                        <span class="amenity-icon" aria-hidden="true"><c:out value="${empty amenityIcons[a.key] ? amenityDefaultIcon : amenityIcons[a.key]}"/></span>
+                                                                        <span class="amenity-name"><c:out value="${a.key}"/></span>
+                                                                        <span class="amenity-status"><c:out value="${a.value == 'Yes' ? 'Available' : 'Not available'}"/></span>
+                                                                    </div>
+                                                                </c:forEach>
+                                                            </div>
+                                                        </c:if>
+                                                        <c:if test="${not empty project.amenities}"><div class="mt-2 small text-muted" id="amenity-other"><span class="fw-semibold">Other:</span> <c:out value="${project.amenities}"/></div></c:if>
                                                     </td>
                                                 </tr>
                                             </c:if>
@@ -225,20 +255,29 @@
                                                     <td><a href="<c:out value='${project.videoUrl}'/>" target="_blank" rel="noopener noreferrer" id="link-project-video">Watch Project Video &rarr;</a></td>
                                                 </tr>
                                             </c:if>
-                                            <c:if test="${not empty attachments}">
-                                                <tr id="row-attachments">
-                                                    <th>Documents (PDF)</th>
-                                                    <td>
-                                                        <c:forEach var="att" items="${attachments}">
-                                                            <div><a href="${pageContext.request.contextPath}/attachments/<c:out value='${att.id}'/>" target="_blank" rel="noopener" id="link-attachment-${att.id}"><c:out value="${att.fileName}"/></a></div>
-                                                        </c:forEach>
-                                                    </td>
-                                                </tr>
-                                            </c:if>
                                         </tbody>
                                     </table>
                                 </div>
                             </div>
+
+                            <%-- Project Documents: one download card per document --%>
+                            <c:if test="${not empty attachments}">
+                                <div class="card-custom mb-4" id="card-project-documents">
+                                    <h2 class="card-title-custom" id="documents-heading">Project Documents</h2>
+                                    <div class="doc-grid" id="doc-list">
+                                        <c:forEach var="att" items="${attachments}">
+                                            <a class="doc-card" href="${pageContext.request.contextPath}/attachments/<c:out value='${att.id}'/>" download rel="noopener" id="link-attachment-${att.id}">
+                                                <span class="doc-badge" aria-hidden="true">PDF</span>
+                                                <span class="doc-info">
+                                                    <span class="doc-name"><c:out value="${att.displayName}"/></span>
+                                                    <span class="doc-meta">PDF document</span>
+                                                </span>
+                                                <span class="doc-action" aria-hidden="true">&#11015; Download</span>
+                                            </a>
+                                        </c:forEach>
+                                    </div>
+                                </div>
+                            </c:if>
 
                             <%-- Builder Profile --%>
                             <div class="card-custom mb-4" id="card-builder-profile">

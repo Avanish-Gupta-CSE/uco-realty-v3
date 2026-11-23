@@ -7,6 +7,7 @@
 document.addEventListener("DOMContentLoaded", function () {
     initGlobalConfirmHandlers();
     initErrorAlertScroll();
+    initPhotoCarousel();
 });
 
 /**
@@ -44,3 +45,19 @@ function initErrorAlertScroll() {
     }
 }
 
+
+/**
+ * Project photo carousel: show "2 / 5" and, for visitors whose device asks for reduced motion, do not slide on its own.
+ */
+function initPhotoCarousel() {
+    var el = document.getElementById("project-photo-carousel");
+    if (!el) return;
+    var counter = document.getElementById("gallery-counter");
+    var total = el.querySelectorAll(".carousel-item").length;
+    el.addEventListener("slid.bs.carousel", function (e) {
+        if (counter) counter.textContent = (e.to + 1) + " / " + total;
+    });
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches && window.bootstrap) {
+        window.bootstrap.Carousel.getOrCreateInstance(el, { ride: false, interval: false }).pause();
+    }
+}

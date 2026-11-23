@@ -53,6 +53,8 @@ erDiagram
         VARCHAR2_20 project_id FK "set for a live PDF"
         NUMBER staging_id FK "set for an unapproved PDF"
         VARCHAR2 file_name "NOT NULL"
+        VARCHAR2 doc_type "BROCHURE, FLOOR_PLAN, RERA or OTHER"
+        VARCHAR2 doc_title "title of an OTHER document"
         VARCHAR2 mime_type
         NUMBER file_size "at most 3 MB, checked by the app"
         BLOB file_data "SecureFile"
@@ -80,6 +82,7 @@ erDiagram
 ## Reading the diagram
 * **Master and staging:** `realty_projects` holds approved projects only. Everything a maker is working on (new, edit, unit reduction, deletion) is a row in `realty_project_staging` until a checker approves it; the approval then applies it to `realty_projects`. `project_id` in staging is the same code as `realty_projects.id`, but there is no foreign key (a new project does not exist in the master yet). One open request per project is enforced by the unique index `ux_realty_staging_one_open`.
 * **Photos and PDF files:** a file belongs either to a live project (`project_id`) or to a maker's unapproved work (`staging_id`), never both (check constraints `chk_realty_image_owner`, `chk_realty_att_owner`). Deleting the project or the staging row deletes its files.
+* **Document slots:** `doc_type` says which named slot a PDF fills (Brochure, Floor Plan, RERA Certificate; one per project, a new one replaces the old) or `OTHER` (any number, each with the maker's `doc_title`). Constraint `chk_realty_att_doctype`.
 * **Audit tables** stand alone: they hold the employee number as text, with no foreign key.
 
 ## Tables we only read (owned by the bank, not created by us)

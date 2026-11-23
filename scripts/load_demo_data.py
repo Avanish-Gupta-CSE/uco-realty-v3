@@ -57,6 +57,7 @@ def form(i, name, builder, state, city, pin, units):
         "budgetMin": "32 L", "budgetMax": "68 L", "avgRate": "4800 per sq.ft.", "totalProjectArea": "3.5 acres",
         "distRailway": "4 km", "distAirport": "22 km", "aptPerFloor": "4", "noOfTowers": "3",
         "amenities": "Jogging track, Clubhouse",
+        "otherTitle_1": "Price List (Demo)",
         **{f"amenity_{k}": ("Y" if k in (0, 2, 4, 5, 7) else "N") for k in range(8)},   # Yes/No amenities (staff form order)
         "builderBg": f"{builder} has delivered residential projects in the region for over 15 years.",
         "builderRating": "4.2", "builderRatingOutOf": "5", "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "website": "https://example.com", "salesExecName": "Demo Sales Executive",
@@ -80,9 +81,10 @@ DEMO_PDF = (b"%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Ty
 
 
 def documents():
-    # attachments: any number of PDF files, all under the one field name "attachments"
-    return [("attachments", "demo-brochure.pdf", DEMO_PDF, "application/pdf"),
-            ("attachments", "demo-floor-plan.pdf", DEMO_PDF, "application/pdf")]
+    # documents: one PDF per named slot (doc_BROCHURE, doc_FLOOR_PLAN, doc_RERA), and "Others" as numbered pairs otherFile_N + otherTitle_N
+    return [("doc_BROCHURE", "demo-brochure.pdf", DEMO_PDF, "application/pdf"),
+            ("doc_FLOOR_PLAN", "demo-floor-plan.pdf", DEMO_PDF, "application/pdf"),
+            ("otherFile_1", "demo-price-list.pdf", DEMO_PDF, "application/pdf")]
 
 
 def newest_project_id(client, name):

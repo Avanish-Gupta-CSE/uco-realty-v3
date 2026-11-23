@@ -114,8 +114,10 @@ public class ProjectCatalogController {
     }
 
     List<ProjectImageRepository.FileInfo> imgs = imageRepo.findFilesOfProject(id);
-    model.addAttribute("attachments", attachmentRepo.findFilesOfProject(id));
+    model.addAttribute("attachments", sortedDocuments(attachmentRepo.findFilesOfProject(id)));
     model.addAttribute("amenityRows", com.ucorealty.util.Amenities.parse(p.amenityFlags));
+    model.addAttribute("amenityIcons", com.ucorealty.util.Amenities.ICONS);
+    model.addAttribute("amenityDefaultIcon", com.ucorealty.util.Amenities.DEFAULT_ICON);
     model.addAttribute("project", p);
     model.addAttribute("images", imgs);
     model.addAttribute("isStaffPreview", isStaff);
@@ -187,5 +189,12 @@ public class ProjectCatalogController {
     if (chosenState == null || chosenState.isEmpty() || chosenState.equalsIgnoreCase(stateOfProject)) {
       cities.add(city.trim());
     }
+  }
+
+  /** The documents in display order: the named slots first, then the Others (oldest first inside each group). */
+  private static java.util.List<ProjectAttachmentRepository.FileInfo> sortedDocuments(java.util.List<ProjectAttachmentRepository.FileInfo> files) {
+    java.util.List<ProjectAttachmentRepository.FileInfo> sorted = new java.util.ArrayList<>(files);
+    sorted.sort(java.util.Comparator.comparingInt((ProjectAttachmentRepository.FileInfo f) -> com.ucorealty.util.DocTypes.order(f.getDocType())).thenComparing(ProjectAttachmentRepository.FileInfo::getId));
+    return sorted;
   }
 }

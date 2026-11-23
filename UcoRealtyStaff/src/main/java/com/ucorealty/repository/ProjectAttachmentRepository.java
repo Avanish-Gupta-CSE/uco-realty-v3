@@ -23,11 +23,16 @@ public interface ProjectAttachmentRepository extends JpaRepository<ProjectAttach
   interface FileInfo {
     Long getId();
     String getFileName();
+    String getDocType();
+    String getDocTitle();
+
+    /** The text people see for this file: the slot label (Brochure, ...), the maker's title, or the file name. */
+    default String getDisplayName() { return com.ucorealty.util.DocTypes.display(getDocType(), getDocTitle(), getFileName()); }
   }
 
   /** The attachments of a live project, oldest first. No bytes are read. */
   @Query(nativeQuery = true, value = """
-      SELECT id AS "id", file_name AS "fileName"
+      SELECT id AS "id", file_name AS "fileName", doc_type AS "docType", doc_title AS "docTitle"
       FROM realty_project_attachments
       WHERE project_id = :projectId
       ORDER BY id
@@ -36,7 +41,7 @@ public interface ProjectAttachmentRepository extends JpaRepository<ProjectAttach
 
   /** The attachments of a staging request (work not live yet), oldest first. No bytes are read. */
   @Query(nativeQuery = true, value = """
-      SELECT id AS "id", file_name AS "fileName"
+      SELECT id AS "id", file_name AS "fileName", doc_type AS "docType", doc_title AS "docTitle"
       FROM realty_project_attachments
       WHERE staging_id = :stagingId
       ORDER BY id
@@ -45,7 +50,7 @@ public interface ProjectAttachmentRepository extends JpaRepository<ProjectAttach
 
   /** These attachments by id (to show the ones a change request removes). No bytes are read. */
   @Query(nativeQuery = true, value = """
-      SELECT id AS "id", file_name AS "fileName"
+      SELECT id AS "id", file_name AS "fileName", doc_type AS "docType", doc_title AS "docTitle"
       FROM realty_project_attachments
       WHERE id IN (:ids)
       ORDER BY id

@@ -91,7 +91,7 @@ def audit_assets(base, who):
 
 # ---- customer site
 pub = Client(PUBLIC)
-crawl(PUBLIC, "customer", pub, ["/projects"])
+crawl(PUBLIC, "customer", pub, ["/", "/about", "/projects"])
 s, _, body = pub.get("/api/public/projects?size=1")
 try:
     items = json.loads(body).get("content") or json.loads(body).get("projects") or []

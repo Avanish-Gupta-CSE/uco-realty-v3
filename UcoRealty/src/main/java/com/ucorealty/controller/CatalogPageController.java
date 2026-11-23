@@ -43,18 +43,21 @@ public class CatalogPageController {
    */
   private static final String HOME_LOAN_PATH = "/Lead_App/lead_web.jsp?utm=REALTY";
   private final String homeLoanUrl;
+  private final String homeLoanOnlineUrl;   // the bank's online application (login page): a plain link
 
   public CatalogPageController(CatalogService catalogService, MasterDataService masterDataService,
       ProjectImageRepository imageRepo, ProjectAttachmentRepository attachmentRepo,
-      @Value("${uco.homeloan.base-url}") String homeLoanBaseUrl) {
+      @Value("${uco.homeloan.base-url}") String homeLoanBaseUrl,
+      @Value("${uco.homeloan.online-apply-url}") String homeLoanOnlineUrl) {
     this.homeLoanUrl = homeLoanBaseUrl.replaceAll("/+$", "") + HOME_LOAN_PATH;
+    this.homeLoanOnlineUrl = homeLoanOnlineUrl.trim();
     this.catalogService = catalogService;
     this.masterDataService = masterDataService;
     this.imageRepo = imageRepo;
     this.attachmentRepo = attachmentRepo;
   }
 
-  @GetMapping({ "/", "/projects" })
+  @GetMapping("/projects")
   public String listProjects(@RequestParam(required = false) String state,
       @RequestParam(required = false) String city,
       @RequestParam(required = false) String search,
@@ -110,9 +113,12 @@ public class CatalogPageController {
     }
     model.addAttribute("project", p);
     model.addAttribute("images", imgs);
-    model.addAttribute("attachments", attachmentRepo.findFilesOfProject(id));   // PDF attachments: any number
+    model.addAttribute("attachments", sortedDocuments(attachmentRepo.findFilesOfProject(id)));   // PDF documents: Brochure, Floor Plan, RERA Certificate, then the Others
     model.addAttribute("amenityRows", com.ucorealty.util.Amenities.parse(p.amenityFlags));
+    model.addAttribute("amenityIcons", com.ucorealty.util.Amenities.ICONS);
+    model.addAttribute("amenityDefaultIcon", com.ucorealty.util.Amenities.DEFAULT_ICON);
     model.addAttribute("homeLoanUrl", homeLoanUrl);
+    model.addAttribute("homeLoanOnlineUrl", homeLoanOnlineUrl);
     return "public-detail";
   }
 
@@ -153,7 +159,8 @@ public class CatalogPageController {
     ProjectAttachment att = attachmentRepo.findById(id)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-    if (att.projectId == null || catalogService.publicById(att.projectId) == null) {
+    Project project = att.projectId == null ? null : catalogService.publicById(att.projectId);
+    if (project == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND);
     }
     if (att.fileData == null || att.fileData.length == 0) {
@@ -161,8 +168,24 @@ public class CatalogPageController {
     }
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_PDF)
-        .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.inline().filename(att.fileName, StandardCharsets.UTF_8).build().toString())   // "Save as" keeps the real name
+        .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(downloadName(project, att), StandardCharsets.UTF_8).build().toString())   // a click downloads the file under a clean name
         .header(HttpHeaders.CACHE_CONTROL, "public, max-age=86400")
         .body(att.fileData);
+  }
+
+  /** The name the browser saves the PDF under: a named slot as "<Project name> - Brochure.pdf", an Other document under its title (or its own file name). */
+  private static String downloadName(Project project, ProjectAttachment att) {
+    String label = com.ucorealty.util.DocTypes.display(att.docType, att.docTitle, att.fileName);
+    String base = com.ucorealty.util.DocTypes.isSlot(att.docType) ? project.projectName + " - " + label : label;
+    String clean = base.replaceAll("[^\\p{L}\\p{N}\\p{M} ._()-]", "_").replaceAll("\\s+", " ").trim();
+    if (clean.length() > 120) clean = clean.substring(0, 120).trim();
+    return (clean.isEmpty() ? "document" : clean) + ".pdf";
+  }
+
+  /** The documents in display order: the named slots first, then the Others (oldest first inside each group). */
+  private static java.util.List<ProjectAttachmentRepository.FileInfo> sortedDocuments(java.util.List<ProjectAttachmentRepository.FileInfo> files) {
+    java.util.List<ProjectAttachmentRepository.FileInfo> sorted = new java.util.ArrayList<>(files);
+    sorted.sort(java.util.Comparator.comparingInt((ProjectAttachmentRepository.FileInfo f) -> com.ucorealty.util.DocTypes.order(f.getDocType())).thenComparing(ProjectAttachmentRepository.FileInfo::getId));
+    return sorted;
   }
 }

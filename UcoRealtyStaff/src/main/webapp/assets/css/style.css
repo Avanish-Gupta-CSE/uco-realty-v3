@@ -384,22 +384,6 @@ a:hover {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-.project-gallery-scroller {
-  display: flex;
-  gap: 16px;
-  overflow-x: auto;
-  padding-bottom: 12px;
-}
-
-.gallery-img {
-  height: 220px;
-  width: 320px;
-  object-fit: cover;
-  border-radius: 6px;
-  border: 1px solid var(--uco-gray-border);
-  flex-shrink: 0;
-}
-
 .table-spec th {
   width: 35%;
   background-color: var(--uco-gray-card);
@@ -508,6 +492,27 @@ a:hover {
   width: auto;
   padding: 2px 10px;
 }
+
+/* a round x in the top-right corner of a saved photo card or document card (like the one on an empty photo slot) */
+.slot-delete-corner-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: var(--uco-red-light);
+  border: 1px solid var(--uco-red-border);
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  line-height: 22px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--uco-red);
+  cursor: pointer;
+  padding: 0;
+  z-index: 2;
+}
+.slot-delete-corner-btn:hover { background: #fca5a5; color: #7f1d1d; }
+.attachment-item { padding-right: 32px; }
 
 .slot-clear-btn {
   background: #f1f5f9;
@@ -945,6 +950,39 @@ h1, h2, h3, h4 { letter-spacing: -.01em; }
 .project-card:hover { box-shadow: 0 6px 20px rgba(15, 23, 42, .1); transform: translateY(-2px); }
 .hero-banner { border-radius: 14px; }
 
+/* amenities on the project page: one tile per amenity, available ones highlighted, the others greyed out */
+.amenity-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: .5rem; }
+.amenity-tile { display: flex; flex-direction: column; align-items: center; text-align: center; padding: .6rem .4rem; border-radius: 10px; border: 1px solid var(--ui-border); }
+.amenity-icon { font-size: 1.6rem; line-height: 1.2; font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif; }
+.amenity-name { font-weight: 600; font-size: .85rem; }
+.amenity-status { font-size: .72rem; }
+.amenity-tile-yes { background: var(--uco-green-light); border-color: var(--uco-green-border); color: var(--uco-green); }
+.amenity-tile-no { background: #f8fafc; color: var(--ui-muted); }
+.amenity-tile-no .amenity-icon { filter: grayscale(1); opacity: .45; }
+
+/* the document slots on the staff project form */
+.doc-slot { border: 1px solid var(--ui-border); border-radius: 10px; padding: .6rem .75rem; margin-bottom: .6rem; background: #fff; }
+.other-title-input { flex: 1 1 180px; max-width: 280px; }
+
+/* project photos: an auto-sliding carousel */
+.photo-carousel { position: relative; border-radius: 10px; overflow: hidden; background: #0b1b2b; }
+.photo-carousel-img { height: 420px; object-fit: cover; }
+.photo-counter { position: absolute; top: 12px; right: 12px; z-index: 3; background: rgba(0, 0, 0, .55); color: #fff; font-size: .78rem; font-weight: 600; padding: 2px 10px; border-radius: 999px; }
+.photo-carousel .carousel-indicators { margin-bottom: .6rem; }
+.photo-carousel .carousel-control-prev-icon, .photo-carousel .carousel-control-next-icon { background-color: rgba(0, 0, 0, .45); border-radius: 50%; background-size: 55%; width: 2.4rem; height: 2.4rem; }
+@media (max-width: 767.98px) { .photo-carousel-img { height: 240px; } }
+
+/* project documents: one download card each */
+.doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: .75rem; }
+.doc-card { display: flex; align-items: center; gap: .8rem; padding: .8rem .9rem; border: 1px solid var(--ui-border); border-radius: 12px; background: #fff; color: var(--uco-navy); text-decoration: none; transition: box-shadow .15s ease, border-color .15s ease, transform .15s ease; }
+.doc-card:hover { border-color: var(--uco-navy); box-shadow: 0 6px 18px rgba(15, 23, 42, .12); transform: translateY(-2px); color: var(--uco-navy); }
+.doc-badge { flex: 0 0 auto; width: 44px; height: 52px; border-radius: 6px; background: #dc2626; color: #fff; font-size: .72rem; font-weight: 800; letter-spacing: .04em; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 6px; box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .15); }
+.doc-info { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+.doc-name { font-weight: 700; font-size: .98rem; overflow-wrap: anywhere; }
+.doc-meta { font-size: .78rem; color: var(--ui-muted); }
+.doc-action { flex: 0 0 auto; font-size: .8rem; font-weight: 700; color: var(--uco-navy); background: var(--uco-light-blue); border: 1px solid var(--uco-border-blue); border-radius: 999px; padding: .25rem .7rem; }
+.doc-card:hover .doc-action { background: var(--uco-navy); color: #fff; }
+
 /* error page */
 .error-card { border-radius: 14px; box-shadow: var(--ui-shadow); border: 1px solid var(--ui-border); }
 .error-icon-info { background: var(--uco-light-blue); color: var(--uco-navy); }
@@ -960,6 +998,19 @@ h1, h2, h3, h4 { letter-spacing: -.01em; }
   .navbar-custom .navbar-nav { overflow-x: auto; white-space: nowrap; }
   .sticky-actions { margin: 1rem -1rem -1rem; padding: .7rem 1rem; }
   .table-spec th { width: 42%; }
+  .amenity-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .4rem; }
+  .amenity-tile { padding: .5rem .25rem; }
+  .amenity-icon { font-size: 1.3rem; }
+  .amenity-name { font-size: .78rem; }
+  /* on a phone the specification rows are flex boxes, so the amenity row can use the full card width */
+  .table-spec, .table-spec tbody { display: block; width: 100%; }
+  .table-spec tr { display: flex; }
+  .table-spec th { flex: 0 0 42%; }
+  .table-spec td { flex: 1 1 0; min-width: 0; }
+  .amenity-row { flex-direction: column; }
+  .amenity-row th, .amenity-row td { flex: 0 0 auto; width: 100%; }
+  .amenity-row th { border-bottom: 0; padding-bottom: .2rem; }
+  .amenity-status { font-size: .65rem; }
 
   /* tables become stacked cards so nothing, especially the action buttons, is hidden off-screen */
   .table-cards thead { display: none; }

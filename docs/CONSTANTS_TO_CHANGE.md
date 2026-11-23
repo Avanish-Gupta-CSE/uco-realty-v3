@@ -23,6 +23,7 @@ Every value below sits in a `application.properties` file with a `# TODO:` comme
 | 24 | `spring.datasource.password` | **real DB password** | production password |
 | 32 | `spring.jpa.properties.hibernate.dialect` | `org.hibernate.dialect.OracleDialect` (Oracle 19c or newer) | same; keep. Hibernate 7 does not support Oracle 12c |
 | 44 | `uco.homeloan.base-url` | UAT Home Loan host | production Home Loan host (no trailing slash) |
+| 48 | `uco.homeloan.online-apply-url` | `https://stp.uco.bank.in/home-loan/#/home-loan-login` | keep; change only if the bank gives another address for the online Home Loan application (the "Apply Online" button) |
 
 ## Logs
 `UcoRealtyStaff/src/main/resources/logback-spring.xml` and `UcoRealty/.../logback-spring.xml` write to `E:/Realty/<App>/logs/` (lines 15 and 17). Files are never deleted. Change the drive there only if the server team says so.

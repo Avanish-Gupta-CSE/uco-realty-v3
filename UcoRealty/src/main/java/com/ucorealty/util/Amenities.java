@@ -1,5 +1,6 @@
 package com.ucorealty.util;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -9,6 +10,20 @@ import java.util.Map;
  */
 public final class Amenities {
   private Amenities() {}
+
+  /** The emoji shown in front of each amenity name on the project page. A name that is not listed gets DEFAULT_ICON. (The same map is in the other application: scripts/sync_check.py compares them.) */
+  public static final Map<String, String> ICONS = Collections.unmodifiableMap(new LinkedHashMap<String, String>() {{
+    put("Swimming Pool", "\uD83C\uDFCA");
+    put("Community Hall", "\uD83C\uDFDB\uFE0F");
+    put("Gym", "\uD83C\uDFCB\uFE0F");
+    put("Children's Play Area", "\uD83C\uDFA0");
+    put("Lift", "\uD83D\uDED7");
+    put("24x7 Power Backup", "\uD83D\uDD0C");
+    put("Parking", "\uD83C\uDD7F\uFE0F");
+    put("CCTV / Security", "\uD83D\uDCF9");
+  }});
+
+  public static final String DEFAULT_ICON = "\u2728";
 
   /** "Gym:Y,Lift:N" -> {Gym=Yes, Lift=No} in stored order. (The same method, word for word, is in the staff app: scripts/sync_check.py compares them.) */
   public static Map<String, String> parse(String flags) {

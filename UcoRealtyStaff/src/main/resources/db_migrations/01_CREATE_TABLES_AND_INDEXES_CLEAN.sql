@@ -176,6 +176,8 @@ CREATE TABLE realty_project_attachments (
   project_id VARCHAR2(20),
   staging_id NUMBER,
   file_name VARCHAR2(255 CHAR) NOT NULL,
+  doc_type VARCHAR2(20) DEFAULT 'OTHER' NOT NULL,
+  doc_title VARCHAR2(100 CHAR),
   mime_type VARCHAR2(100),
   file_size NUMBER(19,0),
   file_data BLOB,
@@ -183,7 +185,8 @@ CREATE TABLE realty_project_attachments (
   uploaded_at TIMESTAMP DEFAULT SYSTIMESTAMP NOT NULL,
   CONSTRAINT fk_realty_att_project FOREIGN KEY (project_id) REFERENCES realty_projects(id) ON DELETE CASCADE,
   CONSTRAINT fk_realty_att_staging FOREIGN KEY (staging_id) REFERENCES realty_project_staging(id) ON DELETE CASCADE,
-  CONSTRAINT chk_realty_att_owner CHECK ((project_id IS NULL AND staging_id IS NOT NULL) OR (project_id IS NOT NULL AND staging_id IS NULL))
+  CONSTRAINT chk_realty_att_owner CHECK ((project_id IS NULL AND staging_id IS NOT NULL) OR (project_id IS NOT NULL AND staging_id IS NULL)),
+  CONSTRAINT chk_realty_att_doctype CHECK (doc_type IN ('BROCHURE','FLOOR_PLAN','RERA','OTHER'))
 )
 LOB (file_data) STORE AS SECUREFILE (
   ENABLE STORAGE IN ROW

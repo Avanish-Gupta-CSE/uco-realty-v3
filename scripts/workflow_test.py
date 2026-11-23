@@ -132,6 +132,7 @@ maker.post(f"/admin/projects/staging/{s1}/submit", {"_csrf": maker.csrf("/admin/
 decide(checker, s1, "approve", "ok")
 decide(dit, s1, "approve", "again")
 check("approved: now live for customers (data + photo)", public(pid)[0] == 200 and "Corrected amenities" in public(pid)[1])
+check("amenities show as tiles with an icon", "id=\"amenity-tile-0\"" in public(pid)[1] and "amenity-tile-yes" in public(pid)[1])
 check("photo went live with it", all(Client(PUBLIC).get(u)[0] == 200 for u in set(re.findall(r'(/files/\d+)', public(pid)[1]))) and "/files/" in public(pid)[1])
 check("dashboard now shows an Approved live project", status_of(checker, pid) == "Approved" and status_of(maker, pid) == "Approved")
 check("a second decision on the same request is refused (status unchanged)", decide(dit, s1, "reject", "late")[0] in (302, 400) and status_of(checker, pid) == "Approved")
@@ -351,6 +352,51 @@ save(maker, {}, stagingId=cs8, action="submit"); decide(checker, cs8, "reject", 
 check("a rejected change deletes its attachments (404 for everyone)", len(never) == 1 and all(maker.get(f"/attachments/{i}")[0] == 404 for i in never))
 check("the live attachments are untouched by the rejection", attachment_ids_public(pid7) == pub2)
 
+print("\n== 14b. Document slots: Brochure / Floor Plan / RERA Certificate / Others, labels instead of file names, click downloads")
+fl = demo.form(9, "ZZ Workflow Documents", "ZZ Workflow Builder", "West Bengal", "Durgapur", "713201", 40)
+fl.update({"branchName": "Durgapur Main Branch", "amenities": "Park", "otherTitle_1": "Price List ZZ"})
+slot_files = [("doc_BROCHURE", "zz-brochure-v1.pdf", demo.DEMO_PDF, "application/pdf"),
+              ("doc_FLOOR_PLAN", "zz-floorplan.pdf", demo.DEMO_PDF, "application/pdf"),
+              ("otherFile_1", "zz-prices.pdf", demo.DEMO_PDF, "application/pdf")]
+s_, _, _ = save(maker, fl, files=slot_files)
+pid9 = demo.newest_project_id(maker, "ZZ Workflow Documents"); sid9 = sid(maker, pid9)
+form9 = maker.get(f"/admin/projects/staging/{sid9}/edit")[2].decode("utf-8", "replace")
+check("a new project with a Brochure, a Floor Plan and one Other saves (302)", s_ == 302 and pid9 is not None)
+check("the form has a slot per document type and shows the 3 saved files",
+      all(f'id="doc-input-{c}"' in form9 for c in ("BROCHURE", "FLOOR_PLAN", "RERA")) and len(attachment_ids_on_form(maker, sid9)) == 3)
+old_ids = attachment_ids_on_form(maker, sid9)
+save(maker, {}, stagingId=sid9, files=[("doc_BROCHURE", "zz-brochure-v2.pdf", demo.DEMO_PDF, "application/pdf")])
+new_ids = attachment_ids_on_form(maker, sid9)
+check("a new Brochure replaces the old one (still 3 files, one id changed)", len(new_ids) == 3 and len(new_ids - old_ids) == 1 and len(old_ids - new_ids) == 1)
+save(maker, {}, stagingId=sid9, action="submit"); decide(checker, sid9, "approve", "")
+page9 = public(pid9)[1]
+check("customers see the labels Brochure, Floor Plan and the Other's title",
+      "Brochure" in page9 and "Floor Plan" in page9 and "Price List ZZ" in page9)
+check("customers do not see the file names, and the empty RERA slot shows nothing",
+      "zz-brochure" not in page9 and "zz-floorplan" not in page9 and "zz-prices" not in page9 and "RERA Certificate" not in page9)
+check("the documents are download cards (download attribute, no new tab)", 'class="doc-card"' in page9 and " download " in page9 and 'id="link-attachment-' in page9 and "_blank\" rel=\"noopener\" id=\"link-attachment" not in page9)
+live9 = sorted(attachment_ids_public(pid9))
+dispositions = [(Client(PUBLIC).get(f"/attachments/{i}")) for i in live9]
+cds = [d[1].get("Content-Disposition") or "" for d in dispositions]
+check("a click downloads: Content-Disposition is attachment with a clean name (project and label)",
+      all(d[0] == 200 for d in dispositions) and all(c.lower().startswith("attachment") and ".pdf" in c.lower() for c in cds)
+      and any("ZZ Workflow Documents - Brochure.pdf" in c for c in cds) and any("Price List ZZ" in c or "zz-prices" in c for c in cds), cds)
+check("the page has two Home Loan buttons: the enquiry link, and Apply Online to the bank's online application in a new tab",
+      "/Lead_App/lead_web.jsp?utm=REALTY" in page9 and 'href="https://stp.uco.bank.in/home-loan/#/home-loan-login"' in page9
+      and page9.count('id="btn-apply-online-') == 2 and page9.count("Enquire for Home Loan") == 2 and 'target="_blank" rel="noopener noreferrer"' in page9)
+check("a Not available amenity has no strikethrough rule in the style sheet", "line-through" not in Client(PUBLIC).get("/assets/css/style.css")[2].decode("utf-8", "replace").split(".amenity-tile-no")[-1][:400] if ".amenity-tile-no" in Client(PUBLIC).get("/assets/css/style.css")[2].decode("utf-8", "replace") else False)
+change(maker, pid9); cs9 = sid(maker, pid9)
+check("a saved document card has the round corner x (top-right), not a text Remove button",
+      'class="slot-delete-corner-btn slot-delete-saved-btn attachment-remove-btn"' in maker.get(f"/admin/projects/staging/{cs9}/edit")[2].decode("utf-8", "replace"))
+check("the order is Brochure, Floor Plan, then the Others", page9.index("Brochure") < page9.index("Floor Plan") < page9.index("Price List ZZ"))
+
+save(maker, {"otherTitle_2": "Brochure"}, stagingId=cs9, files=[("otherFile_2", "extra.pdf", demo.DEMO_PDF, "application/pdf")])
+form_cs9 = maker.get(f"/admin/projects/staging/{cs9}/edit")[2].decode("utf-8", "replace")
+slot_block = form_cs9[form_cs9.index('id="doc-slot-BROCHURE"'):form_cs9.index('id="doc-slot-FLOOR_PLAN"')]
+check("an Other titled 'Brochure' is just an Other: the Brochure slot still holds exactly its one file, the Other is a 4th file",
+      len(re.findall(r'id="existing-attachment-link-\d+"', slot_block)) == 1 and len(attachment_ids_on_form(maker, cs9)) == 4)
+check("the original file name is kept in the slot (the maker sees what was uploaded)", "zz-brochure-v2.pdf" in slot_block)
+
 print("\n== 15. Attachments: file names, access, size limits, withdraw and delete")
 def att_links(html, prefix):
     return re.findall(r'id="%s-(\d+)"[^>]*>([^<]*)<' % prefix, html)
@@ -365,8 +411,8 @@ check("odd file names (markup, Hindi, 320 characters, folder part, duplicates) a
 stored = att_links(maker.get(f"/admin/projects/staging/{sid8}/edit")[2].decode("utf-8", "replace"), "existing-attachment-link")
 shown = [n for _, n in stored]
 check("all 7 are stored", len(stored) == 7, len(stored))
-check("the Hindi name is kept as written", "योजना ब्रोशर.pdf" in shown, shown)
-check("no stored name is longer than 100 characters and every one still ends in .pdf", all(len(n) <= 100 and n.endswith(".pdf") for n in shown), shown)
+check("the Hindi name is kept as written (shown without .pdf)", "योजना ब्रोशर" in shown, shown)
+check("no shown name is longer than 100 characters", all(len(n) <= 100 for n in shown), shown)
 check("markup characters and the folder part are gone from the names", all("<" not in n and ">" not in n and "/" not in n for n in shown), shown)
 aid8 = stored[0][0]
 check("the draft's attachment opens for the maker, not for customers, not for another zone",
@@ -378,7 +424,7 @@ save(maker, {}, stagingId=sid8, action="submit")
 check("the zone's checker can open it while pending, another zone's checker cannot",
       checker.get(f"/attachments/{aid8}")[0] == 200 and other_checker.get(f"/attachments/{aid8}")[0] in (403, 404))
 check("the preview and the review of the new project list the attachments",
-      "योजना ब्रोशर.pdf" in checker.get(f"/admin/projects/staging/{sid8}/preview")[2].decode("utf-8", "replace")
+      "योजना ब्रोशर" in checker.get(f"/admin/projects/staging/{sid8}/preview")[2].decode("utf-8", "replace")
       and 'id="review-new-attachments"' in checker.get(f"/admin/projects/staging/{sid8}/review")[2].decode("utf-8", "replace"))
 decide(checker, sid8, "approve")
 pub_html = public(pid8)[1]

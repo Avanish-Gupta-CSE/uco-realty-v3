@@ -431,8 +431,8 @@ function initDateGuards() {
 }
 
 /**
- * Attachments: PDF files of at most 3 MB each, any number. One input can take several files; "+ Add another file" adds another
- * input. One save can carry at most 30 attachments and 33 MB of files in total (photos included): Tomcat refuses more,
+ * Documents: PDF files of at most 3 MB each. Three named slots take one file each; "Others" are rows of a title and a file,
+ * "+ Add another document" adds a row (numbered otherTitle_N / otherFile_N). One save can carry at most 30 attachments and 33 MB of files in total (photos included): Tomcat refuses more,
  * so the page says so before sending. The server checks every file again.
  */
 var MAX_ATTACHMENT_BYTES = 3 * 1024 * 1024;
@@ -444,7 +444,7 @@ function initDocumentInputs() {
     var addBtn = document.getElementById("addAttachmentBtn");
     var holder = document.getElementById("attachment-inputs");
     if (!addBtn || !holder) return;
-    var rowCounter = holder.querySelectorAll(".doc-file-input").length;
+    var rowCounter = holder.querySelectorAll(".attachment-input-row").length;
     // ✕ on a file row: the last remaining row is only cleared, any other row is removed
     holder.addEventListener("click", function (e) {
         var btn = e.target.closest ? e.target.closest(".attachment-row-remove-btn") : null;
@@ -455,26 +455,36 @@ function initDocumentInputs() {
         } else {
             var only = row.querySelector(".doc-file-input");
             if (only) only.value = "";
+            var onlyTitle = row.querySelector(".other-title-input");
+            if (onlyTitle) onlyTitle.value = "";
         }
     });
     addBtn.addEventListener("click", function () {
         var next = ++rowCounter;
         var row = document.createElement("div");
-        row.className = "mb-2 d-flex align-items-center gap-2 attachment-input-row";
+        row.className = "mb-2 d-flex align-items-center gap-2 flex-wrap attachment-input-row";
         row.id = "attachment-row-" + next;
+        var title = document.createElement("input");
+        title.type = "text";
+        title.id = "other_title_" + next;
+        title.name = "otherTitle_" + next;
+        title.maxLength = 100;
+        title.className = "form-control form-control-sm other-title-input";
+        title.placeholder = "Title, e.g. Price List";
+        title.setAttribute("aria-label", "Title of the other document");
         var input = document.createElement("input");
         input.type = "file";
-        input.id = "attachment_input_" + next;
-        input.name = "attachments";
-        input.multiple = true;
+        input.id = "other_file_" + next;
+        input.name = "otherFile_" + next;
         input.className = "form-control form-control-sm doc-file-input";
         input.accept = "application/pdf,.pdf";
         var removeBtn = document.createElement("button");
         removeBtn.type = "button";
         removeBtn.className = "attachment-row-remove-btn";
         removeBtn.id = "btn-remove-attachment-row-" + next;
-        removeBtn.title = "Remove this file";
+        removeBtn.title = "Remove this document";
         removeBtn.textContent = "\u2715";
+        row.appendChild(title);
         row.appendChild(input);
         row.appendChild(removeBtn);
         holder.appendChild(row);
