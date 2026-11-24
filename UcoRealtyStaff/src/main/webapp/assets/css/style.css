@@ -514,6 +514,9 @@ a:hover {
 .slot-delete-corner-btn:hover { background: #fca5a5; color: #7f1d1d; }
 .attachment-item { padding-right: 32px; }
 
+/* messages under the fields of the project form (shown while typing) */
+.field-error { color: #b91c1c; font-size: .78rem; margin-top: .2rem; }
+
 .slot-clear-btn {
   background: #f1f5f9;
   color: #475569;

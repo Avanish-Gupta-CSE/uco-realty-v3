@@ -66,7 +66,7 @@ def public(pid):
 
 def save(c, fields, stagingId=None, action="draft", files=()):
     fl = dict(fields)
-    fl.update({"action": action, "_csrf": c.csrf("/admin/projects")})
+    fl.update({"action": action, "_csrf": c.csrf("/admin/projects/new")})   # the token comes from the form page, as in the browser (the list would close an unchanged working copy)
     if stagingId:
         fl["stagingId"] = str(stagingId)
     return c.multipart_post("/admin/projects/staging/save", fl, files)
@@ -75,6 +75,13 @@ def save(c, fields, stagingId=None, action="draft", files=()):
 def change(c, pid):
     """Opens (creates) the maker's working copy of a live project: a POST, like the Edit button."""
     return c.post(f"/admin/projects/{pid}/change", {"_csrf": c.csrf("/admin/projects")})
+
+
+def change_sid(c, pid):
+    """Presses Edit and returns the id of the working copy from the redirect (not from the list: opening the list closes an unchanged copy)."""
+    s_, h_, _ = change(c, pid)
+    m = re.search(r"/staging/(\d+)/edit", location(h_) or "")
+    return int(m.group(1)) if m else None
 
 
 def decide(c, staging_id, decision, comment=""):
@@ -156,7 +163,7 @@ s_, h_, _ = change(maker, pid)
 check("opening a change is a POST that redirects to the form (302)", s_ == 302 and "/staging/" in location(h_))
 check("the change form opens (200)", maker.get("/admin/" + location(h_).split("/admin/", 1)[1])[0] == 200)
 check("a GET on the old change address no longer opens or creates anything (405)", maker.get(f"/admin/projects/{pid}/change")[0] == 405)
-cs = sid(maker, pid); check("a working copy (UPDATE) exists", cs is not None)
+cs = int(re.search(r"/staging/(\d+)/edit", location(h_)).group(1)); check("a working copy (UPDATE) exists", cs is not None)
 s, h, _ = save(maker, {"amenities": "DRAFT-ONLY amenities", "unsoldInventory": "55"}, stagingId=cs)
 check("save the change as a draft", s == 302)
 check("live project unchanged for customers", "Corrected amenities" in public(pid)[1] and "DRAFT-ONLY" not in public(pid)[1])
@@ -181,7 +188,7 @@ change(maker, pid)
 save(maker, {"amenities": "Final amenities list", "unsoldInventory": "55"}, stagingId=cs, action="submit")
 decide(checker, cs, "approve", "ok")
 check("approved change is live", "Final amenities list" in public(pid)[1] and units(checker, pid) == 55)
-change(maker, pid); cs = sid(maker, pid)
+cs = change_sid(maker, pid)
 save(maker, {"amenities": "REJECT-ME"}, stagingId=cs, action="submit")
 decide(checker, cs, "reject", "No")
 check("rejected change leaves the live project as it was", "REJECT-ME" not in public(pid)[1] and "Final amenities list" in public(pid)[1] and "Your change" not in (row(maker, pid) or ""))
@@ -208,7 +215,7 @@ maker.post(f"/admin/projects/{pid}/reduce-units", {"units": "500", "reason": "to
 check("cannot reduce by more than available", units(checker, pid) == 50 and "Change pending" not in (row(checker, pid) or ""))
 
 print("\n== 8. Photos of a change stay hidden until approved")
-change(maker, pid); cs = sid(maker, pid)
+cs = change_sid(maker, pid)
 live_ids = set(re.findall(r'/files/(\d+)', public(pid)[1]))
 save(maker, {}, stagingId=cs, files=[("photo1", PHOTO[1].name, PHOTO[1].read_bytes(), "image/jpeg")])
 form_ids = set(re.findall(r'/files/(\d+)"', maker.get(f"/admin/projects/staging/{cs}/edit")[2].decode()))
@@ -217,8 +224,8 @@ check("maker sees the new photo on the form, customers do not", len(new_ids) == 
 check("its URL is 404 for customers", all(Client(PUBLIC).get(f"/files/{i}")[0] == 404 for i in new_ids))
 save(maker, {}, stagingId=cs, action="submit"); decide(checker, cs, "approve", "")
 check("after approval the photo is public", all(Client(PUBLIC).get(f"/files/{i}")[0] == 200 for i in new_ids))
-change(maker, pid); cs = sid(maker, pid); victim = next(iter(new_ids))
-maker.post(f"/admin/projects/staging/{cs}/photos/{victim}/remove", {"_csrf": maker.csrf("/admin/projects")})
+cs = change_sid(maker, pid); victim = next(iter(new_ids))
+maker.post(f"/admin/projects/staging/{cs}/photos/{victim}/remove", {"_csrf": maker.csrf("/admin/projects/new")})
 check("a live photo stays live until the removal is approved", Client(PUBLIC).get(f"/files/{victim}")[0] == 200)
 save(maker, {}, stagingId=cs, action="submit"); decide(checker, cs, "approve", "")
 check("after approval the removed photo is gone", Client(PUBLIC).get(f"/files/{victim}")[0] == 404)
@@ -271,7 +278,7 @@ import urllib.parse  # noqa: E402
 
 def save_packed(c, fields, action="draft", files=()):
     """What project-form.js sends: _csrf and action as parts, every other text field urlencoded into __packed, photos as file parts."""
-    parts = {"_csrf": c.csrf("/admin/projects"), "action": action, "__packed": urllib.parse.urlencode(fields)}
+    parts = {"_csrf": c.csrf("/admin/projects/new"), "action": action, "__packed": urllib.parse.urlencode(fields)}
     return c.multipart_post("/admin/projects/staging/save", parts, files)
 
 
@@ -331,9 +338,9 @@ r = Client(PUBLIC).get(f"/attachments/{next(iter(pub))}")
 check("a live attachment opens for customers as a PDF", r[0] == 200 and "pdf" in (r[1].get("Content-Type") or "").lower() and r[2].startswith(b"%PDF"))
 check("the staff catalog page lists them too", len(set(re.findall(r'id="link-attachment-(\d+)"', maker.get(f"/project/{pid7}")[2].decode("utf-8", "replace")))) == 12)
 
-change(maker, pid7); cs7 = sid(maker, pid7)
+cs7 = change_sid(maker, pid7)
 victim = sorted(ids12)[0]
-maker.post(f"/admin/projects/staging/{cs7}/attachments/{victim}/remove", {"_csrf": maker.csrf("/admin/projects")})
+maker.post(f"/admin/projects/staging/{cs7}/attachments/{victim}/remove", {"_csrf": maker.csrf("/admin/projects/new")})
 save(maker, {}, stagingId=cs7, files=pdfs(2, "extra"))
 check("in a change request the removed attachment leaves the form, two new ones appear", victim not in attachment_ids_on_form(maker, cs7) and len(attachment_ids_on_form(maker, cs7)) == 13)
 check("meanwhile the live project still shows its 12 and not the new ones", attachment_ids_public(pid7) == ids12)
@@ -345,12 +352,47 @@ decide(checker, cs7, "approve", "")
 pub2 = attachment_ids_public(pid7)
 check("after approval: 13 attachments are live, the removed one is gone (404)", len(pub2) == 13 and victim not in pub2 and Client(PUBLIC).get(f"/attachments/{victim}")[0] == 404)
 
-change(maker, pid7); cs8 = sid(maker, pid7)
+cs8 = change_sid(maker, pid7)
 save(maker, {}, stagingId=cs8, files=pdfs(1, "never-live"))
 never = attachment_ids_on_form(maker, cs8) - pub2
 save(maker, {}, stagingId=cs8, action="submit"); decide(checker, cs8, "reject", "not needed")
 check("a rejected change deletes its attachments (404 for everyone)", len(never) == 1 and all(maker.get(f"/attachments/{i}")[0] == 404 for i in never))
 check("the live attachments are untouched by the rejection", attachment_ids_public(pid7) == pub2)
+
+print("\n== 14. Inline field checks")
+form_new = maker.get("/admin/projects/new")[2].decode("utf-8", "replace")
+check("the project form loads the live field-check script, and the style for its messages exists",
+      'id="project-form-validation-js"' in form_new and maker.get("/assets/js/project-form-validation.js")[0] == 200
+      and ".field-error" in maker.get("/assets/css/style.css")[2].decode("utf-8", "replace"))
+
+print("\n== 14a. RERA number is optional")
+fl = demo.form(10, "ZZ Workflow No RERA", "ZZ Workflow Builder", "West Bengal", "Durgapur", "713201", 40)
+fl.update({"branchName": "Durgapur Main Branch", "amenities": "Park", "reraNo": ""})
+s_, _, _ = save(maker, fl, action="submit")
+pid10 = demo.newest_project_id(maker, "ZZ Workflow No RERA")
+check("a project with no RERA number can be submitted to the checker", s_ == 302 and pid10 is not None and status_of(maker, pid10) == "Pending Approval", status_of(maker, pid10) if pid10 else s_)
+sid10 = sid(maker, pid10)
+decide(checker, sid10, "approve", "")
+page10 = public(pid10)
+check("after approval the customer page opens and shows no empty 'RERA ID' line", page10[0] == 200 and 'id="project-rera-info"' not in page10[1])
+
+print("\n== 14c. Edit opened and left without a change leaves no draft")
+sid_unch = change_sid(maker, pid10)
+check("pressing Edit on an approved project creates a working copy at once", sid_unch is not None)
+change(dit, pid10)
+check("meanwhile another maker (DIT) is told a request is already in progress (it is not cleared for him)",
+      "already in progress" in dit.get("/admin/projects")[2].decode("utf-8", "replace"))
+lst = maker.get("/admin/projects")[2].decode("utf-8", "replace")
+check("the maker's own unchanged copy is gone when the list opens: no 'Your change: draft', Edit is offered again",
+      f'id="badge-change-draft-{pid10}"' not in lst and f'id="link-change-project-{pid10}"' in lst)
+sid_dit = change_sid(dit, pid10)
+check("so another maker can now press Edit on it (DIT gets a working copy)", sid_dit is not None)
+dit.post(f"/admin/projects/staging/{sid_dit}/withdraw", {"_csrf": dit.csrf("/admin/projects")})
+sid_real = change_sid(maker, pid10)
+save(maker, {"propertyId": "ZZ-CHANGED-1"}, stagingId=sid_real)
+lst = maker.get("/admin/projects")[2].decode("utf-8", "replace")
+check("a copy with a real change stays as a draft after the list is opened", f'id="badge-change-draft-{pid10}"' in lst and sid(maker, pid10) == sid_real)
+maker.post(f"/admin/projects/staging/{sid_real}/withdraw", {"_csrf": maker.csrf("/admin/projects")})
 
 print("\n== 14b. Document slots: Brochure / Floor Plan / RERA Certificate / Others, labels instead of file names, click downloads")
 fl = demo.form(9, "ZZ Workflow Documents", "ZZ Workflow Builder", "West Bengal", "Durgapur", "713201", 40)
@@ -385,7 +427,7 @@ check("the page has two Home Loan buttons: the enquiry link, and Apply Online to
       "/Lead_App/lead_web.jsp?utm=REALTY" in page9 and 'href="https://stp.uco.bank.in/home-loan/#/home-loan-login"' in page9
       and page9.count('id="btn-apply-online-') == 2 and page9.count("Enquire for Home Loan") == 2 and 'target="_blank" rel="noopener noreferrer"' in page9)
 check("a Not available amenity has no strikethrough rule in the style sheet", "line-through" not in Client(PUBLIC).get("/assets/css/style.css")[2].decode("utf-8", "replace").split(".amenity-tile-no")[-1][:400] if ".amenity-tile-no" in Client(PUBLIC).get("/assets/css/style.css")[2].decode("utf-8", "replace") else False)
-change(maker, pid9); cs9 = sid(maker, pid9)
+cs9 = change_sid(maker, pid9)
 check("a saved document card has the round corner x (top-right), not a text Remove button",
       'class="slot-delete-corner-btn slot-delete-saved-btn attachment-remove-btn"' in maker.get(f"/admin/projects/staging/{cs9}/edit")[2].decode("utf-8", "replace"))
 check("the order is Brochure, Floor Plan, then the Others", page9.index("Brochure") < page9.index("Floor Plan") < page9.index("Price List ZZ"))

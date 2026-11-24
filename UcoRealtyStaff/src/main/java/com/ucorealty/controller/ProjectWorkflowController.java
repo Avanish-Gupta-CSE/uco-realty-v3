@@ -78,6 +78,8 @@ public class ProjectWorkflowController {
                           Authentication auth, Model model) {
     String username = auth.getName();
     StaffUser user = StaffRoles.currentUser(username);
+    if (user != null && ("ZO_MAKER".equals(user.role) || "HO_MARKETING".equals(user.role) || "SUPERADMIN_DIT".equals(user.role)))
+      workflow.discardUnchangedDrafts(username);   // an Edit that was opened and left without any change leaves no draft behind
     List<ProjectRow> rows = new ArrayList<>(workflow.dashboard(username));
 
     if (zone != null && !zone.trim().isEmpty() && !"ALL".equalsIgnoreCase(zone.trim())) {

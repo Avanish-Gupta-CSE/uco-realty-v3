@@ -97,7 +97,7 @@ public class ProjectAccessService {
     }
   }
 
-  // What a project must have before it can go to the checker (the mandatory BRD fields + pincode).
+  // What a project must have before it can go to the checker (the mandatory BRD fields + pincode). The RERA number is optional.
   static void requireSubmittable(ProjectFields p) {
     List<String> missing = new ArrayList<>();
     if (blank(p.zoneName)) missing.add("Zone Name");
@@ -105,7 +105,6 @@ public class ProjectAccessService {
     if (blank(p.stateName)) missing.add("State Name");
     if (blank(p.cityName)) missing.add("City Name");
     if (blank(p.projectName)) missing.add("Project Name");
-    if (blank(p.reraNo)) missing.add("RERARegistrationNo");
     if (p.totalInventory == null || p.totalInventory < 1) missing.add("TotalInventory");
     if (blank(p.builderName)) missing.add("BuilderName");
     if (blank(p.projectAddress)) missing.add("ProjectAddress");

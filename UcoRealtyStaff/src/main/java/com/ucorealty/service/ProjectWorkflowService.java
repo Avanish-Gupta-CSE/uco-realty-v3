@@ -22,6 +22,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.lang.reflect.Field;
 import java.time.LocalDate;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -40,6 +41,9 @@ import java.util.stream.Collectors;
  */
 @Service
 public class ProjectWorkflowService {
+  /** An unchanged working copy that nobody touched for this long is taken to be abandoned (another maker's Edit may then clear it). */
+  static final Duration ABANDONED_AFTER = Duration.ofHours(2);
+
   public static final List<String> OPEN = Arrays.asList(ProjectStaging.DRAFT, ProjectStaging.PENDING, ProjectStaging.NEEDS_CORRECTION);
   private static final List<String> NEW_PROJECT_ROWS = Arrays.asList(
       ProjectStaging.DRAFT, ProjectStaging.PENDING, ProjectStaging.NEEDS_CORRECTION, ProjectStaging.REJECTED);
@@ -243,6 +247,11 @@ public class ProjectWorkflowService {
     ProjectAccessService.requireZoneAccess(user, p.zoneName);
 
     ProjectStaging open = findOpen(projectId);
+    if (open != null && !username.equals(open.createdBy) && isUnchangedCopy(open)
+        && open.updatedAt != null && open.updatedAt.isBefore(LocalDateTime.now().minus(ABANDONED_AFTER))) {
+      closeUnchangedCopy(open, "Cleared by " + username + ": nobody changed it for over " + ABANDONED_AFTER.toHours() + " hours");
+      open = null;
+    }
     if (open != null) {
       if (!username.equals(open.createdBy))
         throw new ResponseStatusException(HttpStatus.CONFLICT, "A request for this project is already in progress (by " + open.createdBy + ")");
@@ -257,6 +266,46 @@ public class ProjectWorkflowService {
     audit.logActivity(username, "CHANGE_DRAFT_STARTED", "PROJECT", projectId, "Started editing the approved project (a private working copy; the live project is unchanged)");
     log.info("[UCO WORKFLOW] {} started editing approved project {} (request {})", username, projectId, s.id);
     return s;
+  }
+
+  /**
+   * True when a maker's working copy of a live project is still exactly the live project: a draft change request with no changed field,
+   * no new or removed photo and no new or removed document. Such a copy is only the result of pressing Edit and leaving again.
+   */
+  boolean isUnchangedCopy(ProjectStaging s) {
+    if (!ProjectStaging.UPDATE.equals(s.requestType) || !ProjectStaging.DRAFT.equals(s.status)) return false;
+    try {
+      Project live = liveProject(s.projectId);
+      return diff(live, s).isEmpty() && removedImageIds(s).isEmpty() && images.findFilesOfStaging(s.id).isEmpty()
+          && removedAttachmentIds(s).isEmpty() && attachments.findFilesOfStaging(s.id).isEmpty();
+    } catch (ResponseStatusException e) {
+      return false;   // the live project is gone or not approved any more: leave the request alone
+    }
+  }
+
+  private void closeUnchangedCopy(ProjectStaging s, String why) {
+    s.status = ProjectStaging.WITHDRAWN;
+    s.decidedAt = LocalDateTime.now();
+    staging.save(s);
+    audit.logActivity(s.createdBy, "CHANGE_DISCARDED_UNCHANGED", "PROJECT", s.projectId, null, why);
+    log.info("[UCO WORKFLOW] Unchanged working copy {} of project {} closed ({})", s.id, s.projectId, why);
+  }
+
+  /**
+   * Pressing Edit on an approved project creates the maker's working copy at once. If the maker leaves without changing anything, the copy is
+   * pointless and would show "Your change: draft" and block other makers. This closes the maker's OWN unchanged copies (called when the
+   * project list opens, which is where Cancel and the browser's Back button lead). A copy with any real change is never touched.
+   */
+  @Transactional
+  public int discardUnchangedDrafts(String username) {
+    int closed = 0;
+    for (ProjectStaging s : staging.findByRequestTypeAndStatusIn(ProjectStaging.UPDATE, Arrays.asList(ProjectStaging.DRAFT))) {
+      if (username.equals(s.createdBy) && isUnchangedCopy(s)) {
+        closeUnchangedCopy(s, "The maker opened Edit and left without changing anything");
+        closed++;
+      }
+    }
+    return closed;
   }
 
   /** Saves the maker's edits into HIS working copy. Only the fields the form sent are updated; the master is not touched. */

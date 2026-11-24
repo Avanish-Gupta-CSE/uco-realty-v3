@@ -123,8 +123,8 @@
                 </div>
 
                 <div class="col-md-6 col-lg-4">
-                    <label for="reraNo" class="form-label fw-semibold small">RERA Registration No. *</label>
-                    <input type="text" id="reraNo" name="reraNo" class="form-control" value="<c:out value="${project.reraNo}"/>" placeholder="e.g. WBRERA/P/KOL/2023/000123" required>
+                    <label for="reraNo" class="form-label fw-semibold small">RERA Registration No. (optional)</label>
+                    <input type="text" id="reraNo" name="reraNo" class="form-control" value="<c:out value="${project.reraNo}"/>" placeholder="e.g. WBRERA/P/KOL/2023/000123">
                 </div>
 
                 <div class="col-md-6 col-lg-4">
@@ -519,5 +519,6 @@
 
 <%-- Project Form Script --%>
 <script id="project-form-js" src="${pageContext.request.contextPath}/assets/js/project-form.js?v=${assetVersion}"></script>
+<script id="project-form-validation-js" src="${pageContext.request.contextPath}/assets/js/project-form-validation.js?v=${assetVersion}"></script>
 
 <jsp:include page="common/footer.jsp"/>

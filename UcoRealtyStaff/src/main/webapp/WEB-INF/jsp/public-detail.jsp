@@ -78,7 +78,7 @@
                                     <span class="text-secondary" id="project-location-info"><strong>Location:</strong>
                                         <c:out value="${project.cityName}"/>, <c:out value="${project.stateName}"/> <c:out value="${project.pinCode != null ? ('- ' +=
                                         project.pinCode) : ''}"/></span>
-                                    <c:if test="${project.reraNo != null}">
+                                    <c:if test="${not empty project.reraNo}">
                                         <span class="text-secondary" id="project-rera-info"><strong>RERA ID:</strong>
                                             <c:out value="${project.reraNo}"/></span>
                                     </c:if>
