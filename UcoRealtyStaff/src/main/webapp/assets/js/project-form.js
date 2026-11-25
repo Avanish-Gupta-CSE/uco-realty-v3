@@ -344,22 +344,35 @@ function initPhotoSlots() {
 
             if (!imgId || !projectId) return;
             window.ucoConfirm("Delete this saved file?", "Yes, delete", "danger", function () {
-
-                var form = document.createElement("form");
-                form.method = "POST";
-                // the button carries the URL of the maker's working copy (staging request)
-                form.action = btn.getAttribute("data-delete-url");
-                if (!form.action) return;
+                var url = btn.getAttribute("data-delete-url");
                 var csrf = document.querySelector('input[name="_csrf"]');
-                if (csrf) {
-                    var token = document.createElement("input");
-                    token.type = "hidden";
-                    token.name = csrf.name;
-                    token.value = csrf.value;
-                    form.appendChild(token);
-                }
-                document.body.appendChild(form);
-                form.submit();
+                if (!url || !csrf) return;
+                var body = new URLSearchParams();
+                body.set(csrf.name, csrf.value);
+                // sent in the background: the page is not reloaded, so whatever the maker has typed or chosen stays
+                fetch(url, { method: "POST", credentials: "same-origin", headers: { "X-Requested-With": "fetch" }, body: body })
+                    .then(function (response) {
+                        if (!response.ok) {
+                            return response.text().then(function (text) { throw new Error(text || "The file could not be removed."); });
+                        }
+                        var card = btn.closest(".existing-slot");
+                        var item = btn.closest(".attachment-item") || document.getElementById("existing-attachment-" + imgId);
+                        if (card) {
+                            card.remove();
+                            updateVisibleCounter();
+                        } else {
+                            if (item) item.remove();
+                            btn.remove();
+                        }
+                    })
+                    .catch(function (error) {
+                        var notice = document.getElementById("formClientNotice");
+                        if (notice) {
+                            notice.textContent = error.message || "The file could not be removed.";
+                            notice.classList.remove("d-none");
+                            notice.scrollIntoView({ behavior: "smooth", block: "center" });
+                        }
+                    });
             });
         });
     });

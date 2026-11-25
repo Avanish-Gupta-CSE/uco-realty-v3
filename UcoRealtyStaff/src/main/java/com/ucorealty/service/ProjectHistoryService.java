@@ -11,14 +11,13 @@ import java.util.Map;
 
 /**
  * Builds the "Workflow and Audit History" timeline of one project from the activity log: who did what, when, with which remarks.
- * Only the approval steps are shown (not every draft save). Change this file when: a new step should appear in the timeline.
+ * Only the approval steps are shown: a maker's private drafting (draft created, saved or discarded) is not part of the history. Change this file when: a new step should appear in the timeline.
  */
 @Service
 public class ProjectHistoryService {
   /** Audit action -> {label shown, badge colour class}. */
   private static final Map<String, String[]> STEPS = new LinkedHashMap<>();
   static {
-    STEPS.put("CREATE_DRAFT", new String[] {"Draft created", "secondary"});
     STEPS.put("SUBMIT_FOR_APPROVAL", new String[] {"Submitted", "primary"});
     STEPS.put("CHANGE_SUBMITTED", new String[] {"Change submitted", "primary"});
     STEPS.put("DELETE_REQUESTED", new String[] {"Deletion requested", "primary"});
@@ -30,8 +29,8 @@ public class ProjectHistoryService {
     STEPS.put("CHECKER_REJECT", new String[] {"Rejected", "danger"});
     STEPS.put("CHANGE_REJECTED", new String[] {"Change rejected", "danger"});
     STEPS.put("DELETE_REJECTED", new String[] {"Deletion rejected", "danger"});
-    STEPS.put("DRAFT_DISCARDED", new String[] {"Draft discarded", "secondary"});
-    STEPS.put("CHANGE_WITHDRAWN", new String[] {"Change withdrawn", "secondary"});
+    STEPS.put("REQUEST_WITHDRAWN", new String[] {"Withdrawn by maker", "secondary"});
+    STEPS.put("CHANGE_WITHDRAWN", new String[] {"Withdrawn by maker", "secondary"});   // older rows
   }
 
   private final AuditService audit;
@@ -68,6 +67,10 @@ public class ProjectHistoryService {
       String name = names.get(r.byUser);
       String time = r.createdAt == null ? "-" : r.createdAt.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
       String remarks = r.newVal != null && !r.newVal.isBlank() ? r.newVal : (r.oldVal != null ? r.oldVal : "");
+      if (r.action.endsWith("APPROVE") || r.action.endsWith("APPROVED")) {
+        // an approval's remark is only what the checker wrote (kept in new_val; the summary is in old_val). Older rows have no old_val and keep nothing.
+        remarks = r.oldVal != null && r.newVal != null ? r.newVal : "";
+      }
       out.add(new Step(st[0], st[1], time, r.byUser, name != null ? name : r.byUser, remarks));
     }
     return out;

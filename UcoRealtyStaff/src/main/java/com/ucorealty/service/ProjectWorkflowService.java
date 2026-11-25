@@ -445,13 +445,14 @@ public class ProjectWorkflowService {
   public void withdraw(Long id, String username) {
     ProjectStaging s = get(id);
     if (!username.equals(s.createdBy)) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the maker who raised this request can withdraw it");
+    boolean wasSent = s.submittedAt != null;   // a request a checker has seen: its withdrawal belongs to the project history; a private draft's does not
     if (!s.isOpen()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "This request is already closed (" + s.status + ")");
     images.deleteAll(images.findByStagingId(s.id));
     attachments.deleteOfStaging(s.id);
     s.status = ProjectStaging.WITHDRAWN;
     s.decidedAt = LocalDateTime.now();
     staging.save(s);
-    audit.logActivity(username, ProjectStaging.CREATE.equals(s.requestType) ? "DRAFT_DISCARDED" : "CHANGE_WITHDRAWN", "PROJECT", s.projectId, null,
+    audit.logActivity(username, wasSent ? "REQUEST_WITHDRAWN" : ProjectStaging.CREATE.equals(s.requestType) ? "DRAFT_DISCARDED" : "CHANGE_DRAFT_DISCARDED", "PROJECT", s.projectId, null,
         "Withdrawn by the maker" + (ProjectStaging.CREATE.equals(s.requestType) ? "" : "; the live project is unchanged"));
     log.info("[UCO WORKFLOW] {} withdrew request {} ({}) of project {}", username, s.id, s.requestType, s.projectId);
   }
@@ -488,7 +489,7 @@ public class ProjectWorkflowService {
           else applyDelete(s, checkerUsername, comment);
           s.status = ProjectStaging.APPROVED;
           audit.logActivity(checkerUsername, ProjectStaging.CREATE.equals(type) ? "CHECKER_APPROVE" : ProjectStaging.UPDATE.equals(type) ? "CHANGE_APPROVED" : "DELETE_APPROVED",
-              "PROJECT", s.projectId, null, trim(s.summary, 1000));
+              "PROJECT", s.projectId, trim(s.summary != null ? s.summary : "-", 1000), trim(comment, 1000));   // summary = old value, the checker's remark (may be empty) = new value
           break;
         case "reject":
           ProjectAccessService.requireComment(comment);

@@ -26,14 +26,12 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * The project catalog for signed-in staff (/projects, /project/{id}) and every uploaded photo (/files/{id}) and PDF attachment (/attachments/{id}).
+ * The staff project detail page (/project/{id}; /projects now only redirects to the Projects dashboard) and every uploaded photo (/files/{id}) and PDF attachment (/attachments/{id}).
  * Only signed-in staff reach these pages (StaffSecurityConfig); staff see the live projects they are allowed to see; a maker's unapproved files are only handed to people who may open that request.
- * Change this file when: the catalog page, the project detail page or who may download a file changes.
+ * Change this file when: the project detail page or who may download a file changes.
  */
 @Controller
 public class ProjectCatalogController {
-  private static final int PAGE_SIZE = 12;
-
   private final ProjectAccessService projectAccess;
   private final MasterDataService masterDataService;
   private final ProjectImageRepository imageRepo;
@@ -56,56 +54,10 @@ public class ProjectCatalogController {
     this.workflow = workflow;
   }
 
+  /** The old customer-style catalog is gone from the staff app: the Projects dashboard is the list (bookmarks and old links land there). */
   @GetMapping("/projects")
-  public String listProjects(@RequestParam(required = false) String state,
-                             @RequestParam(required = false) String city,
-                             @RequestParam(required = false) String search,
-                             @RequestParam(defaultValue = "1") int pageNo,
-                             Authentication auth,
-                             Model model) {
-    boolean isStaff = (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getName()));
-
-    List<Project> list;
-    if (isStaff) {
-      // Authenticated bank staff on the intranet see the live (approved) projects they are allowed to see
-      list = ProjectAccessService.filter(projectAccess.approvedList(auth.getName()), state, city, search);
-    } else {
-      list = projectAccess.publicList(state, city, search);
-    }
-
-    // 12 cards per page
-    int total = list.size();
-    int pageCount = Math.max(1, (total + PAGE_SIZE - 1) / PAGE_SIZE);
-    int current = Math.min(Math.max(1, pageNo), pageCount);
-    List<Project> pageItems = list.subList((current - 1) * PAGE_SIZE, Math.min(current * PAGE_SIZE, total));
-    model.addAttribute("projects", pageItems);
-    model.addAttribute("projectCount", total);
-    model.addAttribute("pageCount", pageCount);
-    model.addAttribute("pageNo", current);
-    model.addAttribute("states", masterDataService.getStates());
-    model.addAttribute("isStaff", isStaff);
-
-    Set<String> cities = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-    if (isStaff) {
-      for (ProjectRepository.Place place : projectRepo.findPlaces()) {
-        addCity(cities, state, place.getStateName(), place.getCityName());
-      }
-    } else {
-      for (Project p : projectAccess.publicList(null, null, null)) {
-        addCity(cities, state, p.stateName, p.cityName);
-      }
-    }
-    model.addAttribute("cities", cities);
-
-    Map<String, Long> thumbnails = new HashMap<>();
-    if (!pageItems.isEmpty()) {
-      for (ProjectImageRepository.FirstPhoto photo : imageRepo.findFirstImageIds(pageItems.stream().map(p -> p.id).collect(Collectors.toList()))) {
-        thumbnails.put(photo.getProjectId(), photo.getImageId());
-      }
-    }
-    model.addAttribute("projectThumbnails", thumbnails);
-
-    return "public-projects";
+  public String oldCatalog() {
+    return "redirect:/admin/projects";
   }
 
   @GetMapping("/project/{id}")
@@ -186,14 +138,6 @@ public class ProjectCatalogController {
     headers.setContentLength(att.fileData.length);
     headers.setCacheControl("max-age=86400, private");   // private: a maker's unapproved file must never be kept by a shared proxy
     return new ResponseEntity<>(att.fileData, headers, HttpStatus.OK);
-  }
-
-  /** Adds a city to the drop-down when it has a name and belongs to the chosen state (no state chosen = every state). */
-  private static void addCity(Set<String> cities, String chosenState, String stateOfProject, String city) {
-    if (city == null || city.trim().isEmpty()) return;
-    if (chosenState == null || chosenState.isEmpty() || chosenState.equalsIgnoreCase(stateOfProject)) {
-      cities.add(city.trim());
-    }
   }
 
   /** The documents in display order: the named slots first, then the Others (oldest first inside each group). */

@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Notice - UCO Bank Realty Portal</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/bootstrap.min.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css?v=20261129a">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css?v=20261130a">
 </head>
 <body class="error-layout">
   <div class="error-card">
@@ -15,7 +15,7 @@
     <div class="error-icon error-icon-info" id="error-icon">!</div>
     <h1 class="error-title" id="error-title">We could not open this page</h1>
     <p class="error-desc" id="error-message"><c:set var="sc" value="${empty status ? requestScope['jakarta.servlet.error.status_code'] : status}"/>
-    <c:out value="${errorMessage != null ? errorMessage : (sc == 403 ? 'Access Denied: your role cannot open this page.' : (sc == 404 ? 'The page you asked for was not found.' : (sc == 400 ? 'The request was not valid.' : (sc == 405 ? 'This page cannot be opened this way.' : (sc >= 500 ? 'An unexpected system error occurred. Please contact the SWDC Cell or Bank Administrator.' : 'Please open the Realty portal from the UCO Bank intranet portal.')))))}"/></p>
+    <c:out value="${errorMessage != null ? errorMessage : (sc == 403 ? 'Access Denied: your role cannot open this page.' : (sc == 404 ? 'The page you asked for was not found.' : (sc == 400 ? 'The request was not valid.' : (sc == 405 ? 'This page cannot be opened this way.' : (sc == 413 ? 'A file is larger than allowed: a photo can be at most 1 MB, a PDF document at most 3 MB, and one save at most 35 MB in total. Please go back and choose smaller files.' : (sc == 409 ? 'This request was just changed by another action. Please open the Projects list and check its current status.' : (sc >= 500 ? 'An unexpected system error occurred. Please contact the SWDC Cell or Bank Administrator.' : 'Please open the Realty portal from the UCO Bank intranet portal.')))))))}"/></p>
   </div>
 </body>
 </html>

@@ -25,6 +25,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -260,6 +261,29 @@ public class ProjectWorkflowController {
     return "redirect:/admin/projects/staging/" + stagingId + "/edit";
   }
 
+  // The form's X buttons call these two through fetch (header X-Requested-With: fetch): the page stays open, so nothing the maker typed is lost
+  @PostMapping(value = "/projects/staging/{stagingId}/photos/{imageId}/remove", headers = "X-Requested-With=fetch")
+  public ResponseEntity<String> removePhotoInPlace(@PathVariable Long stagingId, @PathVariable Long imageId, Authentication auth) {
+    String user = StaffRoles.require(auth, StaffRoles.MAKERS);
+    try {
+      workflow.removePhoto(stagingId, imageId, user);
+      return ResponseEntity.noContent().build();
+    } catch (ResponseStatusException e) {
+      return ResponseEntity.status(e.getStatusCode()).body(e.getReason());
+    }
+  }
+
+  @PostMapping(value = "/projects/staging/{stagingId}/attachments/{attachmentId}/remove", headers = "X-Requested-With=fetch")
+  public ResponseEntity<String> removeAttachmentInPlace(@PathVariable Long stagingId, @PathVariable Long attachmentId, Authentication auth) {
+    String user = StaffRoles.require(auth, StaffRoles.MAKERS);
+    try {
+      workflow.removeAttachment(stagingId, attachmentId, user);
+      return ResponseEntity.noContent().build();
+    } catch (ResponseStatusException e) {
+      return ResponseEntity.status(e.getStatusCode()).body(e.getReason());
+    }
+  }
+
   @PostMapping("/projects/staging/{stagingId}/attachments/{attachmentId}/remove")
   public String removeAttachment(@PathVariable Long stagingId, @PathVariable Long attachmentId, Authentication auth, RedirectAttributes ra) {
     String user = StaffRoles.require(auth, StaffRoles.MAKERS);
@@ -488,15 +512,29 @@ public class ProjectWorkflowController {
     List<MultipartFile> incoming = new ArrayList<>();
     for (MultipartFile f : files) if (f != null && !f.isEmpty()) incoming.add(f);
     int count = workflow.photoCount(s);
+    if (count + incoming.size() > ProjectWorkflowService.MAX_PHOTOS)
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A project can have at most " + ProjectWorkflowService.MAX_PHOTOS + " photos.");
+    // every photo is checked first and a wrong one is reported (never skipped silently): one bad photo saves none of this upload
+    List<byte[]> data = new ArrayList<>();
+    List<String> mimes = new ArrayList<>();
     for (MultipartFile file : incoming) {
-      if (count >= ProjectWorkflowService.MAX_PHOTOS) break;
-      if (file.getSize() > MAX_PHOTO_BYTES) continue;
       String name = file.getOriginalFilename();
+      String shown = UploadChecks.cleanName(name != null ? name : "photo.jpg");
+      if (file.getSize() > MAX_PHOTO_BYTES)
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Photo \"" + shown + "\" is larger than 1 MB. A photo must be a JPG, PNG or WEBP image of at most 1 MB.");
       String ext = name != null && name.contains(".") ? name.substring(name.lastIndexOf('.')).toLowerCase() : ".jpg";
-      if (!Arrays.asList(".jpg", ".jpeg", ".png", ".webp").contains(ext)) continue;
       byte[] bytes = file.getBytes();
       String mime = UploadChecks.sniffMime(bytes);
-      if (mime == null || !UploadChecks.extensionMatches(ext, mime)) continue;
+      if (!Arrays.asList(".jpg", ".jpeg", ".png", ".webp").contains(ext) || mime == null || !UploadChecks.extensionMatches(ext, mime))
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Photo \"" + shown + "\" is not a JPG, PNG or WEBP image. A photo must be a JPG, PNG or WEBP image of at most 1 MB.");
+      data.add(bytes);
+      mimes.add(mime);
+    }
+    for (int i = 0; i < incoming.size(); i++) {
+      MultipartFile file = incoming.get(i);
+      String name = file.getOriginalFilename();
+      byte[] bytes = data.get(i);
+      String mime = mimes.get(i);
 
       ProjectImage img = new ProjectImage();
       img.stagingId = s.id;                       // belongs to the maker's working copy: not live, never shown to customers

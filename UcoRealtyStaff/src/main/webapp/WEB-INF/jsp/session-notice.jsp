@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><c:out value="${noticeTitle}"/> - UCO Bank Realty Portal</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/bootstrap.min.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css?v=20261129a">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css?v=20261130a">
 </head>
 <body class="error-layout">
   <div class="error-card" id="notice-card-${noticeKind}">

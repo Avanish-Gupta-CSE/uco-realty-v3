@@ -31,6 +31,15 @@ public class GlobalExceptionHandler {
     return "error";
   }
 
+  // Two people (or two clicks) changed the same request at the same moment: the second one is told, it is not a system error
+  @ExceptionHandler(org.springframework.orm.ObjectOptimisticLockingFailureException.class)
+  public String handleSimultaneousChange(Exception exc, HttpServletRequest request, HttpServletResponse response, Model model) {
+    response.setStatus(409);
+    log.warn("[UCO HTTP 409] {} {} by {}: the request was changed at the same moment", request.getMethod(), request.getRequestURI(), who(request));
+    model.addAttribute("errorMessage", "This request was just changed by another action (for example a second click). Please open the Projects list and check its current status.");
+    return "error";
+  }
+
   @ExceptionHandler(IllegalArgumentException.class)
   public String handleIllegalArgument(IllegalArgumentException exc, Model model) {
     log.error("Invalid argument exception: {}", exc.getMessage());

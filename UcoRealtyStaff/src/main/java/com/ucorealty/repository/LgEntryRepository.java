@@ -44,9 +44,9 @@ public interface LgEntryRepository extends Repository<Lead, String> {
     + "  AND (:useFrom = 0 OR NVL(SUBMIT_DATE, CRE_DT) >= :from) "
     + "  AND (:useTo = 0 OR NVL(SUBMIT_DATE, CRE_DT) < :to) "
     + "  AND (:useStatus = 0 OR STATUS = :status) "
-    + "  AND (:useSearch = 0 OR UPPER(REF_NAME) LIKE '%' || UPPER(:search) || '%' "
-    + "                      OR MOBILE_NO LIKE '%' || :search || '%' "
-    + "                      OR UPPER(LEAD_ID) LIKE '%' || UPPER(:search) || '%') ";
+    + "  AND (:useSearch = 0 OR UPPER(REF_NAME) LIKE '%' || UPPER(:search) || '%' ESCAPE '\\' "
+    + "                      OR MOBILE_NO LIKE '%' || :search || '%' ESCAPE '\\' "
+    + "                      OR UPPER(LEAD_ID) LIKE '%' || UPPER(:search) || '%' ESCAPE '\\') ";
 
   /** One page of matching leads, newest first (LEAD_ID breaks ties, so rows never repeat or vanish between pages). */
   @Query(nativeQuery = true, value =
@@ -94,12 +94,17 @@ public interface LgEntryRepository extends Repository<Lead, String> {
           from != null ? 1 : 0, from != null ? Timestamp.valueOf(from.atStartOfDay()) : NO_DATE,
           to != null ? 1 : 0, to != null ? Timestamp.valueOf(to.plusDays(1).atStartOfDay()) : NO_DATE,
           hasText(status) ? 1 : 0, hasText(status) ? status.trim() : "-",
-          hasText(search) ? 1 : 0, hasText(search) ? search.trim() : "-",
+          hasText(search) ? 1 : 0, likeText(search),
           Math.max(0, offset), limit > 0 ? limit : Integer.MAX_VALUE);
     } catch (DataAccessException e) {
       log.warn("[UCO LEAD] Could not read {}: {}", DatabaseTables.LEADS, e.getMostSpecificCause().getMessage());
       return new ArrayList<>();
     }
+  }
+
+  /** The search text with % and _ made ordinary characters (the queries above use ESCAPE '\\'): searching "%" must not match everything. */
+  private static String likeText(String search) {
+    return hasText(search) ? search.trim().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") : "-";
   }
 
   /** How many leads match the same filters. */
@@ -109,7 +114,7 @@ public interface LgEntryRepository extends Repository<Lead, String> {
           from != null ? 1 : 0, from != null ? Timestamp.valueOf(from.atStartOfDay()) : NO_DATE,
           to != null ? 1 : 0, to != null ? Timestamp.valueOf(to.plusDays(1).atStartOfDay()) : NO_DATE,
           hasText(status) ? 1 : 0, hasText(status) ? status.trim() : "-",
-          hasText(search) ? 1 : 0, hasText(search) ? search.trim() : "-");
+          hasText(search) ? 1 : 0, likeText(search));
     } catch (DataAccessException e) {
       log.warn("[UCO LEAD] Could not count {}: {}", DatabaseTables.LEADS, e.getMostSpecificCause().getMessage());
       return 0;

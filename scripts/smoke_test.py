@@ -83,6 +83,16 @@ else:
     disp = h.get("Content-Disposition") or h.get("content-disposition") or ""
     check("Leads Excel downloads as uco-realty-leads_<date>.xlsx", s == 200 and
           re.search(r'filename="uco-realty-leads_\d{4}-\d{2}-\d{2}\.xlsx"', disp) is not None, disp)
+    import io, zipfile
+    xl = zipfile.ZipFile(io.BytesIO(retail.post("/admin/leads/export", {"_csrf": retail.csrf("/admin/leads")})[2]))
+    xl_text = xl.read("xl/sharedStrings.xml").decode("utf-8", "replace")
+    check("Leads Excel holds only the columns and the data (no title or filter banner, no Lead Status column)",
+          "Handover" not in xl_text and "UCO BANK - UCO REALTY" not in xl_text and "Lead Status" not in xl_text and "Lead ID" in xl_text and "Submitted On" in xl_text)
+    sheet = xl.read("xl/worksheets/sheet1.xml").decode("utf-8", "replace")
+    m_ = re.search(r'<c r="I2"([^>]*)>', sheet)
+    check("Leads Excel: Submitted On is a real date (numeric cell, not text)", m_ is not None and 't="s"' not in m_.group(1) and 't="str"' not in m_.group(1) and 't="inlineStr"' not in m_.group(1), m_.group(0) if m_ else "no I2 cell")
+    lp = retail.get("/admin/leads")[2].decode("utf-8", "replace")
+    check("Leads page has no Status filter and no Status column", 'id="status"' not in lp and "Lead Status" not in lp and "lead-status-badge" not in lp)
     check("The old GET export and the leads JSON addresses are gone (404)", retail.get("/admin/leads/export.xlsx")[0] == 404
           and retail.get("/api/admin/leads")[0] == 404 and retail.get("/api/admin/leads/export.xlsx")[0] == 404)
     check("Export is a POST only (GET answers 405) and needs the security token",
@@ -98,6 +108,11 @@ else:
     retail.post("/admin/leads/filter", {"clear": "1", "_csrf": retail.csrf("/admin/leads")})
     check("Maker can open Customer Leads (all staff roles may)", maker.get("/admin/leads")[0] == 200)
     check("Checker can open Customer Leads (all staff roles may)", checker.get("/admin/leads")[0] == 200)
+    check("the old staff catalog /projects is gone: it redirects to the Projects dashboard", maker.get("/projects")[0] == 302 and maker.get("/projects")[1].get("Location", "").endswith("/admin/projects"))
+    pid_any = re.search(r'/project/(UCR-PROJ-[A-Z0-9]+)', maker.get("/admin/projects")[2].decode("utf-8", "replace"))
+    if pid_any:
+        det = maker.get("/project/" + pid_any.group(1))[2].decode("utf-8", "replace")
+        check("the staff View page links back to the Projects dashboard (not the old catalog)", 'href="/UcoRealtyStaff/admin/projects" class="btn-back"' in det and "Back to All Housing Projects" not in det)
     check("Staff header has a Leads tab and no Project Catalog tab", 'id="nav-link-leads"' in maker.get("/admin/projects")[2].decode("utf-8", "replace") and 'nav-link-customer-portal' not in maker.get("/admin/projects")[2].decode("utf-8", "replace"))
     check("DIT can open Customer Leads", dit.get("/admin/leads")[0] == 200)
     check("Checker cannot open the new-project form (403)", checker.get("/admin/projects/new")[0] == 403)

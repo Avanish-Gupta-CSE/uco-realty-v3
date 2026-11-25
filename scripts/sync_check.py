@@ -9,7 +9,7 @@ Run it after any change that touches both applications (a new project field, a p
 What it checks (each check says why it exists):
  1. Files that must be IDENTICAL in both applications (there is no shared module on purpose, so we copy and compare).
  2. Every column the customer app reads (customer model/Project) also exists in the staff model (Project + ProjectFields).
- 3. The two pages that exist twice (public-projects.jsp, public-detail.jsp) have the same element ids, except the ids that
+ 3. The page that exists twice (public-detail.jsp) have the same element ids, except the ids that
     belong to only one side (the staff preview banner, the customer Home Loan buttons ...). A page that gained a section in
     one copy only shows up here.
  4. Every JSON address (/api/...) found in the Java controllers is described in docs/openapi-*.yaml, and the files describe
@@ -64,7 +64,6 @@ ONLY_ONE_SIDE = {
         "card-apply-home-loan", "loan-card-heading", "loan-card-subheading", "btn-apply-loan-sidebar",      # Home Loan: customers only
         "bottom-apply-home-loan", "btn-apply-loan-bottom", "btn-apply-online-sidebar", "btn-apply-online-bottom",
     },
-    "public-projects.jsp": {"alert-staff-banner", "btn-staff-banner-mgmt"},   # banner for signed-in staff
 }
 
 

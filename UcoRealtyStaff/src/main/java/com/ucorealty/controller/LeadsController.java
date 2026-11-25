@@ -18,8 +18,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 /**
@@ -64,7 +62,6 @@ public class LeadsController {
     model.addAttribute("filter", f);
     model.addAttribute("maskPii", maskPii);
     model.addAttribute("leads", leads);
-    model.addAttribute("statuses", leadSource.statuses());   // status codes for the filter drop-down
     return "leads";
   }
 
@@ -130,20 +127,6 @@ public class LeadsController {
       Sheet sh = wb.createSheet("Customer Leads");
 
       // Cell Styles
-      CellStyle titleStyle = wb.createCellStyle();
-      Font titleFont = wb.createFont();
-      titleFont.setBold(true);
-      titleFont.setFontHeightInPoints((short) 13);
-      titleFont.setColor(IndexedColors.DARK_BLUE.getIndex());
-      titleStyle.setFont(titleFont);
-
-      CellStyle metaStyle = wb.createCellStyle();
-      Font metaFont = wb.createFont();
-      metaFont.setItalic(true);
-      metaFont.setFontHeightInPoints((short) 9);
-      metaFont.setColor(IndexedColors.GREY_50_PERCENT.getIndex());
-      metaStyle.setFont(metaFont);
-
       CellStyle headerStyle = wb.createCellStyle();
       Font headerFont = wb.createFont();
       headerFont.setBold(true);
@@ -179,42 +162,20 @@ public class LeadsController {
 
       CellStyle dateStyle = wb.createCellStyle();
       dateStyle.cloneStyleFrom(dataStyle);
-      dateStyle.setDataFormat(wb.createDataFormat().getFormat("yyyy-mm-dd hh:mm"));
+      dateStyle.setDataFormat(wb.createDataFormat().getFormat("dd-mmm-yyyy hh:mm"));
+      CellStyle altDateStyle = wb.createCellStyle();
+      altDateStyle.cloneStyleFrom(altDataStyle);
+      altDateStyle.setDataFormat(dateStyle.getDataFormat());
 
-      CellStyle badgeStyle = wb.createCellStyle();
-      badgeStyle.cloneStyleFrom(dataStyle);
-      badgeStyle.setAlignment(HorizontalAlignment.CENTER);
-      Font badgeFont = wb.createFont();
-      badgeFont.setBold(true);
-      badgeStyle.setFont(badgeFont);
-
-      // Row 0: Sheet Title
-      Row titleRow = sh.createRow(0);
-      Cell titleCell = titleRow.createCell(0);
-      titleCell.setCellValue("UCO BANK - UCO REALTY HOME LOAN LEADS (from the bank Home Loan application page)");
-      titleCell.setCellStyle(titleStyle);
-
-      // Row 1: Subtitle / Filter Metadata
-      Row metaRow = sh.createRow(1);
-      String dateBanner = "Date Filter: " + (from != null && !from.trim().isEmpty() ? from : "Beginning") +
-                          " to " + (to != null && !to.trim().isEmpty() ? to : "Present") +
-                          " | Status Filter: " + (status != null && !status.trim().isEmpty() ? status : "ALL") +
-                          " | Total Leads: " + filtered.size() +
-                          (maskPii ? " | Customer name, mobile and e-mail are masked" : "") +
-                          " | Exported By: " + exporter + " | Handover Time: " +
-                          LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MMM-yyyy HH:mm:ss"));
-      Cell metaCell = metaRow.createCell(0);
-      metaCell.setCellValue(dateBanner);
-      metaCell.setCellStyle(metaStyle);
-
-      // Row 3: Column Headers
-      Row h = sh.createRow(3);
+      // Row 0: column headers (the sheet holds only the columns and the data)
+      Row h = sh.createRow(0);
       h.setHeightInPoints(24);
       String[] cols = {
         "Lead ID", "Customer Name", "Mobile", "Email", "State", "District",
-        "Facility", "Loan Amount", "Lead Status", "Submitted On", "Notes"
+        "Facility", "Loan Amount", "Submitted On", "Notes"
       };
       final int notesCol = cols.length - 1;
+      final int dateCol = notesCol - 1;   // "Submitted On"
 
       for (int i = 0; i < cols.length; i++) {
         Cell c = h.createCell(i);
@@ -227,18 +188,23 @@ public class LeadsController {
       }
 
       // Data Rows
-      int rowIdx = 4;
+      int rowIdx = 1;
       for (Lead l : filtered) {
         Row r = sh.createRow(rowIdx);
         CellStyle rowStyle = (rowIdx % 2 == 0) ? altDataStyle : dataStyle;
         String[] values = {
           l.leadId, l.name, l.mobile, l.email, l.state, l.district,
-          l.facility, l.getLoanAmount(), l.status, l.getFormattedDate(), ""
+          l.facility, l.getLoanAmount(), "", ""
         };
         for (int i = 0; i < values.length; i++) {
           Cell c = r.createCell(i);
-          c.setCellValue(safeText(values[i]));
-          c.setCellStyle(i == 8 ? badgeStyle : rowStyle);   // column 8 = Lead Status
+          if (i == dateCol && l.getSubmittedAt() != null) {
+            c.setCellValue(new java.util.Date(l.getSubmittedAt().getTime()));   // a real date: Excel can sort and filter it
+            c.setCellStyle(rowIdx % 2 == 0 ? altDateStyle : dateStyle);
+          } else {
+            c.setCellValue(safeText(values[i]));
+            c.setCellStyle(rowStyle);
+          }
         }
         rowIdx++;
       }

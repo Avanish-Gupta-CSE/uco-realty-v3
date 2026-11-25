@@ -230,7 +230,8 @@
             var message = isShown(e) ? check(e, !draft) : "";
             if (!draft || message) touched[id] = true;
             show(e, message);
-            if (message && !first) first = e;
+            // the first problem on the page (top to bottom), not the first in the order of the rules
+            if (message && (!first || (first.compareDocumentPosition(e) & Node.DOCUMENT_POSITION_PRECEDING))) first = e;
         });
         if (first) {
             event.preventDefault();

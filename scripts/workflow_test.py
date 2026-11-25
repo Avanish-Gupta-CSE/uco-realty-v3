@@ -522,6 +522,71 @@ check("the customer site never shows the history card", 'project-history-card' n
 check("zone maker and zone checker can open the Leads page", maker.get("/admin/leads")[0] == 200 and checker.get("/admin/leads")[0] == 200)
 check("nobody signed in cannot open Leads", Client(INTERNAL).get("/admin/leads")[0] in (302, 401, 403))
 
+print("\n== 16. Fixes from the full audit")
+import threading
+# 16a history: the Approved step shows only what the checker wrote
+fl16 = demo.form(2, "ZZ Workflow Audit Fixes", "ZZ Workflow Builder", "West Bengal", "Durgapur", "713201", 50)
+fl16.update({"branchName": "Durgapur Main Branch", "unsoldInventory": "30", "otherTitle_1": "Fix Sheet"})
+save(maker, fl16, action="submit", files=[("photo1", PHOTO[0].name, PHOTO[0].read_bytes(), "image/jpeg"), ("doc_BROCHURE", "fix.pdf", demo.DEMO_PDF, "application/pdf")])
+pid16 = demo.newest_project_id(maker, "ZZ Workflow Audit Fixes"); sid16 = sid(maker, pid16)
+decide(checker, sid16, "approve", "Checked on site, all fine")
+view16 = maker.get(f"/project/{pid16}")[2].decode("utf-8", "replace")
+hist16 = view16[view16.find('id="project-history-card"'):]
+approved_block = re.findall(r'id="history-status-\d+">Approved</span>(.*?)</div>\s*</div>\s*</div>', hist16, re.S)
+approved_block = approved_block[0] if approved_block else "NO APPROVED STEP"
+check("history: the Approved step shows the checker's own remark", "Checked on site, all fine" in view16)
+check("history: the Approved step does not show the request summary as a remark", "New project" not in approved_block and approved_block != "NO APPROVED STEP", approved_block[:200])
+# 16b X buttons remove a saved file in the background (header X-Requested-With: fetch), without a reload or a redirect
+s16 = change_sid(maker, pid16)
+att16 = attachment_ids_on_form(maker, s16)
+check("the working copy lists the live brochure", len(att16) == 1)
+r16 = maker.post(f"/admin/projects/staging/{s16}/attachments/{next(iter(att16))}/remove", {"_csrf": maker.csrf(f"/admin/projects/staging/{s16}/edit")}, headers={"X-Requested-With": "fetch"})
+check("removing a saved document in the background answers 204 (no redirect, no page)", r16[0] == 204, r16[0])
+check("... and the document is marked for removal", f'id="existing-attachment-{next(iter(att16))}"' not in maker.get(f"/admin/projects/staging/{s16}/edit")[2].decode("utf-8", "replace"))
+r16b = maker.post(f"/admin/projects/staging/{s16}/attachments/999999999/remove", {"_csrf": maker.csrf(f"/admin/projects/staging/{s16}/edit")}, headers={"X-Requested-With": "fetch"})
+check("removing a file that is not there answers an error code (not 204)", r16b[0] in (400, 403, 404), r16b[0])
+maker.post(f"/admin/projects/staging/{s16}/withdraw", {"_csrf": maker.csrf("/admin/projects")})
+# 16c wrong photos are reported, never skipped silently
+bad = demo.form(2, "ZZ Workflow Bad Photo", "ZZ Workflow Builder", "West Bengal", "Durgapur", "713201", 50); bad["branchName"] = "Durgapur Main Branch"
+for label, f_ in (("not an image", ("photo1", "a.jpg", b"not an image", "image/jpeg")),
+                  ("over 1 MB", ("photo1", "big.jpg", PHOTO[0].read_bytes() + b"0" * (1100 * 1024), "image/jpeg")),
+                  ("svg", ("photo1", "a.svg", b"<svg xmlns='http://www.w3.org/2000/svg'/>", "image/svg+xml"))):
+    s_, _, b_ = save(maker, bad, files=[f_])
+    txt = b_.decode("utf-8", "replace")
+    check(f"a photo that is {label} is refused with a message (page stays, not 'draft saved')", s_ == 200 and ("is not a JPG, PNG or WEBP" in txt or "is larger than 1 MB" in txt), s_)
+# 16c2 a file over the size limit: a clear message in the browser (not a generic notice)
+orig_req = maker.request
+maker.request = lambda meth, p_, data=None, headers=None, raw=None: orig_req(meth, p_, data, {**(headers or {}), "Accept": "text/html"}, raw)
+s_, _, b_ = save(maker, bad, files=[("doc_BROCHURE", "big.pdf", b"%PDF-1.4\n" + b"0" * (3 * 1024 * 1024 + 10), "application/pdf")])
+maker.request = orig_req
+check("a PDF over 3 MB sent past the page checks gets a clear size message (413)", s_ == 413 and "at most 3 MB" in b_.decode("utf-8", "replace"), s_)
+# 16d a double click on Submit does not end in an error page
+save(maker, dict(fl16, projectName="ZZ Workflow Race"), action="draft")
+pid_r = demo.newest_project_id(maker, "ZZ Workflow Race"); sid_r = sid(maker, pid_r)
+codes = []
+tok = maker.csrf("/admin/projects")
+def sub():
+    codes.append(maker.post(f"/admin/projects/staging/{sid_r}/submit", {"_csrf": tok})[0])
+ts = [threading.Thread(target=sub) for _ in range(4)]
+[t.start() for t in ts]; [t.join() for t in ts]
+check("four simultaneous Submit clicks: no 500 error page", 500 not in codes, codes)
+check("... and the request is waiting for approval exactly once", status_of(maker, pid_r) == "Pending Approval")
+maker.post(f"/admin/projects/staging/{sid_r}/withdraw", {"_csrf": maker.csrf("/admin/projects")})
+# 16e lead search: % and _ are ordinary characters
+rl = login("58382")
+for q_ in ("%", "_", "\\"):
+    rl.post("/admin/leads/filter", {"search": q_, "_csrf": rl.csrf("/admin/leads")})
+    check(f"Leads search for {q_!r} finds nothing (it is not a wildcard)", "RLTY" not in rl.get("/admin/leads")[2].decode("utf-8", "replace"))
+rl.post("/admin/leads/filter", {"clear": "1", "_csrf": rl.csrf("/admin/leads")})
+# 16f no Reduce Units button for a project without available units
+min_ = {"projectName": "ZZ Workflow No Units", "zoneName": "Durgapur", "branchName": "Durgapur Main Branch", "stateName": "West Bengal",
+        "cityName": "Durgapur", "pinCode": "713201", "projectAddress": "Minimal Rd", "totalInventory": "20", "builderName": "Min Builder"}
+save(maker, min_, action="submit"); pid_m = demo.newest_project_id(maker, "ZZ Workflow No Units")
+decide(checker, sid(maker, pid_m), "approve", "")
+check("a project with no available units has no Reduce Units button", f'id="btn-reduce-units-{pid_m}"' not in (row(maker, pid_m) or "") and f'id="link-change-project-{pid_m}"' in (row(maker, pid_m) or ""))
+maker.post(f"/admin/projects/{pid_m}/delete-request", {"reason": "test", "_csrf": maker.csrf("/admin/projects")}); decide(checker, sid(maker, pid_m), "approve")
+maker.post(f"/admin/projects/{pid16}/delete-request", {"reason": "test", "_csrf": maker.csrf("/admin/projects")}); decide(checker, sid(maker, pid16), "approve")
+
 print(f"\n{results.count(True)}/{len(results)} checks passed")
 print("(test projects ZZ Workflow ... remain: one DELETED in the master table, one REJECTED in staging; scripts/remove_demo_data.sh removes them)")
 sys.exit(1 if False in results else 0)

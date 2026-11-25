@@ -215,12 +215,14 @@
 <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
                                                                 <button type="submit" class="btn btn-outline-secondary btn-sm" id="link-change-project-${p.id}">Edit</button>
                                                             </form>
+                                                            <c:if test="${p.unsoldInventory != null && p.unsoldInventory > 0}">
                                                             <button type="button" class="btn btn-outline-secondary btn-sm btn-reduce-units"
                                                                     id="btn-reduce-units-${p.id}"
                                                                     data-project-id="${p.id}"
                                                                     data-project-name="<c:out value="${p.projectName}"/>"
                                                                     data-current-units="${p.unsoldInventory != null ? p.unsoldInventory : 0}"
                                                                     data-context-path="${pageContext.request.contextPath}">Reduce Units</button>
+                                                            </c:if>
                                                             <button type="button" class="btn btn-outline-danger btn-sm btn-delete-project"
                                                                     id="btn-delete-project-${p.id}"
                                                                     data-project-id="${p.id}"

@@ -38,16 +38,6 @@
             </div>
 
             <div class="col-md-3">
-                <label for="status" class="form-label fw-semibold small">Lead Status</label>
-                <select id="status" name="status" class="form-select form-select-sm">
-                    <option value="">-- All Statuses --</option>
-                    <c:forEach var="st" items="${statuses}">
-                        <option value="<c:out value="${st}"/>" ${filter.status == st ? 'selected' : ''}><c:out value="${st}"/></option>
-                    </c:forEach>
-                </select>
-            </div>
-
-            <div class="col-md-3">
                 <label for="search" class="form-label fw-semibold small">Search Name / Mobile / Lead ID</label>
                 <input type="text" id="search" name="search" class="form-control form-control-sm" value="<c:out value="${filter.search}"/>" placeholder="Name, mobile or lead ID">
             </div>
@@ -75,7 +65,6 @@
                         <th>Location</th>
                         <th>Facility</th>
                         <th>Loan Amount</th>
-                        <th>Status</th>
                         <th class="pe-3">Submitted On</th>
                     </tr>
                 </thead>
@@ -83,7 +72,7 @@
                     <c:choose>
                         <c:when test="${empty leads}">
                             <tr id="row-no-leads">
-                                <td colspan="9" class="text-center py-4 text-muted">
+                                <td colspan="8" class="text-center py-4 text-muted">
                                     No customer leads found matching your criteria.
                                 </td>
                             </tr>
@@ -98,7 +87,6 @@
                                     <td data-label="Location"><c:out value="${l.location}"/></td>
                                     <td data-label="Facility"><c:out value="${l.facility}"/></td>
                                     <td data-label="Loan Amount" class="text-nowrap"><c:out value="${l.loanAmount}"/></td>
-                                    <td data-label="Status"><span class="badge badge-approved" id="lead-status-badge-${vs.index}"><c:out value="${l.status}"/></span></td>
                                     <td class="pe-3 text-nowrap" data-label="Date"><small class="text-muted" id="lead-date-${vs.index}"><c:out value="${l.formattedDate}"/></small></td>
                                 </tr>
                             </c:forEach>

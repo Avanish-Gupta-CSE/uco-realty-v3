@@ -9,8 +9,8 @@
 
                 <main class="container-xxl py-4" id="main-project-detail">
                     <div class="mb-3">
-                        <a href="${pageContext.request.contextPath}/projects" class="btn-back" id="btn-back-projects">
-                            &larr; Back to All Housing Projects
+                        <a href="${pageContext.request.contextPath}/admin/projects" class="btn-back" id="btn-back-projects">
+                            &larr; Back to Projects
                         </a>
                     </div>
 
@@ -21,8 +21,11 @@
                                 <div>
                                     <strong>⚠️ Staff Internal Preview Mode</strong>
                                     <div class="small mt-1 text-dark">
-                                        This project is currently in <strong>${project.status}</strong> status. It is
-                                        <strong>NOT</strong> visible to public customers until approved by a Checker.
+                                        <c:choose>
+                                            <c:when test="${project.status == 'APPROVED'}">This is how customers see this approved project.</c:when>
+                                            <c:otherwise>This project is currently in <strong>${project.status}</strong> status. It is
+                                            <strong>NOT</strong> visible to public customers until approved by a Checker.</c:otherwise>
+                                        </c:choose>
                                     </div>
                                 </div>
                                 <div class="d-flex gap-2">
