@@ -4,13 +4,11 @@ import com.ucorealty.dto.LeadFilter;
 import com.ucorealty.model.Lead;
 import com.ucorealty.repository.LgEntryRepository;
 import com.ucorealty.service.AuditService;
-import com.ucorealty.util.PiiMask;
 import com.ucorealty.util.StaffRoles;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -21,8 +19,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * The customer Leads page and its Excel export, for Head Office Marketing, Retail Banking and DIT. Filters travel by POST into the session;
- * customer name, mobile and e-mail are masked (setting uco.leads.mask-pii).
+ * The customer Leads page and its Excel export, for Head Office Marketing, Retail Banking and DIT. Filters travel by POST into the session.
  * The leads are NOT stored by us: the bank's Home Loan page keeps them in HRMS table LG_ENTRY_REVAMP (CHANNEL = 'REALTY'),
  * and LgEntryRepository reads them from there. The page itself is leads.jsp.
  * Change this file when: the Leads page or the Excel columns change (see docs/MAINTENANCE_GUIDE.md, "Add or remove a column").
@@ -34,13 +31,10 @@ public class LeadsController {
   private static final String FILTER_KEY = "LEAD_FILTER";
   private final LgEntryRepository leadSource;
   private final AuditService auditService;
-  private final boolean maskPii;
 
-  public LeadsController(LgEntryRepository leads, AuditService auditService,
-                         @Value("${uco.leads.mask-pii:true}") boolean maskPii) {
+  public LeadsController(LgEntryRepository leads, AuditService auditService) {
     this.leadSource = leads;
     this.auditService = auditService;
-    this.maskPii = maskPii;
   }
 
   /** The Leads page. The filter comes from the session, not from the address: only the page number is in the URL. */
@@ -55,12 +49,10 @@ public class LeadsController {
     int current = Math.min(Math.max(1, pageNo), pages);
     // only the 20 rows of this page are fetched from the bank table
     List<Lead> leads = leadsPage(f.getFrom(), f.getTo(), f.getStatus(), f.getSearch(), (current - 1) * LEADS_PER_PAGE, LEADS_PER_PAGE);
-    maskIfRequired(leads);
     model.addAttribute("leadCount", total);
     model.addAttribute("pageCount", pages);
     model.addAttribute("pageNo", current);
     model.addAttribute("filter", f);
-    model.addAttribute("maskPii", maskPii);
     model.addAttribute("leads", leads);
     return "leads";
   }
@@ -98,23 +90,12 @@ public class LeadsController {
     return f instanceof LeadFilter ? (LeadFilter) f : LeadFilter.empty();
   }
 
-  /** Customer name, mobile and e-mail are shown masked unless the setting uco.leads.mask-pii is false (the bank decides). */
-  private void maskIfRequired(List<Lead> leads) {
-    if (!maskPii) return;
-    for (Lead l : leads) {   // the rows are detached copies read from the bank table: changing them changes nothing in the database
-      l.name = PiiMask.name(l.name);
-      l.mobile = PiiMask.mobile(l.mobile);
-      l.email = PiiMask.email(l.email);
-    }
-  }
-
   /** Writes the filtered leads as a styled Excel (.xlsx) file with Call Center action columns. */
   private void writeExcel(String from, String to, String status, String search,
                           HttpServletResponse res, Authentication auth) throws IOException {
     String exporter = StaffRoles.require(auth, StaffRoles.LEAD_ROLES);
 
     List<Lead> filtered = filterLeads(from, to, status, search);
-    maskIfRequired(filtered);
     log.info("[UCO LEAD] {} exports {} leads to Excel (from={}, to={}, status={})", exporter, filtered.size(), from, to, status);
 
     // File name: uco-realty-leads_ plus the date of the download, e.g. uco-realty-leads_2026-11-18.xlsx

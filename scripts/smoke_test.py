@@ -98,9 +98,10 @@ else:
     check("Export is a POST only (GET answers 405) and needs the security token",
           retail.get("/admin/leads/export")[0] == 405 and retail.post("/admin/leads/export", {})[0] in (302, 403))
     page = retail.get("/admin/leads")[2].decode("utf-8", "replace")
-    check("Leads page shows customer mobile numbers masked", re.search(r'id="lead-phone-0"[^>]*>[0-9]{2}X+[0-9]{2}<', page) is not None
-          and not re.search(r"\b[0-9]{10}\b", re.sub(r'id="lead-[a-z-]*-?\d*"', "", page.split("<tbody", 1)[-1])))
-    check("Leads page shows names and e-mail masked", "*" in re.search(r'id="lead-name-0"[^>]*>([^<]*)<', page).group(1) and "****@" in page.split("lead-email-0", 1)[-1][:80])
+    check("Leads page shows the customer's full name, mobile number and e-mail (nothing is masked)",
+          "*" not in re.search(r'id="lead-name-0"[^>]*>([^<]*)<', page).group(1) and re.search(r'id="lead-phone-0"[^>]*>[0-9+ ]{8,}<', page) is not None
+          and "****" not in page and re.search(r'id="lead-email-0"[^>]*>[^<*]+@[^<*]+<', page) is not None)
+    check("Leads Excel holds the same full values", "XXXX" not in xl_text and "****" not in xl_text)
     s, h, _ = retail.post("/admin/leads/filter", {"search": "Rohit", "_csrf": retail.csrf("/admin/leads")})
     page = retail.get("/admin/leads")[2].decode("utf-8", "replace")
     check("Leads filter is a POST kept in the session (the address stays clean)", s == 302 and h.get("Location", "").endswith("/admin/leads")

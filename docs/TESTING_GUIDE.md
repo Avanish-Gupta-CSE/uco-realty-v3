@@ -54,7 +54,7 @@ Checks the customer-site lockdown, headers, bad SSO tokens, CSRF, roles (DIT/mak
 **D. Head Office roles**
 11. HO retail `58382`: tabs *Project Management* and *Customer Leads*. Leads: filter, **Export** to Excel. There are **no** Edit / Units / Delete buttons on any project, and `POST /admin/projects/{id}/reduce-units` returns 403.
 12. HO marketing `54534`: can create and approve projects for any zone.
-13. Every staff role (makers and checkers too) can open `/admin/leads`; a customer or a user who is not signed in cannot (phone numbers stay masked per the bank setting).
+13. Every staff role (makers and checkers too) can open `/admin/leads`; a customer or a user who is not signed in cannot.
 14. DIT `55012`: **Logs** shows project events and every login attempt (including refused ones). Everyone else gets 403 on `/admin/audit-logs`.
 15. Sign out with the button: you land on the login page; Back must not reopen admin pages.
 

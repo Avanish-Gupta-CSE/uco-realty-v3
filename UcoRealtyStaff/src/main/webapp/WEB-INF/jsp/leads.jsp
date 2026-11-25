@@ -11,7 +11,7 @@
         <div>
             <h2 class="h4 text-primary fw-bold mb-1" id="leads-title">Home Loan Leads from UCO Realty</h2>
             <p class="text-muted small mb-0" id="leads-subtitle">
-                Customers who clicked Apply for Home Loan on the realty portal and filled the bank's Home Loan application (read from the bank's lead table).<c:if test="${maskPii}"> Customer name, mobile and e-mail are shown masked, as the bank's security policy requires.</c:if>
+                Customers who clicked Apply for Home Loan on the realty portal and filled the bank's Home Loan application (read from the bank's lead table).
             </p>
         </div>
 
@@ -82,7 +82,7 @@
                                 <tr id="row-lead-${vs.index}">
                                     <td class="ps-3" data-label="Lead"><span class="badge bg-light text-secondary border" id="lead-badge-id-${vs.index}"><c:out value="${l.leadId}"/></span></td>
                                     <td data-label="Customer"><strong id="lead-name-${vs.index}"><c:out value="${l.name}"/></strong></td>
-                                    <td data-label="Mobile"><c:choose><c:when test="${maskPii}"><span class="fw-semibold" id="lead-phone-${vs.index}"><c:out value="${l.mobile}"/></span></c:when><c:otherwise><a href="tel:<c:out value="${l.mobile}"/>" class="fw-semibold text-primary" id="lead-phone-${vs.index}"><c:out value="${l.mobile}"/></a></c:otherwise></c:choose></td>
+                                    <td data-label="Mobile"><a href="tel:<c:out value="${l.mobile}"/>" class="fw-semibold text-primary" id="lead-phone-${vs.index}"><c:out value="${l.mobile}"/></a></td>
                                     <td data-label="Email"><small id="lead-email-${vs.index}"><c:out value="${l.email}"/></small></td>
                                     <td data-label="Location"><c:out value="${l.location}"/></td>
                                     <td data-label="Facility"><c:out value="${l.facility}"/></td>

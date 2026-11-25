@@ -2,7 +2,7 @@
 # from the bank SSO); there is no API key. Written by hand: when you add or change an address in controller/PlacesApiController.java,
 # change this file too (python3 scripts/sync_check.py tells you if an address is missing).
 # The screens of the site (HTML pages and forms) are not described here. There is no leads API on purpose: customer data is only
-# on the Leads page (masked) and in its Excel file, behind POST buttons with the security token (secure coding order, points 4 and 5).
+# on the Leads page and in its Excel file, behind POST buttons with the security token (secure coding order, points 4 and 5).
 openapi: 3.0.3
 info:
   title: UCO Realty - staff API
