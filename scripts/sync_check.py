@@ -61,8 +61,8 @@ def check_columns():
 ONLY_ONE_SIDE = {
     "public-detail.jsp": {
         "staff-preview-banner", "btn-preview-back-admin", "btn-preview-edit-project",                       # staff preview banner
-        "card-apply-home-loan", "loan-card-heading", "loan-card-subheading", "btn-apply-loan-sidebar",      # Home Loan: customers only
-        "bottom-apply-home-loan", "btn-apply-loan-bottom", "btn-apply-online-sidebar", "btn-apply-online-bottom",
+        "card-apply-home-loan", "loan-card-heading", "loan-card-subheading", "btn-loan-apply-sidebar",      # Home Loan: customers only
+        "bottom-apply-home-loan", "btn-loan-apply-bottom", "btn-loan-enquire-sidebar", "btn-loan-enquire-bottom",
     },
 }
 

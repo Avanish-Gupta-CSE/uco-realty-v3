@@ -424,16 +424,27 @@ h1, h2, h3, h4 { letter-spacing: -.01em; }
 .amenity-tile-no { background: #f8fafc; color: var(--ui-muted); }
 .amenity-tile-no .amenity-icon { filter: grayscale(1); opacity: .45; }
 
-/* the two Home Loan buttons: enquiry (filled) and online application (outlined) */
-.loan-actions { display: flex; gap: .6rem; }
+/* the two Home Loan buttons. "Apply Online" (loan-btn-main) brings the leads, so it is the one that stands out: UCO gold, a double navy border, larger text, a soft glow
+   and an arrow that moves on hover. "Enquire for Home Loan" (loan-btn-secondary) is calm: white, thin grey border, smaller text. */
+.loan-actions { display: flex; gap: .8rem; }
 .loan-actions-stacked { flex-direction: column; }
-.loan-actions-row { justify-content: center; flex-wrap: wrap; }
-.loan-btn { display: flex; flex-direction: column; align-items: center; text-align: center; line-height: 1.25; }
-.loan-actions-row .loan-btn { min-width: 280px; padding: .7rem 1.6rem; }
+.loan-actions-row { justify-content: center; align-items: stretch; flex-wrap: wrap; }
+.loan-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; line-height: 1.25; border-radius: 10px; text-decoration: none; transition: transform .15s ease, box-shadow .15s ease, background .15s ease; }
+.loan-actions-row .loan-btn { min-width: 290px; padding: .8rem 1.6rem; }
 .loan-btn-title { font-weight: 700; }
-.loan-btn-sub { font-size: .75rem; font-weight: 400; opacity: .9; }
-.loan-btn-secondary { background: #fff; color: var(--uco-navy); border: 2px solid var(--uco-navy); }
-.loan-btn-secondary:hover, .loan-btn-secondary:focus { background: var(--uco-light-blue); color: var(--uco-dark); border-color: var(--uco-dark); }
+.loan-btn-sub { font-size: .75rem; font-weight: 400; }
+.loan-btn-main { background: linear-gradient(180deg, #ffd54f 0%, #ffc107 100%); color: var(--uco-dark); border: 6px double var(--uco-navy); padding: .85rem 1rem; box-shadow: 0 8px 20px rgba(0, 38, 77, .30); animation: loan-glow 2.6s ease-in-out infinite; }
+.loan-btn-main .loan-btn-title { font-size: 1.3rem; letter-spacing: .01em; }
+.loan-btn-main .loan-btn-sub { color: var(--uco-dark); font-weight: 600; opacity: .9; }
+.loan-btn-arrow { display: inline-block; transition: transform .15s ease; }
+.loan-btn-main:hover, .loan-btn-main:focus-visible { background: linear-gradient(180deg, #ffe082 0%, #ffb300 100%); color: var(--uco-deep-blue); transform: translateY(-2px); box-shadow: 0 12px 26px rgba(0, 38, 77, .38); animation: none; }
+.loan-btn-main:hover .loan-btn-arrow, .loan-btn-main:focus-visible .loan-btn-arrow { transform: translateX(5px); }
+.loan-btn-main:focus-visible, .loan-btn-secondary:focus-visible { outline: 3px solid var(--uco-saffron); outline-offset: 3px; }
+.loan-btn-secondary { background: #fff; color: var(--uco-navy); border: 1px solid #cbd5e1; padding: .55rem 1rem; box-shadow: none; }
+.loan-btn-secondary .loan-btn-title { font-size: .9rem; }
+.loan-btn-secondary:hover, .loan-btn-secondary:focus { background: #f8fafc; color: var(--uco-dark); border-color: var(--uco-navy); }
+@keyframes loan-glow { 0%, 100% { box-shadow: 0 8px 20px rgba(0, 38, 77, .30), 0 0 0 0 rgba(255, 193, 7, .55); } 50% { box-shadow: 0 8px 20px rgba(0, 38, 77, .30), 0 0 0 9px rgba(255, 193, 7, 0); } }
+@media (prefers-reduced-motion: reduce) { .loan-btn-main { animation: none; } .loan-btn, .loan-btn-arrow { transition: none; } }
 @media (max-width: 575.98px) { .loan-actions-row { flex-direction: column; } .loan-actions-row .loan-btn { min-width: 0; width: 100%; } }
 
 /* project photos: an auto-sliding carousel */

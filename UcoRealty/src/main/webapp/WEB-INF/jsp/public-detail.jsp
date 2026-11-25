@@ -301,19 +301,17 @@
                             <div class="loan-apply-card" id="card-apply-home-loan">
                                 <h2 class="card-title-custom border-0 pb-0 mb-2" id="loan-card-heading">Apply for Home Loan</h2>
                                 <p class="text-muted small mb-3" id="loan-card-subheading">
-                                    Choose how you would like to proceed.
+                                    Take the first step towards your new home.
                                 </p>
-                                <%-- Button 1: the bank's Home Loan enquiry page; ?utm=REALTY tells the bank the customer came from UCO Realty (our leads). Button 2: the bank's online application (login), a plain link. --%>
+                                <%-- Button 1 (the one that brings us leads, so it is the big, gold, double-bordered one, first): "Apply Online" opens the bank's Home Loan enquiry page (the lead form); ?utm=REALTY tells the bank the customer came from UCO Realty. Button 2: "Enquire for Home Loan" opens the bank's online application (login), a plain link, calm outline. Both open in the same tab. --%>
                                 <div class="loan-actions loan-actions-stacked">
-                                    <a href="<c:out value='${homeLoanUrl}'/>" class="btn btn-primary w-100 py-2 fw-bold loan-btn"
-                                        id="btn-apply-loan-sidebar" rel="noopener">
-                                        <span class="loan-btn-title">Enquire for Home Loan &rarr;</span>
-                                        <span class="loan-btn-sub">Share your details, our team will contact you</span>
+                                    <a href="<c:out value='${homeLoanUrl}'/>" class="btn loan-btn loan-btn-main w-100 fw-bold"
+                                        id="btn-loan-apply-sidebar" rel="noopener">
+                                        <span class="loan-btn-title">Apply Online&nbsp;<span class="loan-btn-arrow">&rarr;</span></span>
+                                        <span class="loan-btn-sub">Share your details and our loan team will call you.</span>
                                     </a>
-                                    <a href="<c:out value='${homeLoanOnlineUrl}'/>" class="btn loan-btn-secondary w-100 py-2 fw-bold loan-btn"
-                                        id="btn-apply-online-sidebar" target="_blank" rel="noopener noreferrer">
-                                        <span class="loan-btn-title">Apply Online &rarr;</span>
-                                        <span class="loan-btn-sub">Log in to the UCO Home Loan portal</span>
+                                    <a href="<c:out value='${homeLoanOnlineUrl}'/>" class="btn loan-btn loan-btn-secondary w-100" id="btn-loan-enquire-sidebar" rel="noopener">
+                                        <span class="loan-btn-title">Enquire for Home&nbsp;Loan&nbsp;&rarr;</span>
                                     </a>
                                 </div>
                             </div>
@@ -349,13 +347,12 @@
                     <%-- Second Apply for Home Loan button, at the bottom of the page (same link as the sidebar card) --%>
                     <div class="my-4" id="bottom-apply-home-loan">
                         <div class="loan-actions loan-actions-row">
-                            <a href="<c:out value='${homeLoanUrl}'/>" class="btn btn-primary btn-lg fw-bold loan-btn" id="btn-apply-loan-bottom" rel="noopener">
-                                <span class="loan-btn-title">Enquire for Home Loan &rarr;</span>
-                                <span class="loan-btn-sub">Share your details, our team will contact you</span>
+                            <a href="<c:out value='${homeLoanUrl}'/>" class="btn btn-lg loan-btn loan-btn-main fw-bold" id="btn-loan-apply-bottom" rel="noopener">
+                                <span class="loan-btn-title">Apply Online&nbsp;<span class="loan-btn-arrow">&rarr;</span></span>
+                                <span class="loan-btn-sub">Share your details and our loan team will call you.</span>
                             </a>
-                            <a href="<c:out value='${homeLoanOnlineUrl}'/>" class="btn loan-btn-secondary btn-lg fw-bold loan-btn" id="btn-apply-online-bottom" target="_blank" rel="noopener noreferrer">
-                                <span class="loan-btn-title">Apply Online &rarr;</span>
-                                <span class="loan-btn-sub">Log in to the UCO Home Loan portal</span>
+                            <a href="<c:out value='${homeLoanOnlineUrl}'/>" class="btn btn-lg loan-btn loan-btn-secondary" id="btn-loan-enquire-bottom" rel="noopener">
+                                <span class="loan-btn-title">Enquire for Home&nbsp;Loan&nbsp;&rarr;</span>
                             </a>
                         </div>
                     </div>

@@ -37,7 +37,7 @@
             <div class="home-step" id="home-step-3">
                 <span class="home-step-icon" aria-hidden="true">&#127969;</span>
                 <h4>3. Apply for a Home Loan</h4>
-                <p>Share your details for an enquiry, or log in to the bank's online Home Loan application.</p>
+                <p>Start your Home Loan journey by sharing your details, or apply online on the bank's Home Loan portal.</p>
             </div>
         </div>
     </div>

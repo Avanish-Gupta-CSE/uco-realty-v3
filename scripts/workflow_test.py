@@ -430,9 +430,12 @@ cds = [d[1].get("Content-Disposition") or "" for d in dispositions]
 check("a click downloads: Content-Disposition is attachment with a clean name (project and label)",
       all(d[0] == 200 for d in dispositions) and all(c.lower().startswith("attachment") and ".pdf" in c.lower() for c in cds)
       and any("ZZ Workflow Documents - Brochure.pdf" in c for c in cds) and any("Price List ZZ" in c or "zz-prices" in c for c in cds), cds)
-check("the page has two Home Loan buttons: the enquiry link, and Apply Online to the bank's online application in a new tab",
-      "/Lead_App/lead_web.jsp?utm=REALTY" in page9 and 'href="https://stp.uco.bank.in/home-loan/#/home-loan-login"' in page9
-      and page9.count('id="btn-apply-online-') == 2 and page9.count("Enquire for Home Loan") == 2 and 'target="_blank" rel="noopener noreferrer"' in page9)
+check("the page has two Home Loan buttons, both opening in the same tab: Apply Online (gold, the lead form) and Enquire for Home Loan (the bank's online application)",
+      re.search(r'<a href="[^"]*/Lead_App/lead_web.jsp\?utm=REALTY"[^>]*id="btn-loan-apply-sidebar"', page9) is not None
+      and re.search(r'<a href="https://stp.uco.bank.in/home-loan/#/home-loan-login"[^>]*id="btn-loan-enquire-sidebar"', page9) is not None
+      and page9.count('id="btn-loan-apply-') == 2 and page9.count('id="btn-loan-enquire-') == 2
+      and page9.count("Apply Online") == 2 and page9.count("Enquire for Home") == 2 and "Start your Home Loan Journey" not in page9
+      and 'target="_blank"' not in page9[page9.find('id="card-apply-home-loan"'):])
 check("a Not available amenity has no strikethrough rule in the style sheet", "line-through" not in Client(PUBLIC).get("/assets/css/style.css")[2].decode("utf-8", "replace").split(".amenity-tile-no")[-1][:400] if ".amenity-tile-no" in Client(PUBLIC).get("/assets/css/style.css")[2].decode("utf-8", "replace") else False)
 cs9 = change_sid(maker, pid9)
 check("a saved document card has the round corner x (top-right), not a text Remove button",
