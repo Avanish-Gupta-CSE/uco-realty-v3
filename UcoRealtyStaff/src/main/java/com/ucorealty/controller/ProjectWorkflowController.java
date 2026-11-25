@@ -55,10 +55,13 @@ public class ProjectWorkflowController {
   private final ProjectAttachmentRepository attachmentRepo;
   private final MasterDataService masterData;
   private final HrmsService hrms;
+  private final com.ucorealty.service.ProjectHistoryService history;
 
   public ProjectWorkflowController(ProjectWorkflowService workflow, ProjectAccessService projectAccess,
                                    ProjectImageRepository imageRepo, ProjectAttachmentRepository attachmentRepo,
-                                   MasterDataService masterData, HrmsService hrms) {
+                                   MasterDataService masterData, HrmsService hrms,
+                                   com.ucorealty.service.ProjectHistoryService history) {
+    this.history = history;
     this.hrms = hrms;
     this.workflow = workflow;
     this.projectAccess = projectAccess;
@@ -356,6 +359,7 @@ public class ProjectWorkflowController {
     model.addAttribute("newAttachments", workflow.newAttachments(s));
     model.addAttribute("canDecide", checkerRole && !user.equals(s.createdBy));
     model.addAttribute("isOwner", user.equals(s.createdBy));
+    model.addAttribute("history", history.of(s.projectId));
     return "change-review";
   }
 
@@ -387,6 +391,7 @@ public class ProjectWorkflowController {
     model.addAttribute("isStaffPreview", true);
     model.addAttribute("stagingPreview", true);
     model.addAttribute("stagingId", s.id);
+    model.addAttribute("history", history.of(s.projectId));
     return "public-detail";
   }
 

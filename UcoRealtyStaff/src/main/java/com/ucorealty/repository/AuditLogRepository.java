@@ -25,4 +25,12 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
   /** How many rows the trail has (for the page numbers). */
   @Query(nativeQuery = true, value = "SELECT COUNT(*) FROM realty_audit_log")
   long countAll();
+
+  /** The steps of one project's approval history (only the given actions), oldest first. */
+  @Query(nativeQuery = true, value = """
+      SELECT * FROM realty_audit_log
+      WHERE entity_type = 'PROJECT' AND entity_id = :projectId AND action IN (:actions)
+      ORDER BY created_at ASC, id ASC
+      """)
+  List<AuditLog> findProjectSteps(@Param("projectId") String projectId, @Param("actions") java.util.Collection<String> actions);
 }

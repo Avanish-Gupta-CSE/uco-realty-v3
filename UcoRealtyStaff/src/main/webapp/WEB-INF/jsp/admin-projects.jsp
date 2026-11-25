@@ -187,7 +187,7 @@
                                         <div class="d-inline-flex justify-content-end align-items-center gap-1" id="actions-wrap-${p.id}">
                                             <%-- Preview: a live project as customers see it; an unapproved one as it would look --%>
                                             <a href="${pageContext.request.contextPath}<c:out value="${p.master ? '/project/'.concat(p.id) : '/admin/projects/staging/'.concat(p.stagingId).concat('/preview')}"/>"
-                                               class="btn btn-outline-primary btn-sm" id="link-preview-project-${p.id}">Preview</a>
+                                               class="btn btn-outline-primary btn-sm" id="link-preview-project-${p.id}">View</a>
 
                                             <%-- Maker: his own NEW project (draft / returned / waiting) --%>
                                             <sec:authorize access="hasAnyRole('ZO_MAKER', 'HO_MARKETING', 'SUPERADMIN_DIT')">
@@ -248,7 +248,7 @@
                                             <sec:authorize access="hasAnyRole('ZO_CHECKER', 'HO_MARKETING', 'SUPERADMIN_DIT')">
                                                 <c:if test="${p.waitingForChecker && !mine}">
                                                     <a href="${pageContext.request.contextPath}/admin/projects/staging/${p.stagingId}/review" class="btn btn-warning btn-sm" id="link-review-${p.id}">
-                                                        ${p.requestType == 'DELETE' ? 'Approve deletion' : (p.requestType == 'UPDATE' ? 'Approve change' : 'Approve')}
+                                                        Approve / Reject
                                                     </a>
                                                 </c:if>
                                             </sec:authorize>

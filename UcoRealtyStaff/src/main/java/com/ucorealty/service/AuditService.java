@@ -78,4 +78,10 @@ public class AuditService {
   public Page<LoginAudit> getLoginAudits(Pageable pageable) {
     return new PageImpl<>(loginAuditRepository.findNewestFirst(pageable.getOffset(), pageable.getPageSize()), pageable, loginAuditRepository.countAll());
   }
+
+  /** The approval steps of one project (created, submitted, approved, rejected, ...), oldest first. */
+  @Transactional(readOnly = true)
+  public java.util.List<AuditLog> projectSteps(String projectId, java.util.Collection<String> actions) {
+    return auditLogRepository.findProjectSteps(projectId, actions);
+  }
 }

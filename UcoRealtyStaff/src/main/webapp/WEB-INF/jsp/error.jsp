@@ -7,10 +7,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Notice - UCO Bank Realty Portal</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/bootstrap.min.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css?v=20261119b">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css?v=20261129a">
 </head>
 <body class="error-layout">
   <div class="error-card">
+    <img src="${pageContext.request.contextPath}/assets/images/uco_bank_logo.png" alt="UCO Bank" class="error-logo" id="error-logo">
     <div class="error-icon error-icon-info" id="error-icon">!</div>
     <h1 class="error-title" id="error-title">We could not open this page</h1>
     <p class="error-desc" id="error-message"><c:set var="sc" value="${empty status ? requestScope['jakarta.servlet.error.status_code'] : status}"/>

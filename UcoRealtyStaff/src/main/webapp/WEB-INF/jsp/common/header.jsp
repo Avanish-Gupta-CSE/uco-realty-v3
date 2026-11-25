@@ -12,7 +12,7 @@
     <link rel="stylesheet" id="bootstrap-css" href="${pageContext.request.contextPath}/assets/css/bootstrap.min.css">
     <%-- UCO Bank Theme Stylesheet --%>
     <%-- bump assetVersion whenever CSS/JS change, so browsers do not keep showing the old design --%>
-    <c:set var="assetVersion" value="20261128a" scope="request" />
+    <c:set var="assetVersion" value="20261129a" scope="request" />
     <link rel="stylesheet" id="uco-theme-css" href="${pageContext.request.contextPath}/assets/css/style.css?v=${assetVersion}">
 </head>
 <body>
@@ -21,7 +21,7 @@
     <div class="container-xxl">
         <div class="header-top">
             <div class="logo-container" id="logo-container">
-                <a href="${pageContext.request.contextPath}/" id="link-home-logo">
+                <a href="${pageContext.request.contextPath}/admin/projects" id="link-home-logo">
                     <img src="${pageContext.request.contextPath}/assets/images/uco_bank_logo.png" alt="UCO Bank Logo" class="logo-img" id="img-bank-logo">
                 </a>
                 <div class="logo-text" id="logo-text">
@@ -59,12 +59,9 @@
     <nav class="navbar navbar-expand navbar-custom" id="main-navigation">
         <div class="container-xxl">
             <div class="navbar-nav" id="main-navbar-nav">
-                <a href="${pageContext.request.contextPath}/projects" class="nav-link ${activeTab == 'public' ? 'active' : ''}" id="nav-link-customer-portal">Project Catalog</a>
                 <sec:authorize access="isAuthenticated()">
                     <a href="${pageContext.request.contextPath}/admin/projects" class="nav-link ${activeTab == 'projects' ? 'active' : ''}" id="nav-link-project-mgmt">Projects</a>
-                    <sec:authorize access="hasAnyRole('HO_MARKETING', 'HO_RETAIL', 'SUPERADMIN_DIT')">
-                        <a href="${pageContext.request.contextPath}/admin/leads" class="nav-link ${activeTab == 'leads' ? 'active' : ''}" id="nav-link-leads">Leads</a>
-                    </sec:authorize>
+                    <a href="${pageContext.request.contextPath}/admin/leads" class="nav-link ${activeTab == 'leads' ? 'active' : ''}" id="nav-link-leads">Leads</a>
                     <sec:authorize access="hasRole('SUPERADMIN_DIT')">
                         <a href="${pageContext.request.contextPath}/admin/audit-logs" class="nav-link ${activeTab == 'audit' ? 'active' : ''}" id="nav-link-audit-logs">Logs</a>
                     </sec:authorize>

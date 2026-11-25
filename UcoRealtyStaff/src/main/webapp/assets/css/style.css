@@ -1048,3 +1048,17 @@ h1, h2, h3, h4 { letter-spacing: -.01em; }
   color: #991b1b;
   border-color: #f87171;
 }
+
+/* logo on the plain message cards (session expired, signed out, error) */
+.error-logo { display: block; height: 64px; width: auto; margin: 0 auto 18px auto; }
+
+/* Workflow and Audit History timeline (staff project pages) */
+.history-timeline { position: relative; padding-left: 28px; }
+.history-timeline::before { content: ""; position: absolute; left: 8px; top: 6px; bottom: 6px; width: 3px; background: #d5dbe3; }
+.history-item { position: relative; margin-bottom: 14px; }
+.history-dot { position: absolute; left: -26px; top: 18px; width: 13px; height: 13px; border-radius: 50%; background: var(--uco-navy, #004d99); }
+.history-box { background: #f8fafc; border: 1px solid var(--ui-border, #e2e8f0); border-radius: 8px; padding: 12px 16px; }
+.history-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.history-time { margin-left: auto; color: #64748b; font-size: 0.9rem; }
+.history-by { color: #64748b; margin-top: 4px; }
+.history-remarks { background: #fff; border: 1px solid var(--ui-border, #e2e8f0); border-radius: 6px; padding: 8px 12px; margin-top: 8px; }

@@ -394,6 +394,13 @@ lst = maker.get("/admin/projects")[2].decode("utf-8", "replace")
 check("a copy with a real change stays as a draft after the list is opened", f'id="badge-change-draft-{pid10}"' in lst and sid(maker, pid10) == sid_real)
 maker.post(f"/admin/projects/staging/{sid_real}/withdraw", {"_csrf": maker.csrf("/admin/projects")})
 
+sid_tab = change_sid(maker, pid10)
+maker.get("/admin/projects")   # opening the list clears the unchanged copy, while the form stays open in another tab
+s_tab, _, _ = save(maker, {"propertyId": "ZZ-TWO-TABS"}, stagingId=sid_tab)
+check("a form left open in another tab still saves after its unchanged copy was cleared (no error, nothing lost)",
+      s_tab == 302 and f'id="badge-change-draft-{pid10}"' in maker.get("/admin/projects")[2].decode("utf-8", "replace"), s_tab)
+maker.post(f"/admin/projects/staging/{sid_tab}/withdraw", {"_csrf": maker.csrf("/admin/projects")})
+
 print("\n== 14b. Document slots: Brochure / Floor Plan / RERA Certificate / Others, labels instead of file names, click downloads")
 fl = demo.form(9, "ZZ Workflow Documents", "ZZ Workflow Builder", "West Bengal", "Durgapur", "713201", 40)
 fl.update({"branchName": "Durgapur Main Branch", "amenities": "Park", "otherTitle_1": "Price List ZZ"})
@@ -492,6 +499,28 @@ maker.post(f"/admin/projects/{pid8}/delete-request", {"reason": "test", "_csrf":
 decide(checker, sid(maker, pid8), "approve")
 check("after an approved deletion the project and its attachments are hidden from customers",
       public(pid8)[0] == 404 and all(Client(PUBLIC).get(f"/attachments/{i}")[0] == 404 for i in live_ids))
+
+print("\n== 15. Workflow & Audit History card, Approve / Reject button, Leads for zone users")
+new_project(maker, "ZZ Workflow History", action="submit")
+pidh = demo.newest_project_id(maker, "ZZ Workflow History"); sidh = sid(maker, pidh)
+dash = checker.get("/admin/projects")[2].decode("utf-8", "replace")
+check("the checker's button in the Actions column reads 'Approve / Reject'", f'id="link-review-{pidh}"' in dash and "Approve / Reject" in dash)
+rev = checker.get(f"/admin/projects/staging/{sidh}/review")[2].decode("utf-8", "replace")
+check("the review page shows the history card with the Submitted step and who did it",
+      'id="project-history-card"' in rev and "Submitted" in rev and "Action by:" in rev and "52260" in rev)
+decide(checker, sidh, "reject", "Documents missing (history test)")
+prev = maker.get(f"/admin/projects/staging/{sidh}/preview")[2].decode("utf-8", "replace")
+check("a rejected new project stays on the dashboard (Rejected tab) for the record",
+      f'id="badge-status-{pidh}"' in maker.get("/admin/projects?status=REJECTED")[2].decode("utf-8", "replace"))
+check("its history shows Submitted, then Rejected with the checker's remark",
+      "Rejected" in prev and "Documents missing (history test)" in prev and prev.index("Submitted") < prev.index("Rejected"))
+check("the checker can View a rejected project listed on his dashboard (no Access Denied)",
+      checker.get(f"/admin/projects/staging/{sidh}/preview")[0] == 200 and 'project-history-card' in checker.get(f"/admin/projects/staging/{sidh}/preview")[2].decode("utf-8", "replace"))
+check("photos on the staff View page point to /files/<number> (not an object name)",
+      re.search(r'src="[^"]*/files/\d+"', prev) is not None and "TupleBackedMap" not in prev)
+check("the customer site never shows the history card", 'project-history-card' not in public(pid9)[1])
+check("zone maker and zone checker can open the Leads page", maker.get("/admin/leads")[0] == 200 and checker.get("/admin/leads")[0] == 200)
+check("nobody signed in cannot open Leads", Client(INTERNAL).get("/admin/leads")[0] in (302, 401, 403))
 
 print(f"\n{results.count(True)}/{len(results)} checks passed")
 print("(test projects ZZ Workflow ... remain: one DELETED in the master table, one REJECTED in staging; scripts/remove_demo_data.sh removes them)")

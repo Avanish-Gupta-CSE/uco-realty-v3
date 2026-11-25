@@ -208,7 +208,8 @@ public class ProjectWorkflowService {
   public void requireCanView(ProjectStaging s, String username) {
     if (username.equals(s.createdBy)) return;
     StaffUser u = projectAccess.requireActiveUser(username);
-    if (!ProjectStaging.PENDING.equals(s.status))
+    // same rule as the dashboard (canSee): a checker sees what waits for him and what he or a colleague rejected
+    if (!ProjectStaging.PENDING.equals(s.status) && !ProjectStaging.REJECTED.equals(s.status))
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "This request is not waiting for approval");
     if ("ZO_MAKER".equals(u.role))
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the maker who raised this request can open it");
@@ -273,7 +274,11 @@ public class ProjectWorkflowService {
    * no new or removed photo and no new or removed document. Such a copy is only the result of pressing Edit and leaving again.
    */
   boolean isUnchangedCopy(ProjectStaging s) {
-    if (!ProjectStaging.UPDATE.equals(s.requestType) || !ProjectStaging.DRAFT.equals(s.status)) return false;
+    return ProjectStaging.UPDATE.equals(s.requestType) && ProjectStaging.DRAFT.equals(s.status) && sameAsLive(s);
+  }
+
+  /** True when the request holds no change at all compared with the live project (whatever its status). */
+  private boolean sameAsLive(ProjectStaging s) {
     try {
       Project live = liveProject(s.projectId);
       return diff(live, s).isEmpty() && removedImageIds(s).isEmpty() && images.findFilesOfStaging(s.id).isEmpty()
@@ -597,6 +602,13 @@ public class ProjectWorkflowService {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the maker who raised this request can edit it");
     if (ProjectStaging.DELETE.equals(s.requestType))
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A deletion request has nothing to edit");
+    // A form that stayed open in another tab after the unchanged copy was cleared away: saving into it brings it back (nothing is lost)
+    if (ProjectStaging.WITHDRAWN.equals(s.status) && ProjectStaging.UPDATE.equals(s.requestType) && findOpen(s.projectId) == null && sameAsLive(s)) {
+      s.status = ProjectStaging.DRAFT;
+      s.decidedAt = null;
+      staging.save(s);
+      audit.logActivity(username, "CHANGE_DRAFT_REOPENED", "PROJECT", s.projectId, null, "The form was still open after the unchanged copy was cleared; it is a draft again");
+    }
     if (!ProjectStaging.DRAFT.equals(s.status) && !ProjectStaging.NEEDS_CORRECTION.equals(s.status))
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "It can be edited only while it is a draft or returned for correction (current: " + s.status + ")");
     StaffUser user = projectAccess.requireActiveUser(username);

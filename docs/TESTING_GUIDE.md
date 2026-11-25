@@ -54,7 +54,7 @@ Checks the customer-site lockdown, headers, bad SSO tokens, CSRF, roles (DIT/mak
 **D. Head Office roles**
 11. HO retail `58382`: tabs *Project Management* and *Customer Leads*. Leads: filter, **Export** to Excel. There are **no** Edit / Units / Delete buttons on any project, and `POST /admin/projects/{id}/reduce-units` returns 403.
 12. HO marketing `54534`: can create and approve projects for any zone.
-13. A maker or checker typing `/admin/leads` in the address bar gets *Access Denied* (customer phone numbers are protected).
+13. Every staff role (makers and checkers too) can open `/admin/leads`; a customer or a user who is not signed in cannot (phone numbers stay masked per the bank setting).
 14. DIT `55012`: **Logs** shows project events and every login attempt (including refused ones). Everyone else gets 403 on `/admin/audit-logs`.
 15. Sign out with the button: you land on the login page; Back must not reopen admin pages.
 
@@ -108,7 +108,7 @@ Watch it between the steps: *Save as Draft* changes only `realty_project_staging
 | 4 | Workflow | `python3 scripts/workflow_test.py` | 83/83 (new project, return, reject, withdraw, edit, unit reduction, delete, role/zone/self-approval refusals, concurrency, XSS) |
 | 5 | Clean | `scripts/remove_demo_data.sh` | "demo data removed" |
 | 6 | Manual 3A-3D | sections 3 and 3b with the personas | every expected result above |
-| 7 | Roles | try `/admin/leads`, `/admin/audit-logs`, a reduce-units POST as the wrong roles | 403 / Access Denied |
+| 7 | Roles | try `/admin/audit-logs` (DIT only) and a reduce-units POST as the wrong roles | 403 / Access Denied |
 | 8 | Public lockdown | `curl -i http://localhost:8080/UcoRealty/admin/projects` | 403; only catalog, project detail, files |
 | 9 | UAT-like start | section 5 or 5b | login behaves as described |
 | 9b | Context path | `python3 scripts/context_path_check.py` | "OK: every URL carries the context path" (no root-relative link, form, script or JSON URL) |

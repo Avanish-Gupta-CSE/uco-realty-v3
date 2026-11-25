@@ -27,8 +27,8 @@ public final class StaffRoles {
   public static final String[] CHECKERS = {"ZO_CHECKER", "HO_MARKETING", "SUPERADMIN_DIT"};
   /** Every staff role (read access to the project directory). */
   public static final String[] ALL_STAFF = {"SUPERADMIN_DIT", "HO_MARKETING", "HO_RETAIL", "ZO_MAKER", "ZO_CHECKER"};
-  /** Customer leads page and Excel export. */
-  public static final String[] LEAD_ROLES = {"HO_MARKETING", "HO_RETAIL", "SUPERADMIN_DIT"};
+  /** Customer leads page and Excel export (every staff role, zonal makers and checkers included). */
+  public static final String[] LEAD_ROLES = ALL_STAFF;
 
   /**
    * Stops a request when the signed-in employee does not have one of the allowed roles (401 when nobody is signed in,

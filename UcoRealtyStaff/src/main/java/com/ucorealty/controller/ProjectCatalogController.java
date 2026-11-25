@@ -41,9 +41,13 @@ public class ProjectCatalogController {
   private final ProjectRepository projectRepo;
   private final ProjectWorkflowService workflow;
 
+  private final com.ucorealty.service.ProjectHistoryService history;
+
   public ProjectCatalogController(ProjectAccessService projectAccess, MasterDataService masterDataService,
                              ProjectImageRepository imageRepo, ProjectAttachmentRepository attachmentRepo,
-                             ProjectRepository projectRepo, ProjectWorkflowService workflow) {
+                             ProjectRepository projectRepo, ProjectWorkflowService workflow,
+                             com.ucorealty.service.ProjectHistoryService history) {
+    this.history = history;
     this.projectAccess = projectAccess;
     this.masterDataService = masterDataService;
     this.imageRepo = imageRepo;
@@ -121,6 +125,7 @@ public class ProjectCatalogController {
     model.addAttribute("project", p);
     model.addAttribute("images", imgs);
     model.addAttribute("isStaffPreview", isStaff);
+    if (isStaff) model.addAttribute("history", history.of(id));
     return "public-detail";
   }
 

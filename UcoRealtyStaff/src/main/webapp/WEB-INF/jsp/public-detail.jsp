@@ -4,7 +4,7 @@
             <%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
 
                 <c:set var="pageTitle" value="${project.projectName} - UCO Bank Realty" scope="request" />
-                <c:set var="activeTab" value="public" scope="request" />
+                <c:set var="activeTab" value="${isStaffPreview ? 'projects' : 'public'}" scope="request" />
                 <jsp:include page="common/header.jsp" />
 
                 <main class="container-xxl py-4" id="main-project-detail">
@@ -102,9 +102,9 @@
                                 <div class="carousel-inner" id="project-gallery-slides">
                                     <c:forEach var="img" items="${images}" varStatus="loop">
                                         <div class="carousel-item ${loop.first ? 'active' : ''}">
-                                            <img src="${pageContext.request.contextPath}/files/<c:out value="${img}"/>"
+                                            <img src="${pageContext.request.contextPath}/files/<c:out value="${img.id}"/>"
                                                 alt="Project Photo ${loop.count}" class="photo-carousel-img d-block w-100" ${loop.first ? '' : 'loading="lazy"'}
-                                                id="gallery-photo-${img}">
+                                                id="gallery-photo-${img.id}">
                                         </div>
                                     </c:forEach>
                                 </div>
@@ -354,6 +354,7 @@
                             </div>
                         </div>
                     </div>
+                    <c:if test="${isStaffPreview}"><jsp:include page="common/project-history.jsp"/></c:if>
                 </main>
 
                 <jsp:include page="common/footer.jsp" />

@@ -48,7 +48,7 @@ Our database user is `HRMS_DBA`; it can already read the table.
 | 3 | `?utm=realty` | Stored as `REALTY` (or ignored, as agreed) |
 | 4 | `?utm=<very long text or quotes>` | No error, nothing harmful stored |
 | 5 | Leave the form half way, then finish later | Channel still `REALTY` |
-| 6 | Open our Leads page (HO Marketing, HO Retail or DIT sign-in) | The lead appears with the right name, mobile, status |
+| 6 | Open our Leads page (any staff sign-in) | The lead appears with the right name, mobile, status |
 
 ## 5. What I (UCO Realty owner) must do
 - [ ] Give this page to the lead-page developer and agree a UAT date.
