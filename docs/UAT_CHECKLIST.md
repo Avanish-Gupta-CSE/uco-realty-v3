@@ -60,7 +60,7 @@ Then: `scripts/package-release.sh uat` gives both WARs in `release/ucorealty-uat
 
 ## D. If you cannot reach the Oracle database
 Run on H2 instead (in memory, test employees 55012 ... 600003, data lost when Tomcat stops). There is no server setting on the bank servers, so this is a file edit and a rebuild:
-remove the `#` in front of `# spring.profiles.active=h2` in both `application.properties` files (staff line 67, customer line 51), build with `scripts/package-release.sh uat`, deploy.
+remove the `#` in front of `# spring.profiles.active=h2` in both `application.properties` files (staff line 69, customer line 57), build with `scripts/package-release.sh uat`, deploy.
 To go back to Oracle: put the `#` back in both files, rebuild, deploy.
 
 ## E. Before production (nothing to delete in Java)

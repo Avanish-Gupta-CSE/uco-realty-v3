@@ -10,10 +10,9 @@ Every value below sits in a `application.properties` file with a `# TODO:` comme
 | 24 | `spring.datasource.password` (`CHANGE_ME_DB_PASSWORD` after the colon) | **real DB password** | production password |
 | 32 | `spring.jpa.properties.hibernate.dialect` | `org.hibernate.dialect.OracleDialect` (Oracle 19c or newer) | same; keep. Hibernate 7 does not support Oracle 12c |
 | 51 | `sso.encryption.key` | dev key until the bank gives one | **real bank key** (16, 24 or 32 characters) |
-| 53 | `sso.cipher` | `AES/GCM/NoPadding` (default; keep unless the bank says CBC) | exactly what the bank's portal uses: `AES/GCM/NoPadding` (12-byte IV first) or `AES/CBC/PKCS5Padding` (16-byte IV first); any other text stops the app at start |
-| 57 | `uco.sso.dev-login-enabled` | `true` (test login) | **`false`** |
-| 58 | `uco.sso.test-otp` | `123456` | **delete the line** |
-| 63 | `uco.rbac.superadmin-sols` | `7115,7103` | `7115` only |
+| 55 | `uco.sso.dev-login-enabled` | `true` (test login) | **`false`** |
+| 56 | `uco.sso.test-otp` | `123456` | **delete the line** |
+| 61 | `uco.rbac.superadmin-sols` | `7115,7103` | `7115` only |
 | 64-66 | marketing/retail SOLs, zonal regex | keep | keep |
 
 ## UcoRealty (`UcoRealty/src/main/resources/application.properties`)

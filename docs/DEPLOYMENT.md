@@ -41,7 +41,7 @@ Copy both WAR files into Tomcat's `webapps/` folder and start Tomcat. The values
 **Overrides:** the `${NAME:default}` form in the file would accept a JVM `-D` flag or an environment variable, but that works only where we control the machine (a laptop, `scripts/dev-start.sh`, a `java -jar` run). **On the bank servers do not rely on it: edit the default after the colon and rebuild.**
 
 **Before production (all in `application.properties`, then rebuild):**
-In `UcoRealtyStaff`: set `uco.sso.dev-login-enabled=false` (line 57), delete the `uco.sso.test-otp` line (58), write the real key after the colon in `sso.encryption.key` (51). Keep `spring.profiles.active=h2` commented out in **both** apps (it already is). `scripts/package-release.sh prod` refuses to build while any of these is still there. It does not check the session cookie `Secure` flag: `server.servlet.session.cookie.secure` is ignored on an external Tomcat (see above), so ask the server team to set it on the https connector.
+In `UcoRealtyStaff`: set `uco.sso.dev-login-enabled=false` (line 55), delete the `uco.sso.test-otp` line (56), write the real key after the colon in `sso.encryption.key` (51). Keep `spring.profiles.active=h2` commented out in **both** apps (it already is). `scripts/package-release.sh prod` refuses to build while any of these is still there. It does not check the session cookie `Secure` flag: `server.servlet.session.cookie.secure` is ignored on an external Tomcat (see above), so ask the server team to set it on the https connector.
 
 The names below are the setting names written in `application.properties` (`${NAME:default}`). On the bank servers you change the default in the file; the "override" column only applies on a laptop or `java -jar`.
 
@@ -66,7 +66,7 @@ Every line the application writes about its own work starts with a tag: `[UCO SS
 ## 3. Bank SSO integration
 Register this URL with the SSO team: `https://<host>/UcoRealtyStaff/entry` . The portal opens it as `/entry?Value=<token>`.
 
-The token is the bank's standard: by default Base64 of a 12-byte IV followed by AES/GCM data with a 128-bit tag, using `SSO_ENCRYPTION_KEY`. The cipher is the setting `sso.cipher` (`AES/GCM/NoPadding` or `AES/CBC/PKCS5Padding` with a 16-byte IV first; nothing else is accepted) as raw text. After decrypting it reads `emp_id=<empno>&sol_id=<sol>`.
+The token is the bank's standard: Base64 of a 12-byte IV followed by AES/GCM/NoPadding data with a 128-bit tag, using `SSO_ENCRYPTION_KEY` as raw text (no other cipher is accepted). After decrypting it reads `emp_id=<empno>&sol_id=<sol>`.
 
 The code is in `HomeController`:
 1. `/entry` decrypts the token and looks the employee up in HRMS (the SOL in the token is **not** trusted; the HRMS posting decides).
