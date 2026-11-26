@@ -16,8 +16,9 @@ public class ProjectRow {
   public String projectName, zoneName, cityName, stateName, builderName, reraNo, branchName, createdBy, checkerComment;
   public Integer unsoldInventory, totalInventory;
   public LocalDateTime updatedAt;
-  public String status;            // APPROVED | DRAFT | PENDING_APPROVAL | NEEDS_CORRECTION | REJECTED
-  public boolean master;           // true: live record in the projects table
+  public String status;            // APPROVED | DELETED | DRAFT | PENDING_APPROVAL | NEEDS_CORRECTION | REJECTED
+  public boolean master;           // true: record of the projects table (live, or deleted)
+  public String deleteReason;      // DELETED lines: the maker's reason
 
   // the request attached to this line: the CREATE row itself, or the open UPDATE / DELETE of a live project
   public Long stagingId;
@@ -32,7 +33,7 @@ public class ProjectRow {
     r.projectName = p.projectName; r.zoneName = p.zoneName; r.cityName = p.cityName; r.stateName = p.stateName;
     r.builderName = p.builderName; r.reraNo = p.reraNo; r.branchName = p.branchName; r.unsoldInventory = p.unsoldInventory; r.totalInventory = p.totalInventory;
     r.createdBy = p.createdBy; r.checkerComment = p.checkerComment; r.updatedAt = p.updatedAt;
-    r.status = Project.APPROVED;
+    r.status = Project.DELETED.equals(p.status) ? Project.DELETED : Project.APPROVED;
     r.master = true;
     if (s != null) r.attach(s);
     return r;
@@ -75,6 +76,7 @@ public class ProjectRow {
   public Integer getTotalInventory() { return totalInventory; }
   public LocalDateTime getUpdatedAt() { return updatedAt; }
   public String getStatus() { return status; }
+  public String getDeleteReason() { return deleteReason; }
   public boolean isMaster() { return master; }
   public Long getStagingId() { return stagingId; }
   public String getRequestType() { return requestType; }

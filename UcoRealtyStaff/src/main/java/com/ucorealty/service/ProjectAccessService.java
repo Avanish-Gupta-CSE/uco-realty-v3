@@ -149,7 +149,7 @@ public class ProjectAccessService {
   // ---- staff ----
 
   /** Live (approved) projects the user may see: all zones for Head Office roles, own zone for zonal staff. DELETED never. */
-  public List<Project> approvedList(String username) {
+  public List<Project> dashboardProjects(String username) {
     StaffUser user = requireActiveUser(username);
     List<Project> visible;
     if (isNational(user)) {
@@ -159,7 +159,12 @@ public class ProjectAccessService {
     } else {
       visible = Collections.emptyList();
     }
-    return visible.stream().filter(p -> !Project.DELETED.equals(p.status)).collect(Collectors.toList());
+    return visible;   // live and deleted ones: a deleted project stays in the bank dashboard (under "Deleted"), customers never see it
+  }
+
+  /** A project for the staff View page: a live one, or a deleted one (read only). Anything else behaves as if it did not exist. */
+  public Project findForView(String id) {
+    return repo.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Project " + id + " not found"));
   }
 
   /** A live project by code; a DELETED one behaves as if it did not exist. */

@@ -64,7 +64,7 @@ public class ProjectCatalogController {
   public String projectDetail(@PathVariable String id, Authentication auth, Model model) {
     boolean isStaff = (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getName()));
 
-    Project p = isStaff ? projectAccess.findById(id) : projectAccess.publicById(id);
+    Project p = isStaff ? projectAccess.findForView(id) : projectAccess.publicById(id);
     if (p == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Project not found or not published");
     }

@@ -83,6 +83,8 @@
             <a href="${tabUrl}" class="status-tab ${currentStatus == 'NEEDS_CORRECTION' ? 'active' : ''}" id="filter-status-correction">Needs correction <span class="status-tab-count">${statusCounts['NEEDS_CORRECTION']}</span></a>
             <c:url var="tabUrl" value="/admin/projects"><c:param name="status" value="REJECTED"/><c:param name="search" value="${currentSearch}"/><c:param name="zone" value="${currentZone}"/></c:url>
             <a href="${tabUrl}" class="status-tab ${currentStatus == 'REJECTED' ? 'active' : ''}" id="filter-status-rejected">Rejected <span class="status-tab-count">${statusCounts['REJECTED']}</span></a>
+            <c:url var="tabUrl" value="/admin/projects"><c:param name="status" value="DELETED"/><c:param name="search" value="${currentSearch}"/><c:param name="zone" value="${currentZone}"/></c:url>
+            <a href="${tabUrl}" class="status-tab ${currentStatus == 'DELETED' ? 'active' : ''}" id="filter-status-deleted">Deleted <span class="status-tab-count">${statusCounts['DELETED']}</span></a>
             <c:url var="tabUrl" value="/admin/projects"><c:param name="status" value="CHANGE_PENDING"/><c:param name="search" value="${currentSearch}"/><c:param name="zone" value="${currentZone}"/></c:url>
             <a href="${tabUrl}" class="status-tab ${currentStatus == 'CHANGE_PENDING' ? 'active' : ''}" id="filter-status-change">Change or deletion pending <span class="status-tab-count">${statusCounts['CHANGE_PENDING']}</span></a>
         </div>
@@ -158,6 +160,10 @@
                                             <c:when test="${p.status == 'REJECTED'}">
                                                 <span class="badge badge-rejected" id="badge-status-${p.id}">Rejected</span>
                                             </c:when>
+                                            <c:when test="${p.status == 'DELETED'}">
+                                                <span class="badge badge-deleted" id="badge-status-${p.id}">Deleted</span>
+                                                <div class="extra-small mt-1 text-muted" id="deleted-note-${p.id}">Taken off the customer site<c:if test="${not empty p.deleteReason}">. Reason: <c:out value="${p.deleteReason}"/></c:if></div>
+                                            </c:when>
                                             <c:otherwise>
                                                 <span class="badge badge-draft" id="badge-status-${p.id}">Draft</span>
                                             </c:otherwise>
@@ -175,7 +181,7 @@
                                             <div class="mt-1"><span class="badge badge-correction" id="badge-change-returned-${p.id}">Your change: returned</span>
                                                 <div class="extra-small text-warning text-truncate" id="change-comment-${p.id}"><c:out value="${p.stagingComment}"/></div></div>
                                         </c:if>
-                                        <c:if test="${p.checkerComment != null && (p.master || p.status == 'NEEDS_CORRECTION' || p.status == 'REJECTED')}">
+                                        <c:if test="${p.checkerComment != null && p.status != 'DELETED' && (p.master || p.status == 'NEEDS_CORRECTION' || p.status == 'REJECTED')}">
                                             <div class="extra-small mt-1 text-truncate ${p.status == 'APPROVED' ? 'text-muted' : (p.status == 'NEEDS_CORRECTION' ? 'text-warning' : 'text-danger')}" id="checker-comment-${p.id}" title="<c:out value="${p.checkerComment}"/>">
                                                 <c:if test="${p.status == 'APPROVED'}"><span class="text-success">&bull;</span></c:if>
                                                 <c:out value="${p.checkerComment}"/>
@@ -208,7 +214,7 @@
                                                 </c:if>
 
                                                 <%-- Maker: change a LIVE project (every change needs a checker) --%>
-                                                <c:if test="${p.master}">
+                                                <c:if test="${p.master && p.status != 'DELETED'}">
                                                     <c:choose>
                                                         <c:when test="${p.stagingId == null}">
                                                             <form action="${pageContext.request.contextPath}/admin/projects/<c:out value="${p.id}"/>/change" method="post" class="d-inline m-0" id="form-change-project-${p.id}">
@@ -339,7 +345,7 @@
 <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
                 <div class="modal-body p-4">
                     <p class="text-muted small mb-3"><span id="deleteProjectName" class="fw-bold text-dark"></span></p>
-                    <p class="small text-muted mb-3" id="delete-approval-note">The project stays live until a checker approves the deletion. After approval it disappears from the dashboard and the customer site; the record is kept for the logs.</p>
+                    <p class="small text-muted mb-3" id="delete-approval-note">The project stays on the customer site until a checker approves. After that it is taken off the customer site and kept in your dashboard under <strong>Deleted</strong>.</p>
                     <div class="mb-3">
                         <label for="deleteReason" class="form-label fw-semibold small">Reason for deletion *</label>
                         <textarea id="deleteReason" name="reason" class="form-control" rows="3" placeholder="Why should this project be removed?" required></textarea>

@@ -77,7 +77,7 @@ Checks the customer-site lockdown, headers, bad SSO tokens, CSRF, roles (DIT/mak
 9. As `52260` press **Reduce Units**, enter units and a reason, **Submit for Approval**. The unit count on the dashboard does not change yet. As `45195` review (old → new units, reason) and approve: the count drops. HO retail `58382` has no such button.
 
 **Delete**
-10. As `52260` press **Delete**, enter a reason. The project stays on the customer site and shows **Deletion pending approval**. As `45195` open **Review deletion** (reason shown; only *Approve* or *Reject* are possible). **Approve**: the project disappears from every dashboard (maker, checker, HO, DIT) and from the customer site; it is still in the database with status `DELETED` (see the **Logs** page for the whole history under `DELETE_REQUESTED` / `DELETE_APPROVED`).
+10. As `52260` press **Delete**, enter a reason. The project stays on the customer site and shows **Deletion pending approval**. As `45195` open **Review deletion** (reason shown; only *Approve* or *Reject* are possible). **Approve**: the project is taken off the customer site but stays in every bank dashboard (maker, checker, HO, DIT) with a grey **Deleted** badge, the maker's reason and only a **View** button (also under the **Deleted** tab); it is still in the database with status `DELETED` (see the **Logs** page for the whole history under `DELETE_REQUESTED` / `DELETE_APPROVED`).
 
 **Automatic version of all of this**
 ```bash

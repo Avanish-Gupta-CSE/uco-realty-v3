@@ -99,7 +99,7 @@ public class ProjectWorkflowController {
     // The number on each status tab (within the current search and zone), and what waits for this user's decision
     Map<String, Long> counts = new HashMap<>();
     counts.put("ALL", (long) rows.size());
-    for (String st : List.of("DRAFT", "PENDING_APPROVAL", "APPROVED", "NEEDS_CORRECTION", "REJECTED", "CHANGE_PENDING")) {
+    for (String st : List.of("DRAFT", "PENDING_APPROVAL", "APPROVED", "NEEDS_CORRECTION", "REJECTED", "DELETED", "CHANGE_PENDING")) {
       counts.put(st, rows.stream().filter(r -> hasStatus(r, st)).count());
     }
     model.addAttribute("statusCounts", counts);
@@ -412,6 +412,8 @@ public class ProjectWorkflowController {
     model.addAttribute("images", workflow.photosForForm(s));
     model.addAttribute("attachments", workflow.attachmentsForForm(s));
     model.addAttribute("amenityRows", Amenities.parse(workflow.previewOf(s).amenityFlags));
+    model.addAttribute("amenityIcons", Amenities.ICONS);
+    model.addAttribute("amenityDefaultIcon", Amenities.DEFAULT_ICON);
     model.addAttribute("isStaffPreview", true);
     model.addAttribute("stagingPreview", true);
     model.addAttribute("stagingId", s.id);

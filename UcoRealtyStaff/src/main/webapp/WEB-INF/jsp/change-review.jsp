@@ -44,7 +44,7 @@
                 <div class="alert alert-danger" id="review-delete-box">
                     <strong>The maker asks to delete this project.</strong>
                     <div class="mt-1" id="review-delete-reason">Reason: <c:out value="${staging.reason}"/></div>
-                    <div class="mt-2 small">After approval the project is marked <em>Deleted</em>: it disappears from every dashboard and from the customer site, and the record is kept in the database for the logs.</div>
+                    <div class="mt-2 small">After you approve, the project is taken off the customer site. It stays in the bank dashboard under <strong>Deleted</strong>, so you can still look it up.</div>
                 </div>
             </c:when>
             <c:when test="${isCreate}">

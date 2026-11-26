@@ -14,12 +14,13 @@ import java.util.List;
  */
 public interface ProjectRepository extends JpaRepository<Project, String> {
 
-  /** The live projects customers may see: status APPROVED, active, and published. */
+  /** The live projects customers may see: status APPROVED, active, and published. Newest first (the day a checker approved the project), so a new project is on the first page. */
   @Query(nativeQuery = true, value = """
       SELECT * FROM realty_projects
       WHERE status = :status
         AND is_active = :active
         AND is_published = :published
+      ORDER BY created_at DESC, id DESC
       """)
   List<Project> findByStatusAndIsActiveAndIsPublished(@Param("status") String status,
                                                       @Param("active") Integer active,

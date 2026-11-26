@@ -239,9 +239,22 @@ check("maker cannot approve (403)", decide(maker, cs, "approve")[0] == 403)
 decide(checker, cs, "needs-correction", "x")
 check("a deletion can only be approved or rejected", "Deletion pending approval" in (row(checker, pid) or ""))
 decide(checker, cs, "approve", "")
-check("deleted: gone from every dashboard", all(row(c, pid) is None for c in (maker, checker, dit, retail, marketing)))
+del_rows = [row(c, pid) for c in (maker, checker, dit, retail, marketing)]
+check("deleted: still in every bank dashboard, with a Deleted badge", all(r is not None and "Deleted</span>" in r for r in del_rows))
+check("deleted: the row says it was taken off the customer site and gives the maker's reason",
+      all("Taken off the customer site" in r and "Duplicate entry" in r for r in del_rows))
+check("deleted: the row has only View (no Edit, Reduce Units, Delete, Withdraw)",
+      all(f'id="link-preview-project-{pid}"' in r and "link-change-project" not in r and "btn-reduce-units" not in r and "btn-delete-project" not in r and "withdraw" not in r.lower() for r in del_rows))
+check("deleted: it is in the Deleted tab and not in the Approved tab",
+      f'id="row-project-{pid}"' in maker.get("/admin/projects?status=DELETED")[2].decode("utf-8", "replace")
+      and f'id="row-project-{pid}"' not in maker.get("/admin/projects?status=APPROVED")[2].decode("utf-8", "replace")
+      and 'id="filter-status-deleted"' in maker.get("/admin/projects")[2].decode("utf-8", "replace"))
 check("deleted: gone from the customer site", public(pid)[0] == 404)
-check("deleted: staff cannot open or change it", maker.get(f"/project/{pid}")[0] == 404 and change(maker, pid)[0] == 302)
+vd = maker.get(f"/project/{pid}")
+check("deleted: staff can open it to look (View), with a Deleted banner and the history",
+      vd[0] == 200 and "This project was deleted. Customers can no longer see it." in vd[2].decode("utf-8", "replace") and 'project-history-card' in vd[2].decode("utf-8", "replace"))
+check("deleted: staff cannot change, reduce or delete it again", change(maker, pid)[0] == 302 and status_of(maker, pid) == "Deleted"
+      and maker.post(f"/admin/projects/{pid}/reduce-units", {"units": "1", "reason": "x", "_csrf": maker.csrf("/admin/projects")})[0] == 302 and sid(maker, pid) is None)
 
 print("\n== 10. Roles")
 check("HO marketing (national maker) can open the new-project form", marketing.get("/admin/projects/new")[0] == 200)
@@ -532,7 +545,13 @@ fl16 = demo.form(2, "ZZ Workflow Audit Fixes", "ZZ Workflow Builder", "West Beng
 fl16.update({"branchName": "Durgapur Main Branch", "unsoldInventory": "30", "otherTitle_1": "Fix Sheet"})
 save(maker, fl16, action="submit", files=[("photo1", PHOTO[0].name, PHOTO[0].read_bytes(), "image/jpeg"), ("doc_BROCHURE", "fix.pdf", demo.DEMO_PDF, "application/pdf")])
 pid16 = demo.newest_project_id(maker, "ZZ Workflow Audit Fixes"); sid16 = sid(maker, pid16)
+pv16 = checker.get(f"/admin/projects/staging/{sid16}/preview")[2].decode("utf-8", "replace")
+check("the preview of a request shows the amenity emoji tiles (for the checker and the maker)",
+      pv16.count('class="amenity-icon"') >= 8 and maker.get(f"/admin/projects/staging/{sid16}/preview")[2].decode("utf-8", "replace").count('class="amenity-icon"') >= 8)
 decide(checker, sid16, "approve", "Checked on site, all fine")
+check("a project that was just approved is on the FIRST page of the customer list (newest first)", pid16 in Client(PUBLIC).get("/projects")[2].decode("utf-8", "replace"))
+api16 = Client(PUBLIC).get("/api/public/projects")[2].decode("utf-8", "replace")
+check("... and first in the public JSON list", api16.find(pid16) != -1 and api16.find(pid16) < 400, api16[:200])
 view16 = maker.get(f"/project/{pid16}")[2].decode("utf-8", "replace")
 hist16 = view16[view16.find('id="project-history-card"'):]
 approved_block = re.findall(r'id="history-status-\d+">Approved</span>(.*?)</div>\s*</div>\s*</div>', hist16, re.S)

@@ -92,7 +92,7 @@ public class ProjectWorkflowService {
   /** The dashboard of one user: live projects (with their open request) and the maker's unapproved new projects. */
   public List<ProjectRow> dashboard(String username) {
     StaffUser u = projectAccess.requireActiveUser(username);
-    List<Project> masters = projectAccess.approvedList(username);
+    List<Project> masters = projectAccess.dashboardProjects(username);
     Map<String, ProjectStaging> openByProject = new HashMap<>();
     if (!masters.isEmpty()) {
       for (ProjectStaging s : staging.findForProjects(masters.stream().map(p -> p.id).collect(Collectors.toList()), OPEN)) {
@@ -101,6 +101,15 @@ public class ProjectWorkflowService {
     }
     List<ProjectRow> rows = new ArrayList<>();
     for (Project p : masters) rows.add(ProjectRow.ofMaster(p, openByProject.get(p.id)));
+    // a deleted project shows the reason the maker gave (from his approved deletion request)
+    List<String> deletedIds = masters.stream().filter(p -> Project.DELETED.equals(p.status)).map(p -> p.id).collect(Collectors.toList());
+    if (!deletedIds.isEmpty()) {
+      Map<String, String> reasons = new HashMap<>();
+      for (ProjectStaging d : staging.findForProjects(deletedIds, Arrays.asList(ProjectStaging.APPROVED))) {
+        if (ProjectStaging.DELETE.equals(d.requestType)) reasons.put(d.projectId, d.reason);
+      }
+      for (ProjectRow r : rows) if (Project.DELETED.equals(r.status)) r.deleteReason = reasons.get(r.id);
+    }
 
     boolean zonal = "ZO_MAKER".equals(u.role) || "ZO_CHECKER".equals(u.role);
     for (ProjectStaging s : staging.findByRequestTypeAndStatusIn(ProjectStaging.CREATE, NEW_PROJECT_ROWS)) {

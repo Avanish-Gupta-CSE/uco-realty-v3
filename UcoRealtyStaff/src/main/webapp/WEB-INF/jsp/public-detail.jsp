@@ -23,6 +23,7 @@
                                     <div class="small mt-1 text-dark">
                                         <c:choose>
                                             <c:when test="${project.status == 'APPROVED'}">This is how customers see this approved project.</c:when>
+                                            <c:when test="${project.status == 'DELETED'}">This project was deleted. Customers can no longer see it.</c:when>
                                             <c:otherwise>This project is currently in <strong>${project.status}</strong> status. It is
                                             <strong>NOT</strong> visible to public customers until approved by a Checker.</c:otherwise>
                                         </c:choose>
@@ -60,6 +61,9 @@
                                         <c:when test="${project.status == 'APPROVED'}">
                                             <span class="badge badge-approved" id="project-detail-status-badge">UCO
                                                 Approved</span>
+                                        </c:when>
+                                        <c:when test="${project.status == 'DELETED'}">
+                                            <span class="badge badge-deleted" id="project-detail-status-badge">Deleted</span>
                                         </c:when>
                                         <c:when test="${project.status == 'PENDING_APPROVAL'}">
                                             <span class="badge badge-pending" id="project-detail-status-badge">Pending
